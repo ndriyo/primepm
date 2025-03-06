@@ -5,8 +5,7 @@ import {
   ViewColumnsIcon,
   DocumentTextIcon,
   HomeIcon,
-  Bars3Icon,
-  XMarkIcon,
+  Bars3Icon
 } from '@heroicons/react/24/outline';
 
 interface NavItem {

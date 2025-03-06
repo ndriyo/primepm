@@ -80,10 +80,7 @@ export const CriteriaManagement = () => {
 
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this criterion?')) {
-      const success = removeCriterion(id);
-      if (!success) {
-        alert('Cannot delete default criteria');
-      }
+      removeCriterion(id);
     }
   };
 
@@ -275,14 +272,12 @@ export const CriteriaManagement = () => {
                   >
                     Edit
                   </button>
-                  {!criterion.isDefault && (
-                    <button
-                      onClick={() => handleDelete(criterion.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Delete
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleDelete(criterion.id)}
+                    className="text-red-600 hover:text-red-900"
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}

@@ -70,9 +70,9 @@ export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const removeCriterion = (id: string): boolean => {
-    // Prevent removal of default criteria
+    // Allow removal of any criteria, including defaults
     const criterionToRemove = criteria.find(c => c.id === id);
-    if (!criterionToRemove || criterionToRemove.isDefault) {
+    if (!criterionToRemove) {
       return false;
     }
 

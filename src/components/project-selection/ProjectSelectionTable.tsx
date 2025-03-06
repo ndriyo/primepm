@@ -1,14 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Project } from '../../data/projects';
+import { useCriteria } from '../../contexts/CriteriaContext';
 
 interface ProjectRating {
   id: string;
   name: string;
-  income: number;
-  policyImpact: number;
-  budget: number;
-  resources: number;
-  complexity: number;
+  [key: string]: string | number; // Dynamic criteria keys
 }
 
 interface ProjectScore extends ProjectRating {
@@ -21,42 +18,82 @@ interface ProjectSelectionTableProps {
 }
 
 export const ProjectSelectionTable = ({ projects }: ProjectSelectionTableProps) => {
-  const [weights, setWeights] = useState({
-    income: 52,
-    policyImpact: 23,
-    budget: 15,
-    resources: 7,
-    complexity: 4,
-  });
+  const { criteria } = useCriteria();
 
+  // Initialize weights with dynamic criteria keys
+  const [weights, setWeights] = useState<Record<string, number>>({});
   const [projectRatings, setProjectRatings] = useState<ProjectRating[]>([]);
   const [projectScores, setProjectScores] = useState<ProjectScore[]>([]);
 
+  // Initialize weights when criteria change
   useEffect(() => {
-    // Initialize project ratings from the existing projects
-    const initialRatings = projects.map(project => ({
-      id: project.id,
-      name: project.name,
-      income: Math.min(5, Math.ceil(project.criteria.revenue / 2)), // Scale from 1-10 to 1-5
-      policyImpact: Math.min(5, Math.ceil(project.criteria.policyImpact / 2)), // Scale from 1-10 to 1-5
-      budget: Math.min(5, Math.ceil((11 - project.criteria.budget) / 2)), // Inverse and scale
-      resources: Math.min(5, Math.ceil((11 - project.criteria.resources) / 2)), // Inverse and scale
-      complexity: Math.min(5, Math.ceil((11 - project.criteria.complexity) / 2)), // Inverse and scale
-    }));
-    setProjectRatings(initialRatings);
-  }, [projects]);
+    if (criteria.length === 0) return;
 
+    const newWeights: Record<string, number> = {};
+    // Distribute weights evenly across all criteria
+    const weightPerCriterion = Math.floor(100 / criteria.length);
+    
+    criteria.forEach((criterion, index) => {
+      // Give the remainder to the first criterion
+      newWeights[criterion.key] = index === 0 
+        ? weightPerCriterion + (100 - weightPerCriterion * criteria.length) 
+        : weightPerCriterion;
+    });
+    
+    setWeights(newWeights);
+  }, [criteria]);
+
+  // Initialize project ratings from projects data
   useEffect(() => {
-    // Calculate portfolio scores and ranks whenever ratings or weights change
-    if (projectRatings.length === 0) return;
+    if (criteria.length === 0 || projects.length === 0) return;
+
+    const initialRatings = projects.map(project => {
+      const rating: ProjectRating = {
+        id: project.id,
+        name: project.name,
+      };
+
+      // Add ratings for each criterion
+      criteria.forEach(criterion => {
+        let value = project.criteria[criterion.key] || 5; // Default to middle value if missing
+        
+        // Scale from 1-10 to 1-5 and handle inverse criteria
+        if (criterion.isInverse) {
+          // For inverse criteria, a low value in the project is a high rating
+          value = Math.min(5, Math.ceil((11 - value) / 2));
+        } else {
+          // For regular criteria, a high value in the project is a high rating
+          value = Math.min(5, Math.ceil(value / 2));
+        }
+        
+        rating[criterion.key] = value;
+      });
+
+      return rating;
+    });
+
+    setProjectRatings(initialRatings);
+  }, [projects, criteria]);
+
+  // Calculate portfolio scores whenever ratings or weights change
+  useEffect(() => {
+    if (projectRatings.length === 0 || criteria.length === 0) return;
 
     const scores = projectRatings.map(project => {
-      const score = 
-        (project.income * weights.income / 100) +
-        (project.policyImpact * weights.policyImpact / 100) +
-        (project.budget * weights.budget / 100) +
-        (project.resources * weights.resources / 100) +
-        (project.complexity * weights.complexity / 100);
+      let totalWeightedScore = 0;
+      let totalWeightUsed = 0;
+
+      criteria.forEach(criterion => {
+        const rating = project[criterion.key] as number || 0;
+        const weight = weights[criterion.key] || 0;
+        totalWeightedScore += rating * weight;
+        totalWeightUsed += weight;
+      });
+        
+      // Avoid division by zero
+      const score = totalWeightUsed > 0 
+        ? totalWeightedScore / totalWeightUsed * 100
+        : 0;
         
       return {
         ...project,
@@ -72,22 +109,31 @@ export const ProjectSelectionTable = ({ projects }: ProjectSelectionTableProps) 
     });
     
     setProjectScores(sortedScores);
-  }, [projectRatings, weights]);
+  }, [projectRatings, weights, criteria]);
 
-  const handleRatingChange = (id: string, criterion: keyof ProjectRating, value: number) => {
+  const handleRatingChange = (id: string, criterionKey: string, value: number) => {
     setProjectRatings(prev => 
       prev.map(project => 
-        project.id === id ? { ...project, [criterion]: value } : project
+        project.id === id ? { ...project, [criterionKey]: value } : project
       )
     );
   };
 
-  const handleWeightChange = (criterion: keyof typeof weights, value: number) => {
-    setWeights(prev => ({ ...prev, [criterion]: value }));
+  const handleWeightChange = (criterionKey: string, value: number) => {
+    setWeights(prev => ({ ...prev, [criterionKey]: value }));
   };
 
   // Ensure the total of all weights equals 100%
   const totalWeight = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
+
+  // If no criteria are defined, show a message
+  if (criteria.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-lg">No criteria defined. Please add criteria in the Manage Criteria tab.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-x-auto">
@@ -98,27 +144,24 @@ export const ProjectSelectionTable = ({ projects }: ProjectSelectionTableProps) 
         <thead>
           <tr>
             <th className="border border-gray-300 px-4 py-2 w-16">No.</th>
-            <th className="border border-gray-300 px-4 py-2">Description of Projects</th>
-            <th className="border border-gray-300 px-4 py-2 w-24">Rating</th>
-            <th className="border border-gray-300 px-4 py-2 w-28">Weighting</th>
-            <th className="border border-gray-300 px-4 py-2 w-24">Rating</th>
-            <th className="border border-gray-300 px-4 py-2 w-28">Weighting</th>
-            <th className="border border-gray-300 px-4 py-2 w-24">Rating</th>
-            <th className="border border-gray-300 px-4 py-2 w-28">Weighting</th>
-            <th className="border border-gray-300 px-4 py-2 w-24">Rating</th>
-            <th className="border border-gray-300 px-4 py-2 w-28">Weighting</th>
-            <th className="border border-gray-300 px-4 py-2 w-24">Rating</th>
-            <th className="border border-gray-300 px-4 py-2 w-28">Weighting</th>
+            <th className="border border-gray-300 px-4 py-2">Projects</th>
+            {criteria.map(criterion => (
+              <React.Fragment key={`header-${criterion.id}`}>
+                <th className="border border-gray-300 px-4 py-2 w-24">Rating</th>
+                <th className="border border-gray-300 px-4 py-2 w-28">Weighting</th>
+              </React.Fragment>
+            ))}
             <th className="border border-gray-300 px-4 py-2 w-36">Portfolio Score</th>
             <th className="border border-gray-300 px-4 py-2 w-36">Ranked Priority</th>
           </tr>
           <tr>
             <th colSpan={2} className="border border-gray-300"></th>
-            <th colSpan={2} className="border border-gray-300 px-4 py-2 text-center">Income</th>
-            <th colSpan={2} className="border border-gray-300 px-4 py-2 text-center">Policy Impact</th>
-            <th colSpan={2} className="border border-gray-300 px-4 py-2 text-center">Budget</th>
-            <th colSpan={2} className="border border-gray-300 px-4 py-2 text-center">Resources</th>
-            <th colSpan={2} className="border border-gray-300 px-4 py-2 text-center">Complexity</th>
+            {criteria.map(criterion => (
+              <th colSpan={2} className="border border-gray-300 px-4 py-2 text-center" key={criterion.id}>
+                {criterion.label}
+                {criterion.isInverse && <span className="text-xs block">(Inverse)</span>}
+              </th>
+            ))}
             <th colSpan={2} className="border border-gray-300"></th>
           </tr>
         </thead>
@@ -128,135 +171,34 @@ export const ProjectSelectionTable = ({ projects }: ProjectSelectionTableProps) 
               <td className="border border-gray-300 px-4 py-2 text-center">{index + 1}</td>
               <td className="border border-gray-300 px-4 py-2">{project.name}</td>
               
-              {/* Income */}
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <select 
-                  value={project.income}
-                  onChange={(e) => handleRatingChange(project.id, 'income', Number(e.target.value))}
-                  className="w-full p-1 text-center"
-                >
-                  {[1, 2, 3, 4, 5].map(value => (
-                    <option key={value} value={value}>{value}</option>
-                  ))}
-                </select>
-              </td>
-              <td className="border border-gray-300 px-4 py-2 text-center align-middle">
-                {index === 0 && (
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={weights.income}
-                    onChange={(e) => handleWeightChange('income', Number(e.target.value))}
-                    className="w-16 p-1 text-center"
-                  />
-                )}
-                {index === 0 && <span>%</span>}
-              </td>
-              
-              {/* Policy Impact */}
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <select 
-                  value={project.policyImpact}
-                  onChange={(e) => handleRatingChange(project.id, 'policyImpact', Number(e.target.value))}
-                  className="w-full p-1 text-center"
-                >
-                  {[1, 2, 3, 4, 5].map(value => (
-                    <option key={value} value={value}>{value}</option>
-                  ))}
-                </select>
-              </td>
-              <td className="border border-gray-300 px-4 py-2 text-center align-middle">
-                {index === 0 && (
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={weights.policyImpact}
-                    onChange={(e) => handleWeightChange('policyImpact', Number(e.target.value))}
-                    className="w-16 p-1 text-center"
-                  />
-                )}
-                {index === 0 && <span>%</span>}
-              </td>
-              
-              {/* Budget */}
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <select 
-                  value={project.budget}
-                  onChange={(e) => handleRatingChange(project.id, 'budget', Number(e.target.value))}
-                  className="w-full p-1 text-center"
-                >
-                  {[1, 2, 3, 4, 5].map(value => (
-                    <option key={value} value={value}>{value}</option>
-                  ))}
-                </select>
-              </td>
-              <td className="border border-gray-300 px-4 py-2 text-center align-middle">
-                {index === 0 && (
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={weights.budget}
-                    onChange={(e) => handleWeightChange('budget', Number(e.target.value))}
-                    className="w-16 p-1 text-center"
-                  />
-                )}
-                {index === 0 && <span>%</span>}
-              </td>
-              
-              {/* Resources */}
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <select 
-                  value={project.resources}
-                  onChange={(e) => handleRatingChange(project.id, 'resources', Number(e.target.value))}
-                  className="w-full p-1 text-center"
-                >
-                  {[1, 2, 3, 4, 5].map(value => (
-                    <option key={value} value={value}>{value}</option>
-                  ))}
-                </select>
-              </td>
-              <td className="border border-gray-300 px-4 py-2 text-center align-middle">
-                {index === 0 && (
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={weights.resources}
-                    onChange={(e) => handleWeightChange('resources', Number(e.target.value))}
-                    className="w-16 p-1 text-center"
-                  />
-                )}
-                {index === 0 && <span>%</span>}
-              </td>
-              
-              {/* Complexity */}
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <select 
-                  value={project.complexity}
-                  onChange={(e) => handleRatingChange(project.id, 'complexity', Number(e.target.value))}
-                  className="w-full p-1 text-center"
-                >
-                  {[1, 2, 3, 4, 5].map(value => (
-                    <option key={value} value={value}>{value}</option>
-                  ))}
-                </select>
-              </td>
-              <td className="border border-gray-300 px-4 py-2 text-center align-middle">
-                {index === 0 && (
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={weights.complexity}
-                    onChange={(e) => handleWeightChange('complexity', Number(e.target.value))}
-                    className="w-16 p-1 text-center"
-                  />
-                )}
-                {index === 0 && <span>%</span>}
-              </td>
+              {criteria.map(criterion => (
+                <React.Fragment key={`cell-${criterion.id}-${project.id}`}>
+                  <td className="border border-gray-300 px-4 py-2 text-center">
+                    <select 
+                      value={project[criterion.key] as number || 1}
+                      onChange={(e) => handleRatingChange(project.id, criterion.key, Number(e.target.value))}
+                      className="w-full p-1 text-center"
+                    >
+                      {[1, 2, 3, 4, 5].map(value => (
+                        <option key={value} value={value}>{value}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-center align-middle">
+                    {index === 0 && (
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={weights[criterion.key] || 0}
+                        onChange={(e) => handleWeightChange(criterion.key, Number(e.target.value))}
+                        className="w-16 p-1 text-center"
+                      />
+                    )}
+                    {index === 0 && <span>%</span>}
+                  </td>
+                </React.Fragment>
+              ))}
               
               {/* Portfolio Score and Rank */}
               <td className="border border-gray-300 px-4 py-2 text-center font-semibold">

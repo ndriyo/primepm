@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Project } from '../../data/projects';
 import { useCriteria } from '../../contexts/CriteriaContext';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';

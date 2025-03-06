@@ -1,0 +1,116 @@
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import {
+  ChartPieIcon,
+  ViewColumnsIcon,
+  DocumentTextIcon,
+  HomeIcon,
+  Bars3Icon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+
+interface NavItem {
+  name: string;
+  path: string;
+  icon: React.ForwardRefExoticComponent<React.SVGProps<SVGSVGElement>>;
+}
+
+const navigation: NavItem[] = [
+  { name: 'Dashboard', path: '/', icon: HomeIcon },
+  { name: 'Project Selection', path: '/selection', icon: ViewColumnsIcon },
+  { name: 'Project Details', path: '/details', icon: DocumentTextIcon },
+  { name: 'Reports', path: '/reports', icon: ChartPieIcon },
+];
+
+export const Sidebar = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+
+  return (
+    <>
+      {/* Mobile menu button */}
+      <div className="lg:hidden fixed top-0 left-0 z-40 w-full bg-white shadow-sm p-4 flex items-center">
+        <button
+          type="button"
+          className="text-gray-500 hover:text-gray-600"
+          onClick={() => setSidebarOpen(true)}
+        >
+          <span className="sr-only">Open sidebar</span>
+          <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+        </button>
+        <h1 className="ml-4 text-xl font-bold text-primary-600">PrimePM</h1>
+      </div>
+
+      {/* Mobile sidebar */}
+      <div
+        className={`fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden ${
+          sidebarOpen ? 'block' : 'hidden'
+        }`}
+        onClick={() => setSidebarOpen(false)}
+      ></div>
+
+      <div
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-lg transform transition-transform ease-in-out duration-300 flex flex-col ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0 lg:static lg:z-auto`}
+      >
+        <div className="flex items-center justify-between p-4 border-b">
+          <h1 className="text-xl font-bold text-primary-600">PrimePM</h1>
+          <button
+            type="button"
+            className="lg:hidden text-gray-500 hover:text-gray-600"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <span className="sr-only">Close sidebar</span>
+            <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+          </button>
+        </div>
+
+        <nav className="mt-5 px-4 overflow-y-auto flex-1">
+          <ul className="space-y-2 pb-16">
+            {navigation.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <li key={item.name}>
+                  <Link
+                    to={item.path}
+                    className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg ${
+                      isActive
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <item.icon
+                      className={`mr-3 h-5 w-5 ${
+                        isActive ? 'text-primary-700' : 'text-gray-500'
+                      }`}
+                      aria-hidden="true"
+                    />
+                    {item.name}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-white">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <img
+                className="h-8 w-8 rounded-full"
+                src="https://ui-avatars.com/api/?name=Admin+User&background=0284c7&color=fff"
+                alt="User avatar"
+              />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-700">Admin User</p>
+              <p className="text-xs font-medium text-gray-500">Project Manager</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};

@@ -1,0 +1,38 @@
+"filename", "language", "JSON", "HTML", "TypeScript JSX", "JavaScript", "XML", "TypeScript", "CSS", "JSON with Comments", "Markdown", "comment", "blank", "total"
+"/Users/ndriyo/Documents/Code/primepm/README.md", "Markdown", 0, 0, 0, 0, 0, 0, 0, 0, 58, 0, 23, 81
+"/Users/ndriyo/Documents/Code/primepm/eslint.config.js", "JavaScript", 0, 0, 0, 27, 0, 0, 0, 0, 0, 0, 2, 29
+"/Users/ndriyo/Documents/Code/primepm/index.html", "HTML", 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 1, 14
+"/Users/ndriyo/Documents/Code/primepm/package-lock.json", "JSON", 5192, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5193
+"/Users/ndriyo/Documents/Code/primepm/package.json", "JSON", 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 37
+"/Users/ndriyo/Documents/Code/primepm/postcss.config.js", "JavaScript", 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 1, 7
+"/Users/ndriyo/Documents/Code/primepm/public/vite.svg", "XML", 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1
+"/Users/ndriyo/Documents/Code/primepm/src/App.css", "CSS", 0, 0, 0, 0, 0, 0, 37, 0, 0, 0, 6, 43
+"/Users/ndriyo/Documents/Code/primepm/src/App.tsx", "TypeScript JSX", 0, 0, 27, 0, 0, 0, 0, 0, 0, 0, 3, 30
+"/Users/ndriyo/Documents/Code/primepm/src/assets/react.svg", "XML", 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1
+"/Users/ndriyo/Documents/Code/primepm/src/components/dashboard/MetricsSummary.tsx", "TypeScript JSX", 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 4, 68
+"/Users/ndriyo/Documents/Code/primepm/src/components/dashboard/RiskQuadrantChart.tsx", "TypeScript JSX", 0, 0, 80, 0, 0, 0, 0, 0, 0, 7, 9, 96
+"/Users/ndriyo/Documents/Code/primepm/src/components/dashboard/StatusChart.tsx", "TypeScript JSX", 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 5, 50
+"/Users/ndriyo/Documents/Code/primepm/src/components/dashboard/TopProjects.tsx", "TypeScript JSX", 0, 0, 58, 0, 0, 0, 0, 0, 0, 0, 3, 61
+"/Users/ndriyo/Documents/Code/primepm/src/components/layout/Layout.tsx", "TypeScript JSX", 0, 0, 26, 0, 0, 0, 0, 0, 0, 2, 4, 32
+"/Users/ndriyo/Documents/Code/primepm/src/components/layout/Sidebar.tsx", "TypeScript JSX", 0, 0, 85, 0, 0, 0, 0, 0, 0, 2, 8, 95
+"/Users/ndriyo/Documents/Code/primepm/src/components/project-selection/CriteriaManagement.tsx", "TypeScript JSX", 0, 0, 271, 0, 0, 0, 0, 0, 0, 5, 21, 297
+"/Users/ndriyo/Documents/Code/primepm/src/components/project-selection/ProjectCard.tsx", "TypeScript JSX", 0, 0, 76, 0, 0, 0, 0, 0, 0, 0, 9, 85
+"/Users/ndriyo/Documents/Code/primepm/src/components/project-selection/ProjectMatrix.tsx", "TypeScript JSX", 0, 0, 184, 0, 0, 0, 0, 0, 0, 6, 17, 207
+"/Users/ndriyo/Documents/Code/primepm/src/components/project-selection/ProjectRadarChart.tsx", "TypeScript JSX", 0, 0, 28, 0, 0, 0, 0, 0, 0, 1, 6, 35
+"/Users/ndriyo/Documents/Code/primepm/src/components/project-selection/ProjectSelectionTable.tsx", "TypeScript JSX", 0, 0, 211, 0, 0, 0, 0, 0, 0, 16, 36, 263
+"/Users/ndriyo/Documents/Code/primepm/src/contexts/CriteriaContext.tsx", "TypeScript JSX", 0, 0, 88, 0, 0, 0, 0, 0, 0, 5, 17, 110
+"/Users/ndriyo/Documents/Code/primepm/src/contexts/ProjectContext.tsx", "TypeScript JSX", 0, 0, 87, 0, 0, 0, 0, 0, 0, 4, 15, 106
+"/Users/ndriyo/Documents/Code/primepm/src/data/projects.ts", "TypeScript", 0, 0, 0, 0, 0, 275, 0, 0, 0, 7, 16, 298
+"/Users/ndriyo/Documents/Code/primepm/src/index.css", "CSS", 0, 0, 0, 0, 0, 0, 22, 0, 0, 0, 3, 25
+"/Users/ndriyo/Documents/Code/primepm/src/main.tsx", "TypeScript JSX", 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 2, 11
+"/Users/ndriyo/Documents/Code/primepm/src/pages/Dashboard.tsx", "TypeScript JSX", 0, 0, 33, 0, 0, 0, 0, 0, 0, 0, 5, 38
+"/Users/ndriyo/Documents/Code/primepm/src/pages/ProjectDetails.tsx", "TypeScript JSX", 0, 0, 253, 0, 0, 0, 0, 0, 0, 3, 25, 281
+"/Users/ndriyo/Documents/Code/primepm/src/pages/ProjectSelection.tsx", "TypeScript JSX", 0, 0, 72, 0, 0, 0, 0, 0, 0, 2, 9, 83
+"/Users/ndriyo/Documents/Code/primepm/src/pages/Reports.tsx", "TypeScript JSX", 0, 0, 256, 0, 0, 0, 0, 0, 0, 10, 23, 289
+"/Users/ndriyo/Documents/Code/primepm/src/vite-env.d.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2
+"/Users/ndriyo/Documents/Code/primepm/tailwind.config.js", "JavaScript", 0, 0, 0, 26, 0, 0, 0, 0, 0, 1, 1, 28
+"/Users/ndriyo/Documents/Code/primepm/tsconfig.app.json", "JSON", 22, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 27
+"/Users/ndriyo/Documents/Code/primepm/tsconfig.json", "JSON with Comments", 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 1, 8
+"/Users/ndriyo/Documents/Code/primepm/tsconfig.node.json", "JSON", 20, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 25
+"/Users/ndriyo/Documents/Code/primepm/vite.config.ts", "TypeScript", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 2, 8
+"Total", "-", 5270, 13, 1953, 59, 2, 280, 59, 7, 58, 77, 286, 8064

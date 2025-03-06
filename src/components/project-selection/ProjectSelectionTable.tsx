@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Project } from '../../data/projects';
 import { useCriteria } from '../../contexts/CriteriaContext';
+import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 
 interface ProjectRating {
   id: string;
@@ -136,87 +137,126 @@ export const ProjectSelectionTable = ({ projects }: ProjectSelectionTableProps) 
   }
 
   return (
-    <div className="overflow-x-auto">
-      <div className="text-center font-semibold mb-2">
-        Please rate using 1 to 5 scale (1 = very small ... 5 = very big)
-      </div>
-      <table className="min-w-full border border-gray-300">
-        <thead>
-          <tr>
-            <th className="border border-gray-300 px-4 py-2 w-16">No.</th>
-            <th className="border border-gray-300 px-4 py-2">Projects</th>
-            {criteria.map(criterion => (
-              <React.Fragment key={`header-${criterion.id}`}>
-                <th className="border border-gray-300 px-4 py-2 w-24">Rating</th>
-                <th className="border border-gray-300 px-4 py-2 w-28">Weighting</th>
-              </React.Fragment>
-            ))}
-            <th className="border border-gray-300 px-4 py-2 w-36">Portfolio Score</th>
-            <th className="border border-gray-300 px-4 py-2 w-36">Ranked Priority</th>
-          </tr>
-          <tr>
-            <th colSpan={2} className="border border-gray-300"></th>
-            {criteria.map(criterion => (
-              <th colSpan={2} className="border border-gray-300 px-4 py-2 text-center" key={criterion.id}>
-                {criterion.label}
-                {criterion.isInverse && <span className="text-xs block">(Inverse)</span>}
-              </th>
-            ))}
-            <th colSpan={2} className="border border-gray-300"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {projectScores.map((project, index) => (
-            <tr key={project.id}>
-              <td className="border border-gray-300 px-4 py-2 text-center">{index + 1}</td>
-              <td className="border border-gray-300 px-4 py-2">{project.name}</td>
-              
-              {criteria.map(criterion => (
-                <React.Fragment key={`cell-${criterion.id}-${project.id}`}>
-                  <td className="border border-gray-300 px-4 py-2 text-center">
-                    <select 
-                      value={project[criterion.key] as number || 1}
-                      onChange={(e) => handleRatingChange(project.id, criterion.key, Number(e.target.value))}
-                      className="w-full p-1 text-center"
-                    >
-                      {[1, 2, 3, 4, 5].map(value => (
-                        <option key={value} value={value}>{value}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2 text-center align-middle">
-                    {index === 0 && (
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={weights[criterion.key] || 0}
-                        onChange={(e) => handleWeightChange(criterion.key, Number(e.target.value))}
-                        className="w-16 p-1 text-center"
-                      />
-                    )}
-                    {index === 0 && <span>%</span>}
-                  </td>
-                </React.Fragment>
-              ))}
-              
-              {/* Portfolio Score and Rank */}
-              <td className="border border-gray-300 px-4 py-2 text-center font-semibold">
-                {project.portfolioScore.toFixed(2)}
-              </td>
-              <td className="border border-gray-300 px-4 py-2 text-center font-semibold">
-                {project.rank}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      
-      {totalWeight !== 100 && (
-        <div className="mt-4 text-red-500 font-semibold">
-          Warning: Total weighting should equal 100%. Current total: {totalWeight}%
+    <div className="overflow-x-auto space-y-8 font-sans">
+      {/* Criteria Weights Section */}
+      <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
+        <div className="flex items-center mb-4">
+          <h2 className="text-xl font-semibold">Criteria Weights</h2>
+          <div className="ml-2 text-gray-500 cursor-help relative">
+            <QuestionMarkCircleIcon className="h-5 w-5" title="Set weights for each criterion. Total should equal 100%" />
+          </div>
         </div>
-      )}
+        
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          {criteria.map(criterion => (
+            <div key={criterion.id} className="flex flex-col">
+              <label 
+                className="text-sm font-medium mb-2 flex items-center"
+                title={criterion.description || ""}
+              >
+                {criterion.label}
+                {criterion.isInverse && <span className="text-xs ml-1">(Inverse)</span>}
+                <div className="ml-1 group relative inline-block">
+                  <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                  <span className="hidden group-hover:block absolute z-10 bg-black text-white text-xs rounded px-2 py-1 w-48 -left-20 top-6">
+                    {criterion.description || `${criterion.label} criterion`}
+                    {criterion.isInverse && " (Lower values are better)"}
+                  </span>
+                </div>
+              </label>
+              <div className="flex items-center">
+                <input
+                  type="text"
+                  value={weights[criterion.key] || 0}
+                  onChange={(e) => handleWeightChange(criterion.key, Number(e.target.value))}
+                  className="w-full p-2 text-center border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                />
+                <span className="ml-2">%</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="mt-4 flex items-center">
+          <div className={`font-medium ${totalWeight === 100 ? 'text-green-600' : 'text-red-500'}`}>
+            Total Weight: {totalWeight}%
+          </div>
+          {totalWeight !== 100 && (
+            <div className="ml-2 text-red-500 text-sm">
+              (Should equal 100%)
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Project Rating Section */}
+      <div>
+        <div className="text-center font-medium mb-4 text-gray-700">
+          Please rate using 1 to 5 scale (1 = very small ... 5 = very big)
+        </div>
+        
+        <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">No.</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projects</th>
+                {criteria.map(criterion => (
+                  <th key={criterion.id} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider relative">
+                    {criterion.label}
+                    <div className="group relative inline-block ml-1">
+                      <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400 hover:text-gray-600 inline-block" />
+                      <span className="hidden group-hover:block absolute z-10 bg-black text-white text-xs rounded px-2 py-1 w-48 -left-20 top-6">
+                        {criterion.description || `Impact on ${criterion.label}`}
+                        {criterion.isInverse && " (Lower values are better)"}
+                      </span>
+                    </div>
+                  </th>
+                ))}
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Portfolio Score</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">Rank</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {projectScores.map((project, index) => (
+                <tr key={project.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{index + 1}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{project.name}</td>
+                  
+                  {criteria.map(criterion => (
+                    <td key={`cell-${criterion.id}-${project.id}`} className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                      <input 
+                        type="text"
+                        value={project[criterion.key] as number || 1}
+                        onChange={(e) => handleRatingChange(project.id, criterion.key, Number(e.target.value))}
+                        className="w-16 p-2 text-center border border-gray-200 rounded-md shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
+                    </td>
+                  ))}
+                  
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold">
+                    {project.portfolioScore.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full 
+                      ${project.rank === 1 ? 'bg-green-100 text-green-800' : 
+                       project.rank === 2 ? 'bg-green-50 text-green-600' : 
+                       project.rank === 3 ? 'bg-yellow-100 text-yellow-800' : 
+                       project.rank === 4 ? 'bg-yellow-50 text-yellow-600' : 
+                      'bg-red-100 text-red-800'}`}>
+                      {project.rank}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        
+        <div className="mt-2 text-xs text-gray-500">
+          * Portfolio Score is calculated based on the weighted average of all criteria
+        </div>
+      </div>
     </div>
   );
 };

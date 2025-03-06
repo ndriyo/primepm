@@ -29,7 +29,7 @@ export const Sidebar = () => {
   return (
     <>
       {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-0 left-0 z-40 w-full bg-white shadow-sm p-4 flex items-center">
+      <div className="lg:hidden fixed top-16 left-0 z-40 w-full bg-white shadow-sm p-4 flex items-center">
         <button
           type="button"
           className="text-gray-500 hover:text-gray-600"
@@ -38,7 +38,13 @@ export const Sidebar = () => {
           <span className="sr-only">Open sidebar</span>
           <Bars3Icon className="h-6 w-6" aria-hidden="true" />
         </button>
-        <h1 className="ml-4 text-xl font-bold text-primary-600">PrimePM</h1>
+        <div className="ml-4 flex items-center">
+          <img
+            src="https://zwweamxsxemiefdlkgzn.supabase.co/storage/v1/object/public/asset/logo_transparent.png"
+            alt="PrimePM Logo"
+            className="h-8 mr-2"
+          />
+        </div>
       </div>
 
       {/* Mobile sidebar */}
@@ -50,24 +56,13 @@ export const Sidebar = () => {
       ></div>
 
       <div
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-lg transform transition-transform ease-in-out duration-300 flex flex-col ${
+        className={`fixed top-0 left-0 z-50 h-screen w-64 bg-white shadow-lg transform transition-transform ease-in-out duration-300 flex flex-col ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 lg:static lg:z-auto`}
+        } lg:translate-x-0 lg:static lg:z-auto lg:h-full`}
       >
-        <div className="flex items-center justify-between p-4 border-b">
-          <h1 className="text-xl font-bold text-primary-600">PrimePM</h1>
-          <button
-            type="button"
-            className="lg:hidden text-gray-500 hover:text-gray-600"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <span className="sr-only">Close sidebar</span>
-            <XMarkIcon className="h-6 w-6" aria-hidden="true" />
-          </button>
-        </div>
 
-        <nav className="mt-5 px-4 overflow-y-auto flex-1">
-          <ul className="space-y-2 pb-16">
+        <nav className="px-4 overflow-y-auto flex-1 py-5">
+          <ul className="space-y-2">
             {navigation.map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -94,22 +89,6 @@ export const Sidebar = () => {
             })}
           </ul>
         </nav>
-
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-white">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <img
-                className="h-8 w-8 rounded-full"
-                src="https://ui-avatars.com/api/?name=Admin+User&background=0284c7&color=fff"
-                alt="User avatar"
-              />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-700">Admin User</p>
-              <p className="text-xs font-medium text-gray-500">Project Manager</p>
-            </div>
-          </div>
-        </div>
       </div>
     </>
   );

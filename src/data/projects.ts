@@ -3,13 +3,7 @@ export interface Project {
   name: string;
   description: string;
   status: 'planning' | 'in-progress' | 'completed' | 'on-hold';
-  criteria: {
-    revenue: number; // Scale 1-10, higher is better
-    policyImpact: number; // Scale 1-10, higher is better
-    budget: number; // Scale 1-10, lower number is higher budget (inverse scale)
-    resources: number; // Scale 1-10, lower number is more resources (inverse scale)
-    complexity: number; // Scale 1-10, lower number is more complex (inverse scale)
-  };
+  criteria: Record<string, number>; // Dynamic criteria with scale 1-10
   startDate: string;
   endDate: string;
   team: string[];
@@ -238,42 +232,58 @@ export const projects: Project[] = [
 
 // Helper functions for working with project data
 
-export const calculateOverallScore = (project: Project, weights = {
-  revenue: 1,
-  policyImpact: 1,
-  budget: 1,
-  resources: 1, 
-  complexity: 1
-}) => {
-  const { revenue, policyImpact, budget, resources, complexity } = project.criteria;
-  const totalWeight = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
+export const calculateOverallScore = (
+  project: Project, 
+  weights: Record<string, number> = {},
+  inverseCriteria: string[] = []
+) => {
+  // Get all criteria keys that exist in the project
+  const criteriaKeys = Object.keys(project.criteria);
   
-  const score = (
-    (revenue * weights.revenue) +
-    (policyImpact * weights.policyImpact) +
-    (budget * weights.budget) +
-    (resources * weights.resources) +
-    (complexity * weights.complexity)
-  ) / totalWeight;
+  // Filter weights to only include criteria that exist in the project
+  const filteredWeights: Record<string, number> = {};
   
-  return parseFloat(score.toFixed(2));
+  // Default weight of 1 for all criteria if not specified
+  criteriaKeys.forEach(key => {
+    filteredWeights[key] = weights[key] || 1;
+  });
+  
+  const totalWeight = Object.values(filteredWeights).reduce((sum, weight) => sum + weight, 0);
+  
+  if (totalWeight === 0) return 0;
+  
+  let weightedSum = 0;
+  
+  // Calculate weighted sum, handling inverse criteria
+  criteriaKeys.forEach(key => {
+    let value = project.criteria[key];
+    const weight = filteredWeights[key] || 0;
+    
+    // For inverse criteria, invert the scale (10 - value + 1)
+    // This makes lower values score higher
+    if (inverseCriteria.includes(key)) {
+      value = 11 - value; // Invert scale: 1->10, 2->9, 3->8, etc.
+    }
+    
+    weightedSum += value * weight;
+  });
+  
+  return parseFloat((weightedSum / totalWeight).toFixed(2));
 };
 
 export const getProjectsByStatus = (status: Project['status']) => {
   return projects.filter(project => project.status === status);
 };
 
-export const getTopProjects = (count = 5, weights = {
-  revenue: 1,
-  policyImpact: 1,
-  budget: 1,
-  resources: 1,
-  complexity: 1
-}) => {
+export const getTopProjects = (
+  count = 5, 
+  weights: Record<string, number> = {},
+  inverseCriteria: string[] = []
+) => {
   return [...projects]
     .map(project => ({
       ...project,
-      score: calculateOverallScore(project, weights)
+      score: calculateOverallScore(project, weights, inverseCriteria)
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, count);

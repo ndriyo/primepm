@@ -1,12 +1,13 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Project, projects, calculateOverallScore } from '../data/projects';
+import { useCriteria } from './CriteriaContext';
 
 interface ProjectContextType {
   projects: Project[];
   selectedProject: Project | null;
   setSelectedProject: (project: Project | null) => void;
-  weightSettings: WeightSettings;
-  updateWeightSettings: (newSettings: Partial<WeightSettings>) => void;
+  weightSettings: Record<string, number>;
+  updateWeightSettings: (newSettings: Record<string, number>) => void;
   filteredProjects: Project[];
   setFilteredProjects: (projects: Project[]) => void;
   filterSettings: FilterSettings;
@@ -14,13 +15,7 @@ interface ProjectContextType {
   getProjectScore: (project: Project) => number;
 }
 
-export interface WeightSettings {
-  revenue: number;
-  policyImpact: number;
-  budget: number;
-  resources: number;
-  complexity: number;
-}
+// WeightSettings is now dynamic based on criteria
 
 export interface FilterSettings {
   status: string[];
@@ -30,13 +25,6 @@ export interface FilterSettings {
   searchTerm: string;
 }
 
-const defaultWeightSettings: WeightSettings = {
-  revenue: 1,
-  policyImpact: 1,
-  budget: 1,
-  resources: 1,
-  complexity: 1,
-};
 
 const defaultFilterSettings: FilterSettings = {
   status: [],
@@ -49,12 +37,23 @@ const defaultFilterSettings: FilterSettings = {
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export const ProjectProvider = ({ children }: { children: ReactNode }) => {
+  const { criteria } = useCriteria();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [weightSettings, setWeightSettings] = useState<WeightSettings>(defaultWeightSettings);
+  const [weightSettings, setWeightSettings] = useState<Record<string, number>>({});
   const [filteredProjects, setFilteredProjects] = useState<Project[]>(projects);
   const [filterSettings, setFilterSettings] = useState<FilterSettings>(defaultFilterSettings);
 
-  const updateWeightSettings = (newSettings: Partial<WeightSettings>) => {
+  // Initialize weight settings when criteria change
+  useEffect(() => {
+    const newWeightSettings: Record<string, number> = {};
+    criteria.forEach(criterion => {
+      // Keep existing weights if they exist, otherwise set to 1
+      newWeightSettings[criterion.key] = weightSettings[criterion.key] || 1;
+    });
+    setWeightSettings(newWeightSettings);
+  }, [criteria]);
+
+  const updateWeightSettings = (newSettings: Record<string, number>) => {
     setWeightSettings(prev => ({
       ...prev,
       ...newSettings,
@@ -69,7 +68,12 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const getProjectScore = (project: Project): number => {
-    return calculateOverallScore(project, weightSettings);
+    // Get inverse criteria keys
+    const inverseCriteria = criteria
+      .filter(criterion => criterion.isInverse)
+      .map(criterion => criterion.key);
+
+    return calculateOverallScore(project, weightSettings, inverseCriteria);
   };
 
   return (

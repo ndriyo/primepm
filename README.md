@@ -1,54 +1,80 @@
-# React + TypeScript + Vite
+# PrimePM - Project Portfolio Management Tool
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+PrimePM is a comprehensive project portfolio management application that helps organizations manage, prioritize, and select projects based on customizable criteria.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Dynamic Project Selection Criteria
 
-## Expanding the ESLint configuration
+- **Customizable Criteria**: Define your own project evaluation criteria beyond the default set (revenue impact, policy impact, budget, resources, complexity).
+- **Criteria Management**: Add, edit, and remove criteria as needed through an intuitive management interface.
+- **Inverse Scale Support**: Configure whether higher or lower values are preferable for each criterion (e.g., higher revenue is good, but lower cost is better).
+- **Persistent Settings**: Criteria definitions are saved in the browser's local storage for persistence between sessions.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Project Visualization
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+- **Matrix View**: Compare projects across different criteria using an interactive scatter plot where axes can be dynamically changed.
+- **Card View**: Browse projects in a card-based interface for quick overview and selection.
+- **Table View**: Detailed tabular view with dynamic columns based on defined criteria, allowing for custom weighting and scoring.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Project Management
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **Filtering & Sorting**: Filter projects by status, department, and search terms. Sort by various criteria or scores.
+- **Scoring System**: Calculate project scores based on weighted criteria, helping prioritize projects objectively.
+- **Status Tracking**: Track project status (planning, in-progress, completed, on-hold) throughout the lifecycle.
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+### Dashboard & Reporting
+
+- **Project Overview**: Get a quick view of your project portfolio status and health.
+- **Risk Analysis**: Visualize project risk factors using quadrant charts.
+- **Top Projects**: Identify highest-scoring projects based on your criteria weightings.
+
+## Technical Implementation
+
+PrimePM is built using modern web technologies:
+
+- **React**: Frontend framework for building the user interface
+- **TypeScript**: For type-safe code and better developer experience
+- **Tailwind CSS**: For responsive, utility-first styling
+- **Recharts**: For interactive data visualization
+- **Context API**: For state management across components
+
+## Project Structure
+
+- `/src/components/`: Reusable UI components
+  - `/dashboard/`: Dashboard-specific components
+  - `/layout/`: Layout components like sidebar and main container
+  - `/project-selection/`: Components for the project selection functionality
+- `/src/contexts/`: React contexts for state management
+  - `ProjectContext.tsx`: Manages project data and selection state
+  - `CriteriaContext.tsx`: Manages custom criteria definitions
+- `/src/data/`: Data models and sample data
+- `/src/pages/`: Main application pages
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start the development server: `npm run dev`
+4. Open your browser to the URL shown in the terminal (typically http://localhost:5173)
+
+## Using the Criteria Management System
+
+1. Navigate to the "Project Selection" page
+2. Click the "Manage Criteria" button
+3. From here you can:
+   - View all existing criteria
+   - Add new criteria with the "Add New Criterion" button
+   - Edit existing criteria by clicking the "Edit" button
+   - Delete custom criteria by clicking the "Delete" button (note: default criteria cannot be deleted)
+   - Reset to default criteria with the "Reset to Defaults" button
+
+When defining criteria, consider:
+- **Key**: A unique identifier for the criterion (camelCase, no spaces)
+- **Label**: User-friendly name displayed in the UI
+- **Description**: Detailed explanation of what the criterion measures
+- **Inverse Scale**: Whether lower values are better (e.g., for cost, risk, etc.)
+
+## License
+
+[MIT License](LICENSE)

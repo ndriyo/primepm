@@ -1,6 +1,8 @@
+'use client';
+
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { Project, projects, calculateOverallScore } from '../data/projects';
-import { useCriteria } from './CriteriaContext';
+import { Project, projects, calculateOverallScore } from '@/src/data/projects';
+import { useCriteria } from '@/app/contexts/CriteriaContext';
 
 interface ProjectContextType {
   projects: Project[];

@@ -1,20 +1,43 @@
-import { useEffect } from 'react';
-import { useProjects } from '../contexts/ProjectContext';
-import { ProjectRadarChart } from '../components/project-selection/ProjectRadarChart';
-import { useNavigate } from 'react-router-dom';
+'use client';
 
-export const ProjectDetails = () => {
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useProjects } from '@/app/contexts/ProjectContext';
+import { ProjectRadarChart } from '@/src/components/project-selection/ProjectRadarChart';
+import { Project } from '@/src/data/projects';
+
+interface ProjectDetailsProps {
+  projectId?: string;
+}
+
+export const ProjectDetails = ({ projectId }: ProjectDetailsProps) => {
   const { selectedProject, projects, setSelectedProject } = useProjects();
-  const navigate = useNavigate();
+  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const router = useRouter();
   
   useEffect(() => {
-    // If no project is selected, redirect to selection page
-    if (!selectedProject) {
-      navigate('/selection');
+    // If projectId is provided, find the project by ID
+    if (projectId) {
+      const project = projects.find(p => p.id === projectId);
+      if (project) {
+        setSelectedProject(project);
+        setCurrentProject(project);
+      } else {
+        // If project ID is invalid, redirect to selection page
+        router.push('/selection');
+      }
+    } 
+    // If no projectId but selectedProject exists in context, use that
+    else if (selectedProject) {
+      setCurrentProject(selectedProject);
+    } 
+    // If neither projectId nor selectedProject, redirect to selection
+    else {
+      router.push('/selection');
     }
-  }, [selectedProject, navigate]);
+  }, [projectId, selectedProject, projects, setSelectedProject, router]);
   
-  if (!selectedProject) {
+  if (!currentProject) {
     return <div>Loading...</div>;
   }
   
@@ -29,7 +52,7 @@ export const ProjectDetails = () => {
   };
   
   const handleChangeProject = (direction: 'next' | 'prev') => {
-    const currentIndex = projects.findIndex(p => p.id === selectedProject.id);
+    const currentIndex = projects.findIndex(p => p.id === currentProject.id);
     if (currentIndex === -1) return;
     
     let newIndex;
@@ -39,7 +62,12 @@ export const ProjectDetails = () => {
       newIndex = (currentIndex - 1 + projects.length) % projects.length;
     }
     
-    setSelectedProject(projects[newIndex]);
+    const nextProject = projects[newIndex];
+    setSelectedProject(nextProject);
+    setCurrentProject(nextProject);
+    
+    // Update URL to reflect the new project ID
+    router.push(`/details/${nextProject.id}`);
   };
 
   return (
@@ -74,38 +102,38 @@ export const ProjectDetails = () => {
           <div className="card h-full">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">{selectedProject.name}</h2>
-                <p className="text-sm text-gray-600">{selectedProject.department}</p>
+                <h2 className="text-xl font-bold text-gray-900">{currentProject.name}</h2>
+                <p className="text-sm text-gray-600">{currentProject.department}</p>
               </div>
               <span
                 className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                  selectedProject.status
+                  currentProject.status
                 )}`}
               >
-                {selectedProject.status.charAt(0).toUpperCase() + selectedProject.status.slice(1).replace('-', ' ')}
+                {currentProject.status.charAt(0).toUpperCase() + currentProject.status.slice(1).replace('-', ' ')}
               </span>
             </div>
             
-            <p className="text-gray-700 mb-6">{selectedProject.description}</p>
+            <p className="text-gray-700 mb-6">{currentProject.description}</p>
             
             <div className="grid grid-cols-2 gap-x-6 gap-y-4 mb-6">
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Start Date</h3>
                 <p className="text-base font-medium text-gray-900">
-                  {new Date(selectedProject.startDate).toLocaleDateString()}
+                  {new Date(currentProject.startDate).toLocaleDateString()}
                 </p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-500">End Date</h3>
                 <p className="text-base font-medium text-gray-900">
-                  {new Date(selectedProject.endDate).toLocaleDateString()}
+                  {new Date(currentProject.endDate).toLocaleDateString()}
                 </p>
               </div>
               <div className="col-span-2">
                 <h3 className="text-sm font-medium text-gray-500">Duration</h3>
                 <p className="text-base font-medium text-gray-900">
                   {Math.ceil(
-                    (new Date(selectedProject.endDate).getTime() - new Date(selectedProject.startDate).getTime()) /
+                    (new Date(currentProject.endDate).getTime() - new Date(currentProject.startDate).getTime()) /
                       (1000 * 60 * 60 * 24 * 30)
                   )}{' '}
                   months
@@ -116,7 +144,7 @@ export const ProjectDetails = () => {
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-500 mb-2">Team Members</h3>
               <div className="flex flex-wrap gap-2">
-                {selectedProject.team.map((member, index) => (
+                {currentProject.team.map((member, index) => (
                   <div key={index} className="flex items-center bg-gray-100 rounded-full px-3 py-1">
                     <div className="flex-shrink-0 h-6 w-6 rounded-full bg-primary-500 flex items-center justify-center text-white text-xs font-medium mr-2">
                       {member.split(' ').map(n => n[0]).join('')}
@@ -130,7 +158,7 @@ export const ProjectDetails = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-2">Tags</h3>
               <div className="flex flex-wrap gap-2">
-                {selectedProject.tags.map((tag) => (
+                {currentProject.tags.map((tag) => (
                   <span
                     key={tag}
                     className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
@@ -145,18 +173,18 @@ export const ProjectDetails = () => {
         
         <div className="card">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Criteria Analysis</h3>
-          <ProjectRadarChart project={selectedProject} />
+          <ProjectRadarChart project={currentProject} />
           
           <div className="mt-6 space-y-4">
             <div>
               <div className="flex justify-between items-center mb-1">
                 <h4 className="text-sm font-medium text-gray-700">Revenue Impact</h4>
-                <span className="text-sm font-medium text-gray-900">{selectedProject.criteria.revenue}/10</span>
+                <span className="text-sm font-medium text-gray-900">{currentProject.criteria.revenue}/10</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-green-500 h-2 rounded-full"
-                  style={{ width: `${selectedProject.criteria.revenue * 10}%` }}
+                  style={{ width: `${currentProject.criteria.revenue * 10}%` }}
                 ></div>
               </div>
             </div>
@@ -164,12 +192,12 @@ export const ProjectDetails = () => {
             <div>
               <div className="flex justify-between items-center mb-1">
                 <h4 className="text-sm font-medium text-gray-700">Policy Impact</h4>
-                <span className="text-sm font-medium text-gray-900">{selectedProject.criteria.policyImpact}/10</span>
+                <span className="text-sm font-medium text-gray-900">{currentProject.criteria.policyImpact}/10</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-blue-500 h-2 rounded-full"
-                  style={{ width: `${selectedProject.criteria.policyImpact * 10}%` }}
+                  style={{ width: `${currentProject.criteria.policyImpact * 10}%` }}
                 ></div>
               </div>
             </div>
@@ -177,12 +205,12 @@ export const ProjectDetails = () => {
             <div>
               <div className="flex justify-between items-center mb-1">
                 <h4 className="text-sm font-medium text-gray-700">Budget (Lower is Higher)</h4>
-                <span className="text-sm font-medium text-gray-900">{selectedProject.criteria.budget}/10</span>
+                <span className="text-sm font-medium text-gray-900">{currentProject.criteria.budget}/10</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-yellow-500 h-2 rounded-full"
-                  style={{ width: `${selectedProject.criteria.budget * 10}%` }}
+                  style={{ width: `${currentProject.criteria.budget * 10}%` }}
                 ></div>
               </div>
             </div>
@@ -190,12 +218,12 @@ export const ProjectDetails = () => {
             <div>
               <div className="flex justify-between items-center mb-1">
                 <h4 className="text-sm font-medium text-gray-700">Resources (Lower is More)</h4>
-                <span className="text-sm font-medium text-gray-900">{selectedProject.criteria.resources}/10</span>
+                <span className="text-sm font-medium text-gray-900">{currentProject.criteria.resources}/10</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-orange-500 h-2 rounded-full"
-                  style={{ width: `${selectedProject.criteria.resources * 10}%` }}
+                  style={{ width: `${currentProject.criteria.resources * 10}%` }}
                 ></div>
               </div>
             </div>
@@ -203,12 +231,12 @@ export const ProjectDetails = () => {
             <div>
               <div className="flex justify-between items-center mb-1">
                 <h4 className="text-sm font-medium text-gray-700">Complexity (Lower is More Complex)</h4>
-                <span className="text-sm font-medium text-gray-900">{selectedProject.criteria.complexity}/10</span>
+                <span className="text-sm font-medium text-gray-900">{currentProject.criteria.complexity}/10</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-red-500 h-2 rounded-full"
-                  style={{ width: `${selectedProject.criteria.complexity * 10}%` }}
+                  style={{ width: `${currentProject.criteria.complexity * 10}%` }}
                 ></div>
               </div>
             </div>
@@ -230,7 +258,7 @@ export const ProjectDetails = () => {
             </div>
             <div>
               <h4 className="text-base font-medium text-gray-900">Project Start</h4>
-              <p className="text-sm text-gray-600">{new Date(selectedProject.startDate).toLocaleDateString()}</p>
+              <p className="text-sm text-gray-600">{new Date(currentProject.startDate).toLocaleDateString()}</p>
               <p className="mt-1 text-sm text-gray-600">Kickoff meeting and initial planning</p>
             </div>
           </div>
@@ -243,7 +271,7 @@ export const ProjectDetails = () => {
             </div>
             <div>
               <h4 className="text-base font-medium text-gray-900">Milestone: Requirements Completed</h4>
-              <p className="text-sm text-gray-600">{new Date(new Date(selectedProject.startDate).setMonth(new Date(selectedProject.startDate).getMonth() + 1)).toLocaleDateString()}</p>
+              <p className="text-sm text-gray-600">{new Date(new Date(currentProject.startDate).setMonth(new Date(currentProject.startDate).getMonth() + 1)).toLocaleDateString()}</p>
               <p className="mt-1 text-sm text-gray-600">All project requirements finalized and approved</p>
             </div>
           </div>
@@ -256,7 +284,7 @@ export const ProjectDetails = () => {
             </div>
             <div>
               <h4 className="text-base font-medium text-gray-900">Milestone: Development Complete</h4>
-              <p className="text-sm text-gray-600">{new Date(new Date(selectedProject.endDate).setMonth(new Date(selectedProject.endDate).getMonth() - 1)).toLocaleDateString()}</p>
+              <p className="text-sm text-gray-600">{new Date(new Date(currentProject.endDate).setMonth(new Date(currentProject.endDate).getMonth() - 1)).toLocaleDateString()}</p>
               <p className="mt-1 text-sm text-gray-600">Core development phase completed</p>
             </div>
           </div>
@@ -269,7 +297,7 @@ export const ProjectDetails = () => {
             </div>
             <div>
               <h4 className="text-base font-medium text-gray-900">Project Completion</h4>
-              <p className="text-sm text-gray-600">{new Date(selectedProject.endDate).toLocaleDateString()}</p>
+              <p className="text-sm text-gray-600">{new Date(currentProject.endDate).toLocaleDateString()}</p>
               <p className="mt-1 text-sm text-gray-600">Project closure and handover</p>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
-import { Project } from '../../data/projects';
+import { Project } from '@/src/data/projects';
 
 interface ProjectRadarChartProps {
   project: Project;

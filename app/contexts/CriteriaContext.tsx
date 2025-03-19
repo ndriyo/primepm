@@ -1,3 +1,5 @@
+'use client';
+
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export interface Criterion {
@@ -34,14 +36,20 @@ const CriteriaContext = createContext<CriteriaContextType | undefined>(undefined
 
 export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
   const [criteria, setCriteria] = useState<Criterion[]>(() => {
-    // Try to load from localStorage
-    const savedCriteria = localStorage.getItem(STORAGE_KEY);
-    return savedCriteria ? JSON.parse(savedCriteria) : defaultCriteria;
+    // Make sure localStorage is only accessed in the browser
+    if (typeof window !== 'undefined') {
+      // Try to load from localStorage
+      const savedCriteria = localStorage.getItem(STORAGE_KEY);
+      return savedCriteria ? JSON.parse(savedCriteria) : defaultCriteria;
+    }
+    return defaultCriteria;
   });
 
   // Save to localStorage whenever criteria change
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(criteria));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(criteria));
+    }
   }, [criteria]);
 
   const getDefaultCriteria = (): Criterion[] => {

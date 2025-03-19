@@ -1,4 +1,4 @@
-import { projects } from '../../data/projects';
+import { projects } from '@/src/data/projects';
 
 export const MetricsSummary = () => {
   const totalProjects = projects.length;

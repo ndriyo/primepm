@@ -1,20 +1,25 @@
+'use client';
+
 import { useState } from 'react';
-import { Project } from '../data/projects';
-import { useProjects } from '../contexts/ProjectContext';
-import { ProjectCard } from '../components/project-selection/ProjectCard';
-import { ProjectMatrix } from '../components/project-selection/ProjectMatrix';
-import { ProjectSelectionTable } from '../components/project-selection/ProjectSelectionTable';
-import { CriteriaManagement } from '../components/project-selection/CriteriaManagement';
+import { Project } from '@/src/data/projects';
+import { useProjects } from '@/app/contexts/ProjectContext';
+import { useRouter } from 'next/navigation';
+import { ProjectCard } from '@/src/components/project-selection/ProjectCard';
+import { ProjectMatrix } from '@/src/components/project-selection/ProjectMatrix';
+import { ProjectSelectionTable } from '@/src/components/project-selection/ProjectSelectionTable';
+import { CriteriaManagement } from '@/src/components/project-selection/CriteriaManagement';
 
 export const ProjectSelection = () => {
   const { projects, setSelectedProject } = useProjects();
   const [viewMode, setViewMode] = useState<'matrix' | 'cards' | 'table' | 'criteria'>('table');
+  const router = useRouter();
   
   // Filter projects to only show those in planning status
   const filteredProjects = projects.filter(project => project.status === 'planning');
 
   const handleSelectProject = (project: Project) => {
     setSelectedProject(project);
+    router.push(`/details/${project.id}`);
   };
 
   return (
@@ -69,7 +74,10 @@ export const ProjectSelection = () => {
           )}
           
           {viewMode === 'table' && (
-            <ProjectSelectionTable projects={filteredProjects} />
+            <ProjectSelectionTable 
+              projects={filteredProjects} 
+              onSelectProject={handleSelectProject} 
+            />
           )}
           
           {viewMode === 'criteria' && (

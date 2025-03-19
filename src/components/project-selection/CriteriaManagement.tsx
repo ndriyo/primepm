@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useCriteria, Criterion } from '../../contexts/CriteriaContext';
+import { useCriteria, Criterion } from '@/app/contexts/CriteriaContext';
 
 interface CriteriaFormData {
   key: string;

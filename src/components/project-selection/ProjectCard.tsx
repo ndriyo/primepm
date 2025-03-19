@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Project, calculateOverallScore } from '../../data/projects';
-import { useProjects } from '../../contexts/ProjectContext';
+import { Project, calculateOverallScore } from '@/src/data/projects';
+import { useProjects } from '@/app/contexts/ProjectContext';
 import { ProjectRadarChart } from './ProjectRadarChart';
 
 interface ProjectCardProps {

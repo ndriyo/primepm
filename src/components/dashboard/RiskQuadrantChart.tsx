@@ -1,5 +1,5 @@
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ZAxis } from 'recharts';
-import { useProjects } from '../../contexts/ProjectContext';
+import { useProjects } from '@/app/contexts/ProjectContext';
 
 export const RiskQuadrantChart = () => {
   const { projects } = useProjects();

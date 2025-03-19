@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Project } from '../../data/projects';
-import { useProjects } from '../../contexts/ProjectContext';
-import { useCriteria } from '../../contexts/CriteriaContext';
+import { Project } from '@/src/data/projects';
+import { useProjects } from '@/app/contexts/ProjectContext';
+import { useCriteria } from '@/app/contexts/CriteriaContext';
 
 interface ProjectMatrixProps {
   projects: Project[];

@@ -1,0 +1,29 @@
+-- Seed data script for PrimePM database in Supabase (Part 3: Projects and Scores)
+-- Run this script after seed_02_criteria.sql
+
+-- Projects for Acme Corp
+INSERT INTO projects (id, organization_id, department_id, name, description, status, start_date, end_date, budget, resources, tags, created_by, updated_by) VALUES
+  ('c1c1c1c1-c1c1-c1c1-c1c1-c1c1c1c1c1c1', '11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', 'Digital Transformation Initiative', 'Enterprise-wide digital transformation to modernize legacy systems and implement cloud solutions.', 'in-progress', '2025-01-15', '2025-12-31', 1500000, 2400, ARRAY['digital', 'cloud', 'transformation', 'high-priority'], 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
+  ('c2c2c2c2-c2c2-c2c2-c2c2-c2c2c2c2c2c2', '11111111-1111-1111-1111-111111111111', '44444444-4444-4444-4444-444444444444', 'Customer Experience Redesign', 'Redesign the customer experience journey across all touchpoints to improve satisfaction and loyalty.', 'planning', '2025-04-01', '2025-09-30', 750000, 1200, ARRAY['customer-experience', 'design', 'marketing'], 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
+  ('c3c3c3c3-c3c3-c3c3-c3c3-c3c3c3c3c3c3', '11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', 'Supply Chain Optimization', 'Optimize the supply chain to reduce costs and improve delivery times.', 'in-progress', '2025-02-10', '2025-08-15', 850000, 1500, ARRAY['supply-chain', 'optimization', 'logistics'], 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'dddddddd-dddd-dddd-dddd-dddddddddddd');
+
+-- Projects for TechInnovate
+INSERT INTO projects (id, organization_id, department_id, name, description, status, start_date, end_date, budget, resources, tags, created_by, updated_by) VALUES
+  ('d1d1d1d1-d1d1-d1d1-d1d1-d1d1d1d1d1d1', '22222222-2222-2222-2222-222222222222', '66666666-6666-6666-6666-666666666666', 'AI Assistant Implementation', 'Implement AI-powered assistants across customer service and internal support functions.', 'planning', '2025-04-15', '2025-11-30', 950000, 1800, ARRAY['ai', 'automation', 'customer-service', 'innovation'], 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'),
+  ('d2d2d2d2-d2d2-d2d2-d2d2-d2d2d2d2d2d2', '22222222-2222-2222-2222-222222222222', '77777777-7777-7777-7777-777777777777', 'New Product Launch: Smart Office', 'Launch a new product line focused on smart office technologies.', 'planning', '2025-06-01', '2026-01-31', 1200000, 2100, ARRAY['product-launch', 'innovation', 'tech', 'high-priority'], 'ffffffff-ffff-ffff-ffff-ffffffffffff', 'ffffffff-ffff-ffff-ffff-ffffffffffff');
+
+-- Project Criteria Scores for Acme's Digital Transformation Initiative
+INSERT INTO project_criteria_scores (id, project_id, criterion_id, version_id, score, comment, created_by, updated_by) VALUES
+  (uuid_generate_v4(), 'c1c1c1c1-c1c1-c1c1-c1c1-c1c1c1c1c1c1', 'a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1', '88888888-8888-8888-8888-888888888888', 9, 'Expected to generate significant savings through improved efficiency', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
+  (uuid_generate_v4(), 'c1c1c1c1-c1c1-c1c1-c1c1-c1c1c1c1c1c1', 'a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', '88888888-8888-8888-8888-888888888888', 8, 'Aligns with digital transformation strategy', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
+  (uuid_generate_v4(), 'c1c1c1c1-c1c1-c1c1-c1c1-c1c1c1c1c1c1', 'a3a3a3a3-a3a3-a3a3-a3a3-a3a3a3a3a3a3', '88888888-8888-8888-8888-888888888888', 3, 'Significant investment required', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
+  (uuid_generate_v4(), 'c1c1c1c1-c1c1-c1c1-c1c1-c1c1c1c1c1c1', 'a4a4a4a4-a4a4-a4a4-a4a4-a4a4a4a4a4a4', '88888888-8888-8888-8888-888888888888', 2, 'Requires substantial resources across multiple departments', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
+  (uuid_generate_v4(), 'c1c1c1c1-c1c1-c1c1-c1c1-c1c1c1c1c1c1', 'a5a5a5a5-a5a5-a5a5-a5a5-a5a5a5a5a5a5', '88888888-8888-8888-8888-888888888888', 2, 'Very complex implementation', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
+
+-- Project Criteria Scores for Acme's Customer Experience Redesign
+INSERT INTO project_criteria_scores (id, project_id, criterion_id, version_id, score, comment, created_by, updated_by) VALUES
+  (uuid_generate_v4(), 'c2c2c2c2-c2c2-c2c2-c2c2-c2c2c2c2c2c2', 'a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1', '88888888-8888-8888-8888-888888888888', 7, 'Expected to increase customer retention and sales', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
+  (uuid_generate_v4(), 'c2c2c2c2-c2c2-c2c2-c2c2-c2c2c2c2c2c2', 'a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2', '88888888-8888-8888-8888-888888888888', 6, 'Aligns with customer-centric strategy', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
+  (uuid_generate_v4(), 'c2c2c2c2-c2c2-c2c2-c2c2-c2c2c2c2c2c2', 'a3a3a3a3-a3a3-a3a3-a3a3-a3a3a3a3a3a3', '88888888-8888-8888-8888-888888888888', 5, 'Moderate investment required', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
+  (uuid_generate_v4(), 'c2c2c2c2-c2c2-c2c2-c2c2-c2c2c2c2c2c2', 'a4a4a4a4-a4a4-a4a4-a4a4-a4a4a4a4a4a4', '88888888-8888-8888-8888-888888888888', 4, 'Marketing department resources primarily', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
+  (uuid_generate_v4(), 'c2c2c2c2-c2c2-c2c2-c2c2-c2c2c2c2c2c2', 'a5a5a5a5-a5a5-a5a5-a5a5-a5a5a5a5a5a5', '88888888-8888-8888-8888-888888888888', 5, 'Moderate complexity', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');

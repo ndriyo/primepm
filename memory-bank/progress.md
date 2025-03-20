@@ -35,23 +35,30 @@
 - Deployment configuration:
   - Netlify deployment setup with netlify.toml
   - Next.js build output configuration
+- Database schema and persistence layer:
+  - Prisma ORM schema defined for all entities
+  - SQL migration scripts for database setup with PostgreSQL
+  - Repository pattern implementation for data access
+  - Audit logging for all CRUD operations
+  - Entity relationships and type definitions
+  - Multi-tenant data isolation with RLS
+  - Role-based access control
 
 ## In Progress
-- Connecting to database for project persistence
+- Connecting frontend components to database repositories
 - Committee review interface
 
-## Not Started
-- Supabase integration
-- Authentication system
-- User role management
-- Multi-tenant functionality
+## Next Steps
+- Authentication system implementation with NextAuth
+- User role management UI
+- Multi-tenant UI customization
 - Portfolio simulation based on constraints
 - Data export/import functionality
+- Excel import for project bulk creation
 
 ## Known Issues
-- Using placeholder data instead of actual database
+- Frontend still using placeholder data instead of actual database
 - Missing authentication and authorization
 - Project selection algorithm not fully implemented
-- No data persistence between sessions
-- Criteria weights need to be recalculated when criteria are added or removed
 - Form data is not persisted if user navigates away
+- Criteria weights need to be recalculated when criteria are added or removed

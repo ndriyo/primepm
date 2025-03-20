@@ -1,16 +1,16 @@
 'use client';
 
 import { PageLayout } from '@/components/layout/PageLayout';
-import { ProjectDetails } from '@/app/components/project-details/ProjectDetails';
+import { ProjectInformation } from '@/app/components/project-details/ProjectInformation';
 import { useParams } from 'next/navigation';
 
-export default function ProjectDetailsPage() {
+export default function ProjectInformationPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   
   return (
     <PageLayout>
-      <ProjectDetails projectId={projectId} />
+      <ProjectInformation projectId={projectId} />
     </PageLayout>
   );
 }

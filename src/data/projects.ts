@@ -9,6 +9,7 @@ export interface Project {
   team: string[];
   department: string;
   tags: string[];
+  budget?: number; // Project budget in currency units
 }
 
 export const projects: Project[] = [

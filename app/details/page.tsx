@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProjects } from '@/app/contexts/ProjectContext';
 
-export default function ProjectDetailsPage() {
+export default function ProjectInformationPage() {
   const router = useRouter();
   const { projects, selectedProject } = useProjects();
   
@@ -26,7 +26,7 @@ export default function ProjectDetailsPage() {
   // This page doesn't render anything, it just redirects
   return (
     <div className="flex justify-center items-center h-32">
-      <p>Redirecting to project details...</p>
+      <p>Redirecting to project information...</p>
     </div>
   );
 }

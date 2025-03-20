@@ -9,7 +9,8 @@ import {
   DocumentTextIcon,
   HomeIcon,
   Bars3Icon,
-  AdjustmentsHorizontalIcon
+  AdjustmentsHorizontalIcon,
+  PlusCircleIcon
 } from '@heroicons/react/24/outline';
 
 interface NavItem {
@@ -21,7 +22,7 @@ interface NavItem {
 const navigation: NavItem[] = [
   { name: 'Dashboard', path: '/', icon: HomeIcon },
   { name: 'Project Selection', path: '/selection', icon: ViewColumnsIcon },
-  { name: 'Project Details', path: '/details', icon: DocumentTextIcon },
+  { name: 'Project Information', path: '/details', icon: DocumentTextIcon },
   { name: 'Criteria Management', path: '/criteria', icon: AdjustmentsHorizontalIcon },
   { name: 'Reports', path: '/reports', icon: ChartPieIcon },
 ];

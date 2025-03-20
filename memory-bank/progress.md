@@ -22,12 +22,23 @@
 - Custom UI components:
   - Confirmation dialogs with improved UX
   - Warning notifications for incomplete weights
+- Project entry and self-assessment:
+  - Multi-step form with progress tracking
+  - Basic information entry (name, description, department, budget, duration, resources, tags) with proper formatting
+  - Self-assessment using card-based option selection with descriptions for each score
+  - Project review and submission workflow with formatted values
+  - Cancel button for easy navigation back to project list
+- Project information display:
+  - Clean presentation of project details
+  - Resources display with thousand separator formatting
+  - Criteria analysis with visual indicators
 - Deployment configuration:
   - Netlify deployment setup with netlify.toml
   - Next.js build output configuration
 
 ## In Progress
-- Entry basic project info & self assessment
+- Connecting to database for project persistence
+- Committee review interface
 
 ## Not Started
 - Supabase integration
@@ -43,3 +54,4 @@
 - Project selection algorithm not fully implemented
 - No data persistence between sessions
 - Criteria weights need to be recalculated when criteria are added or removed
+- Form data is not persisted if user navigates away

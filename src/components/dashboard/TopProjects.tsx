@@ -1,9 +1,16 @@
-import { useProjects } from '../../contexts/ProjectContext';
-import { getTopProjects } from '../../data/projects';
+import { useProjects } from '@/app/contexts/ProjectContext';
+import { getTopProjects, Project } from '@/src/data/projects';
+import { useRouter } from 'next/navigation';
 
 export const TopProjects = () => {
-  const { weightSettings } = useProjects();
+  const { weightSettings, setSelectedProject } = useProjects();
   const topProjects = getTopProjects(5, weightSettings);
+  const router = useRouter();
+  
+  const handleProjectClick = (project: Project) => {
+    setSelectedProject(project);
+    router.push(`/details/${project.id}`);
+  };
 
   return (
     <div className="card overflow-hidden">
@@ -28,7 +35,11 @@ export const TopProjects = () => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {topProjects.map((project) => (
-              <tr key={project.id} className="hover:bg-gray-50">
+              <tr 
+                key={project.id} 
+                className="hover:bg-gray-50 cursor-pointer"
+                onClick={() => handleProjectClick(project)}
+              >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">{project.name}</div>
                 </td>

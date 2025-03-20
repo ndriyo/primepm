@@ -1,5 +1,5 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { getStatusCounts } from '../../data/projects';
+import { getStatusCounts } from '@/src/data/projects';
 
 const STATUS_COLORS = {
   'planning': '#60a5fa', // blue-400

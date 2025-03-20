@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Project } from '../../data/projects';
-import { useCriteria } from '../../contexts/CriteriaContext';
+import { Project } from '@/src/data/projects';
+import { useCriteria } from '@/app/contexts/CriteriaContext';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 
 interface ProjectRating {
@@ -16,9 +16,10 @@ interface ProjectScore extends ProjectRating {
 
 interface ProjectSelectionTableProps {
   projects: Project[];
+  onSelectProject?: (project: Project) => void;
 }
 
-export const ProjectSelectionTable = ({ projects }: ProjectSelectionTableProps) => {
+export const ProjectSelectionTable = ({ projects, onSelectProject }: ProjectSelectionTableProps) => {
   const { criteria } = useCriteria();
 
   // Initialize weights with dynamic criteria keys
@@ -219,7 +220,11 @@ export const ProjectSelectionTable = ({ projects }: ProjectSelectionTableProps) 
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {projectScores.map((project, index) => (
-                <tr key={project.id} className="hover:bg-gray-50">
+                <tr 
+                  key={project.id} 
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onClick={() => onSelectProject && onSelectProject(projects.find(p => p.id === project.id)!)}
+                >
                   <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{index + 1}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{project.name}</td>
                   

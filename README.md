@@ -1,80 +1,77 @@
-# PrimePM - Project Portfolio Management Tool
+# PrimePM - Project Management Application
 
-PrimePM is a comprehensive project portfolio management application that helps organizations manage, prioritize, and select projects based on customizable criteria.
+PrimePM is a project management application built with React and Next.js, designed to help organizations manage, prioritize, and visualize their project portfolio.
 
 ## Features
 
-### Dynamic Project Selection Criteria
+- **Dashboard**: Overview of project metrics, risk assessments, and top projects
+- **Project Selection**: Matrix view, table view, and card view for selecting projects based on criteria
+- **Project Details**: Detailed view of a specific project with timeline and criteria analysis
+- **Reports**: Generate various reports by department, status, criteria, or timeline
 
-- **Customizable Criteria**: Define your own project evaluation criteria beyond the default set (revenue impact, policy impact, budget, resources, complexity).
-- **Criteria Management**: Add, edit, and remove criteria as needed through an intuitive management interface.
-- **Inverse Scale Support**: Configure whether higher or lower values are preferable for each criterion (e.g., higher revenue is good, but lower cost is better).
-- **Persistent Settings**: Criteria definitions are saved in the browser's local storage for persistence between sessions.
+## Tech Stack
 
-### Project Visualization
-
-- **Matrix View**: Compare projects across different criteria using an interactive scatter plot where axes can be dynamically changed.
-- **Card View**: Browse projects in a card-based interface for quick overview and selection.
-- **Table View**: Detailed tabular view with dynamic columns based on defined criteria, allowing for custom weighting and scoring.
-
-### Project Management
-
-- **Filtering & Sorting**: Filter projects by status, department, and search terms. Sort by various criteria or scores.
-- **Scoring System**: Calculate project scores based on weighted criteria, helping prioritize projects objectively.
-- **Status Tracking**: Track project status (planning, in-progress, completed, on-hold) throughout the lifecycle.
-
-### Dashboard & Reporting
-
-- **Project Overview**: Get a quick view of your project portfolio status and health.
-- **Risk Analysis**: Visualize project risk factors using quadrant charts.
-- **Top Projects**: Identify highest-scoring projects based on your criteria weightings.
-
-## Technical Implementation
-
-PrimePM is built using modern web technologies:
-
-- **React**: Frontend framework for building the user interface
-- **TypeScript**: For type-safe code and better developer experience
-- **Tailwind CSS**: For responsive, utility-first styling
-- **Recharts**: For interactive data visualization
-- **Context API**: For state management across components
-
-## Project Structure
-
-- `/src/components/`: Reusable UI components
-  - `/dashboard/`: Dashboard-specific components
-  - `/layout/`: Layout components like sidebar and main container
-  - `/project-selection/`: Components for the project selection functionality
-- `/src/contexts/`: React contexts for state management
-  - `ProjectContext.tsx`: Manages project data and selection state
-  - `CriteriaContext.tsx`: Manages custom criteria definitions
-- `/src/data/`: Data models and sample data
-- `/src/pages/`: Main application pages
+- **Frontend Framework**: Next.js with React
+- **Styling**: Tailwind CSS
+- **Charts and Visualizations**: Recharts
+- **UI Components**: Headless UI and Heroicons
+- **State Management**: React Context API
 
 ## Getting Started
 
+### Prerequisites
+
+- Node.js (version 18 or newer)
+- npm or yarn
+
+### Installation
+
 1. Clone the repository
-2. Install dependencies: `npm install`
-3. Start the development server: `npm run dev`
-4. Open your browser to the URL shown in the terminal (typically http://localhost:5173)
+```bash
+git clone [repository-url]
+cd primepm
+```
 
-## Using the Criteria Management System
+2. Install dependencies
+```bash
+npm install
+```
 
-1. Navigate to the "Project Selection" page
-2. Click the "Manage Criteria" button
-3. From here you can:
-   - View all existing criteria
-   - Add new criteria with the "Add New Criterion" button
-   - Edit existing criteria by clicking the "Edit" button
-   - Delete custom criteria by clicking the "Delete" button (note: default criteria cannot be deleted)
-   - Reset to default criteria with the "Reset to Defaults" button
+3. Run the development server
+```bash
+npm run dev
+```
 
-When defining criteria, consider:
-- **Key**: A unique identifier for the criterion (camelCase, no spaces)
-- **Label**: User-friendly name displayed in the UI
-- **Description**: Detailed explanation of what the criterion measures
-- **Inverse Scale**: Whether lower values are better (e.g., for cost, risk, etc.)
+4. Open [http://localhost:3000](http://localhost:3000) with your browser to see the application
 
-## License
+## Build for Production
 
-[MIT License](LICENSE)
+To build the application for production:
+
+```bash
+npm run build
+```
+
+To start the production server:
+
+```bash
+npm start
+```
+
+## Project Structure
+
+- `/app`: Next.js App Router pages and layouts
+- `/components`: Reusable React components
+- `/app/contexts`: React Context providers
+- `/src/data`: Data models and mock data
+- `/src/pages`: Original page components
+- `/public`: Static assets
+
+## Migration Notes
+
+This project was migrated from a Vite-based React application to Next.js with the App Router. The migration includes:
+
+1. Converting the routing system from React Router to Next.js App Router
+2. Setting up server-side rendering (SSR) capabilities
+3. Organizing components in the Next.js preferred structure
+4. Maintaining the existing features and functionality

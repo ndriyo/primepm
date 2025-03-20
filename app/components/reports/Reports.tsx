@@ -1,6 +1,8 @@
+'use client';
+
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { projects } from '../data/projects';
+import { projects } from '@/src/data/projects';
 
 type ReportType = 'department' | 'status' | 'criteria' | 'timeline';
 

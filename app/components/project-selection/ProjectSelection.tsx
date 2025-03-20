@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Project } from '@/src/data/projects';
 import { useProjects } from '@/app/contexts/ProjectContext';
+import { useCriteria } from '@/app/contexts/CriteriaContext';
 import { useRouter } from 'next/navigation';
 import { ProjectCard } from '@/src/components/project-selection/ProjectCard';
 import { ProjectMatrix } from '@/src/components/project-selection/ProjectMatrix';
@@ -11,6 +12,7 @@ import { CriteriaManagement } from '@/src/components/project-selection/CriteriaM
 
 export const ProjectSelection = () => {
   const { projects, setSelectedProject } = useProjects();
+  const { activeVersion } = useCriteria();
   const [viewMode, setViewMode] = useState<'matrix' | 'cards' | 'table' | 'criteria'>('table');
   const router = useRouter();
   
@@ -81,7 +83,16 @@ export const ProjectSelection = () => {
           )}
           
           {viewMode === 'criteria' && (
-            <CriteriaManagement />
+            activeVersion ? (
+              <CriteriaManagement versionId={activeVersion.id} />
+            ) : (
+              <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-md">
+                <h3 className="text-lg font-medium text-yellow-800 mb-2">No Active Criteria Version</h3>
+                <p className="text-yellow-700">
+                  There is no active criteria version. Please create a version first using the Criteria Version Management.
+                </p>
+              </div>
+            )
           )}
         </div>
       </div>

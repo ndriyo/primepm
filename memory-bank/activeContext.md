@@ -26,3 +26,10 @@
 - Build out the multi-tenant functionality
 - Implement portfolio simulation based on constraints
 - Add data export/import functionality
+- Deploy the application to production environments
+
+## Deployment Configuration
+- Added Netlify deployment configuration with netlify.toml
+- Configured to use Next.js build output (.next directory)
+- Added @netlify/plugin-nextjs for optimal Next.js deployment
+- Updated .gitignore to exclude the legacy dist/ directory

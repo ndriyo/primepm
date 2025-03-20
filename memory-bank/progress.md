@@ -22,6 +22,9 @@
 - Custom UI components:
   - Confirmation dialogs with improved UX
   - Warning notifications for incomplete weights
+- Deployment configuration:
+  - Netlify deployment setup with netlify.toml
+  - Next.js build output configuration
 
 ## In Progress
 - Entry basic project info & self assessment

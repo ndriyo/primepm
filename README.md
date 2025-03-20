@@ -58,6 +58,25 @@ To start the production server:
 npm start
 ```
 
+## Deployment to Netlify
+
+This project is configured for deployment to Netlify using the Next.js build system:
+
+1. The `netlify.toml` file in the root directory configures the build settings:
+   - Build command: `npm run build`
+   - Publish directory: `.next`
+   - Uses the Netlify Next.js plugin for optimal deployment
+
+2. To deploy to Netlify:
+   - Connect your GitHub repository to Netlify
+   - Netlify will automatically use the configuration in `netlify.toml`
+   - The deployment will use the Next.js build output, not the legacy Vite build
+
+3. If you encounter issues with Netlify showing an old version:
+   - Make sure to commit and push the `netlify.toml` file
+   - Clear the Netlify cache in the Netlify dashboard if needed
+   - Ensure the `dist/` directory is in your `.gitignore` file
+
 ## Project Structure
 
 - `/app`: Next.js App Router pages and layouts

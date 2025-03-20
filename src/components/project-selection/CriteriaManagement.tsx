@@ -1,11 +1,28 @@
-import { useState } from 'react';
+'use client';
+
+import { useState, useEffect } from 'react';
 import { useCriteria, Criterion } from '@/app/contexts/CriteriaContext';
+import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
 
 interface CriteriaFormData {
   key: string;
   label: string;
   description: string;
   isInverse: boolean;
+  scale?: {
+    min: number;
+    max: number;
+  };
+  rubric?: {
+    [score: number]: string;
+  };
+}
+
+interface CriteriaManagementProps {
+  versionId: string;
+  onEditingStart?: () => void;
+  onEditingEnd?: () => void;
+  isDisabled?: boolean;
 }
 
 const initialFormData: CriteriaFormData = {
@@ -13,13 +30,64 @@ const initialFormData: CriteriaFormData = {
   label: '',
   description: '',
   isInverse: false,
+  scale: {
+    min: 1,
+    max: 5
+  },
+  rubric: {
+    1: '',
+    2: '',
+    3: '',
+    4: '',
+    5: ''
+  }
 };
 
-export const CriteriaManagement = () => {
-  const { criteria, addCriterion, updateCriterion, removeCriterion, resetToDefaultCriteria } = useCriteria();
+export const CriteriaManagement = ({ 
+  versionId, 
+  onEditingStart, 
+  onEditingEnd,
+  isDisabled = false 
+}: CriteriaManagementProps) => {
+  const { 
+    criteriaByVersion, 
+    addCriterionToVersion, 
+    updateCriterionInVersion, 
+    removeCriterionFromVersion,
+    getDefaultCriteria
+  } = useCriteria();
+  
+  const criteria = criteriaByVersion[versionId] || [];
   const [formData, setFormData] = useState<CriteriaFormData>(initialFormData);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isFormVisible, setIsFormVisible] = useState(false);
+  
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    message: '',
+    onConfirm: () => {},
+  });
+
+  // Calculate total weight and check if any criteria are missing weights
+  const totalWeight = criteria.reduce((sum, criterion) => 
+    sum + (criterion.weight || 0), 0
+  );
+  
+  // Check if weights sum to approximately 100% (allowing for small floating-point errors)
+  const isWeightComplete = Math.abs(totalWeight - 1) < 0.01;
+  
+  // Check if any criteria are missing weights
+  const hasUnsetWeights = criteria.some(criterion => criterion.weight === undefined);
+
+  // Notify parent component when editing starts/ends
+  useEffect(() => {
+    if (isFormVisible && onEditingStart) {
+      onEditingStart();
+    } else if (!isFormVisible && onEditingEnd) {
+      onEditingEnd();
+    }
+  }, [isFormVisible, onEditingStart, onEditingEnd]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -55,10 +123,10 @@ export const CriteriaManagement = () => {
 
     if (editingId) {
       // Update existing criterion
-      updateCriterion(editingId, formData);
+      updateCriterionInVersion(versionId, editingId, formData);
     } else {
       // Add new criterion
-      addCriterion(formData);
+      addCriterionToVersion(versionId, formData);
     }
 
     // Reset form
@@ -73,21 +141,47 @@ export const CriteriaManagement = () => {
       label: criterion.label,
       description: criterion.description,
       isInverse: criterion.isInverse,
+      scale: criterion.scale || { min: 1, max: 5 },
+      rubric: criterion.rubric || { 1: '', 2: '', 3: '', 4: '', 5: '' }
     });
     setEditingId(criterion.id);
     setIsFormVisible(true);
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this criterion?')) {
-      removeCriterion(id);
-    }
+    const criterionToDelete = criteria.find(c => c.id === id);
+    if (!criterionToDelete) return;
+    
+    setConfirmDialog({
+      isOpen: true,
+      message: `Criterion "${criterionToDelete.label}" will be removed.`,
+      onConfirm: () => {
+        removeCriterionFromVersion(versionId, id);
+        setConfirmDialog({ ...confirmDialog, isOpen: false });
+      },
+    });
   };
 
   const handleReset = () => {
-    if (window.confirm('Are you sure you want to reset to default criteria? All custom criteria will be lost.')) {
-      resetToDefaultCriteria();
-    }
+    setConfirmDialog({
+      isOpen: true,
+      message: 'Default criteria will be added to this version.',
+      onConfirm: () => {
+        const defaultCriteria = getDefaultCriteria();
+        defaultCriteria.forEach(criterion => {
+          // Skip if a criterion with the same key already exists
+          if (!criteria.some(c => c.key === criterion.key)) {
+            addCriterionToVersion(versionId, {
+              key: criterion.key,
+              label: criterion.label,
+              description: criterion.description,
+              isInverse: criterion.isInverse,
+            });
+          }
+        });
+        setConfirmDialog({ ...confirmDialog, isOpen: false });
+      },
+    });
   };
 
   const handleCancel = () => {
@@ -96,10 +190,20 @@ export const CriteriaManagement = () => {
     setIsFormVisible(false);
   };
 
+  if (isDisabled) {
+    return (
+      <div className="opacity-50 pointer-events-none">
+        <div className="p-4 bg-gray-100 border rounded-md text-center">
+          <p className="text-gray-500">Criteria management is disabled while editing version details.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="card p-6">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium text-gray-900">Project Selection Criteria</h3>
+        <h3 className="text-lg font-medium text-gray-900">Criteria Management</h3>
         <div className="space-x-2">
           {!isFormVisible && (
             <button
@@ -113,10 +217,51 @@ export const CriteriaManagement = () => {
             onClick={handleReset}
             className="btn btn-outline btn-sm"
           >
-            Reset to Defaults
+            Add Default Criteria
           </button>
         </div>
       </div>
+
+      {/* Weight Warnings */}
+      {criteria.length > 0 && (
+        <>
+          {/* Warning for incomplete total weight */}
+          {!isWeightComplete && (
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-700">
+                    Total weight is {(totalWeight * 100).toFixed(1)}%. Run the AHP Wizard to calculate weights that sum to 100%.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Warning for unset weights */}
+          {hasUnsetWeights && (
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-700">
+                    Some criteria don't have weights set. Run the AHP Wizard to calculate weights for all criteria.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {isFormVisible && (
         <div className="mb-6 p-4 border rounded-md bg-gray-50">
@@ -124,7 +269,7 @@ export const CriteriaManagement = () => {
             {editingId ? 'Edit Criterion' : 'Add New Criterion'}
           </h4>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label htmlFor="key" className="block text-sm font-medium text-gray-700 mb-1">
                   Key <span className="text-red-500">*</span>
@@ -176,6 +321,79 @@ export const CriteriaManagement = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                 placeholder="Brief explanation of this criterion"
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label htmlFor="scale.min" className="block text-sm font-medium text-gray-700 mb-1">
+                  Scale Minimum
+                </label>
+                <input
+                  type="number"
+                  id="scale.min"
+                  name="scale.min"
+                  value={formData.scale?.min || 1}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    scale: {
+                      ...(formData.scale || { min: 1, max: 5 }),
+                      min: parseInt(e.target.value)
+                    }
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+                  min="1"
+                  max="10"
+                />
+              </div>
+              <div>
+                <label htmlFor="scale.max" className="block text-sm font-medium text-gray-700 mb-1">
+                  Scale Maximum
+                </label>
+                <input
+                  type="number"
+                  id="scale.max"
+                  name="scale.max"
+                  value={formData.scale?.max || 5}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    scale: {
+                      ...(formData.scale || { min: 1, max: 5 }),
+                      max: parseInt(e.target.value)
+                    }
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+                  min="1"
+                  max="10"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Rubric (Description for each score level)
+              </label>
+              {formData.scale && Array.from({ length: (formData.scale.max - formData.scale.min) + 1 }, (_, i) => i + formData.scale!.min).map(score => (
+                <div key={score} className="mb-2">
+                  <label htmlFor={`rubric.${score}`} className="block text-xs font-medium text-gray-600 mb-1">
+                    Score {score}
+                  </label>
+                  <input
+                    type="text"
+                    id={`rubric.${score}`}
+                    name={`rubric.${score}`}
+                    value={formData.rubric?.[score] || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      rubric: {
+                        ...(formData.rubric || {}),
+                        [score]: e.target.value
+                      }
+                    })}
+                    className="w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm text-sm"
+                    placeholder={`Description for score ${score}`}
+                  />
+                </div>
+              ))}
             </div>
 
             <div>
@@ -232,6 +450,9 @@ export const CriteriaManagement = () => {
                 Scale
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Weight
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Type
               </th>
               <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -253,6 +474,13 @@ export const CriteriaManagement = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {criterion.isInverse ? 'Inverse (lower is better)' : 'Standard (higher is better)'}
+                  {criterion.scale && <span className="ml-1">({criterion.scale.min}-{criterion.scale.max})</span>}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {criterion.weight !== undefined ? 
+                    `${(criterion.weight * 100).toFixed(1)}%` : 
+                    <span className="text-yellow-500">Not set</span>
+                  }
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {criterion.isDefault ? (
@@ -283,7 +511,7 @@ export const CriteriaManagement = () => {
             ))}
             {criteria.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
                   No criteria defined. Click "Add New Criterion" to create one.
                 </td>
               </tr>
@@ -291,6 +519,14 @@ export const CriteriaManagement = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+      />
     </div>
   );
 };

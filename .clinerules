@@ -1,0 +1,24 @@
+# Project Intelligence
+
+## Implementation Patterns
+- Components are organized in both app/ and src/ directories
+  - app/ contains Next.js specific components and pages
+  - src/ contains reusable components and business logic
+- Using 'use client' directive for client-side components
+- Tailwind CSS utility classes with custom component classes (btn-primary, btn-secondary)
+
+## File Structure Conventions
+- Page components in app/[route]/page.tsx
+- Shared components in components/ directory
+- Feature-specific components in app/components/[feature]/ or src/components/[feature]/
+- Data models and utilities in src/data/
+
+## Naming Conventions
+- PascalCase for component files and React components
+- camelCase for variables, functions, and non-component files
+- Descriptive names that reflect component purpose
+
+## Code Style Preferences
+- TypeScript interfaces for data models
+- Functional components with hooks
+- Export statements at the component declaration

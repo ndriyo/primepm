@@ -1,9 +1,21 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { CriteriaVersionManagement } from '@/src/components/project-selection/CriteriaVersionManagement';
+import { LoadingWrapper } from '@/components/ui/LoadingWrapper';
+import { SkeletonCriteriaVersion } from '@/components/ui/skeleton';
+import { useCriteria } from '@/src/hooks/useCriteria';
+import { useAuth } from '@/app/contexts/AuthContext';
 
 export default function CriteriaPage() {
+  const { organization } = useAuth();
+  const { useVersionsQuery } = useCriteria();
+  const organizationId = organization?.id || '';
+  
+  // We'll use this to determine if we should show loading state
+  const { isLoading: versionsLoading } = useVersionsQuery(organizationId);
+
   return (
     <PageLayout>
       <div className="container mx-auto px-4 py-8">
@@ -13,7 +25,12 @@ export default function CriteriaPage() {
           Only one version can be active at a time, and the active version will be used for project scoring.
         </p>
         
-        <CriteriaVersionManagement />
+        <LoadingWrapper
+          isLoading={versionsLoading}
+          skeleton={<SkeletonCriteriaVersion />}
+        >
+          <CriteriaVersionManagement />
+        </LoadingWrapper>
       </div>
     </PageLayout>
   );

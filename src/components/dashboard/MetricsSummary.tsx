@@ -1,6 +1,10 @@
-import { projects } from '@/src/data/projects';
+import { useProjects } from '@/app/contexts/ProjectContext';
+import { LoadingWrapper } from '@/components/ui/LoadingWrapper';
+import { SkeletonCard } from '@/components/ui/skeleton';
 
 export const MetricsSummary = () => {
+  const { projects, loading } = useProjects();
+  
   const totalProjects = projects.length;
   const inProgressProjects = projects.filter(p => p.status === 'in-progress').length;
   const completedProjects = projects.filter(p => p.status === 'completed').length;
@@ -50,18 +54,29 @@ export const MetricsSummary = () => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {metrics.map((metric, index) => (
-        <div key={index} className="card flex items-center p-6">
-          <div className={`${metric.bgColor} text-white p-3 rounded-lg mr-4`}>
-            {metric.icon}
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm">{metric.label}</p>
-            <p className="text-2xl font-semibold text-gray-800">{metric.value}</p>
-          </div>
+    <LoadingWrapper
+      isLoading={loading}
+      skeleton={
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
         </div>
-      ))}
-    </div>
+      }
+    >
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {metrics.map((metric, index) => (
+          <div key={index} className="card flex items-center p-6">
+            <div className={`${metric.bgColor} text-white p-3 rounded-lg mr-4`}>
+              {metric.icon}
+            </div>
+            <div>
+              <p className="text-gray-500 text-sm">{metric.label}</p>
+              <p className="text-2xl font-semibold text-gray-800">{metric.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </LoadingWrapper>
   );
 };

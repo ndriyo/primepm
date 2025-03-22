@@ -4,6 +4,20 @@ This file documents the changes made to the PrimePM application.
 
 ## [Unreleased]
 
+## 2025-03-23
+- Added a comprehensive skeleton loading system:
+  - Created base skeleton components (SkeletonElement, SkeletonText, SkeletonCard, SkeletonTable, SkeletonChart, SkeletonDashboard, and SkeletonProjectList)
+  - Implemented specialized skeleton components for specific views:
+    - SkeletonCriteriaVersion for the criteria management interface
+    - SkeletonRedirect for transition/redirect pages
+  - Implemented LoadingWrapper component for showing skeletons during loading states
+  - Added DelayedSkeletonWrapper to prevent flickering for fast loads
+  - Added skeleton animation styles to globals.css
+  - Integrated skeleton loading into dashboard components (TopProjects, StatusChart, RiskQuadrantChart, MetricsSummary)
+  - Enhanced project selection views with appropriate skeleton placeholders
+  - Added skeleton loading to criteria management and project details pages
+  - Replaced plain loading text with skeleton UI for a more seamless experience
+
 ### Added
 - SidebarContext for centralized sidebar state management
 - CSS variables for sidebar width and transitions in globals.css

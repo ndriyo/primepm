@@ -1,4 +1,4 @@
-import prisma from '../lib/prisma';
+import prisma, { getPrismaWithRLS } from '../lib/prisma';
 import { Prisma } from '@prisma/client';
 import { BaseRepository } from './BaseRepository';
 
@@ -68,9 +68,18 @@ export class ProjectRepository extends BaseRepository<
    * Find projects by organization ID
    */
   async findByOrganization(organizationId: string): Promise<Project[]> {
-    return this.model.findMany({
+    const prismaWithRLS = this.getPrismaWithContext(organizationId);
+    
+    return prismaWithRLS.project.findMany({
       where: { organizationId },
       orderBy: { createdAt: 'desc' },
+      include: {
+        projectScores: {
+          include: {
+            criterion: true
+          }
+        }
+      }
     });
   }
 
@@ -78,9 +87,29 @@ export class ProjectRepository extends BaseRepository<
    * Find projects by department ID
    */
   async findByDepartment(departmentId: string): Promise<Project[]> {
-    return this.model.findMany({
+    // For departmentId queries, we need to first find a project with this department
+    // to get its organizationId for proper RLS context
+    const sampleProject = await prisma.project.findFirst({
+      where: { departmentId },
+      select: { organizationId: true }
+    });
+    
+    if (!sampleProject) {
+      return [];
+    }
+    
+    const prismaWithRLS = this.getPrismaWithContext(sampleProject.organizationId);
+    
+    return prismaWithRLS.project.findMany({
       where: { departmentId },
       orderBy: { createdAt: 'desc' },
+      include: {
+        projectScores: {
+          include: {
+            criterion: true
+          }
+        }
+      }
     });
   }
 
@@ -88,12 +117,21 @@ export class ProjectRepository extends BaseRepository<
    * Find projects by status
    */
   async findByStatus(organizationId: string, status: string): Promise<Project[]> {
-    return this.model.findMany({
+    const prismaWithRLS = this.getPrismaWithContext(organizationId);
+    
+    return prismaWithRLS.project.findMany({
       where: { 
         organizationId,
         status
       },
       orderBy: { createdAt: 'desc' },
+      include: {
+        projectScores: {
+          include: {
+            criterion: true
+          }
+        }
+      }
     });
   }
 
@@ -101,7 +139,16 @@ export class ProjectRepository extends BaseRepository<
    * Find projects with their criteria scores
    */
   async findWithScores(projectId: string): Promise<Project & { scores: any[] }> {
-    const project = await this.model.findUnique({
+    // First get the basic project to get its organizationId
+    const project = await this.findById(projectId);
+    
+    if (!project) {
+      throw new Error(`Project with ID ${projectId} not found`);
+    }
+    
+    const prismaWithRLS = this.getPrismaWithContext(project.organizationId);
+    
+    const projectWithScores = await prismaWithRLS.project.findUnique({
       where: { id: projectId },
       include: {
         projectScores: {
@@ -112,13 +159,13 @@ export class ProjectRepository extends BaseRepository<
       }
     });
 
-    if (!project) {
-      throw new Error(`Project with ID ${projectId} not found`);
+    if (!projectWithScores) {
+      throw new Error(`Project with ID ${projectId} not found during score lookup`);
     }
 
     return {
-      ...project,
-      scores: project.projectScores
+      ...projectWithScores,
+      scores: projectWithScores.projectScores
     };
   }
 
@@ -126,7 +173,16 @@ export class ProjectRepository extends BaseRepository<
    * Find projects with committee scores
    */
   async findWithCommitteeScores(projectId: string): Promise<Project & { committeeScores: any[] }> {
-    const project = await this.model.findUnique({
+    // First get the basic project to get its organizationId
+    const project = await this.findById(projectId);
+    
+    if (!project) {
+      throw new Error(`Project with ID ${projectId} not found`);
+    }
+    
+    const prismaWithRLS = this.getPrismaWithContext(project.organizationId);
+    
+    const projectWithScores = await prismaWithRLS.project.findUnique({
       where: { id: projectId },
       include: {
         committeeScores: {
@@ -144,15 +200,16 @@ export class ProjectRepository extends BaseRepository<
       }
     });
 
-    if (!project) {
-      throw new Error(`Project with ID ${projectId} not found`);
+    if (!projectWithScores) {
+      throw new Error(`Project with ID ${projectId} not found during committee score lookup`);
     }
 
-    return project;
+    return projectWithScores;
   }
 
   /**
    * Create a project with proper relations
+   * Note: We override the base create method to handle relations
    */
   async create(data: ProjectCreateInput, userId: string): Promise<Project> {
     // Prepare the data for Prisma
@@ -183,7 +240,10 @@ export class ProjectRepository extends BaseRepository<
       })
     };
 
-    return prisma.$transaction(async (tx: any) => {
+    // Get RLS-enabled client
+    const prismaWithRLS = this.getPrismaWithContext(data.organizationId, userId);
+
+    return prismaWithRLS.$transaction(async (tx: any) => {
       const result = await tx.project.create({
         data: createData
       });
@@ -193,7 +253,7 @@ export class ProjectRepository extends BaseRepository<
           userId,
           action: 'CREATE',
           entityType: 'project',
-          entityId: result.id,
+          entityId: result.id
         },
       });
 
@@ -203,8 +263,16 @@ export class ProjectRepository extends BaseRepository<
 
   /**
    * Update a project with proper relations
+   * Note: We override the base update method to handle relations
    */
   async update(id: string, data: ProjectUpdateInput, userId: string): Promise<Project> {
+    // Get the existing project to get its organization
+    const existingProject = await this.findById(id);
+    
+    if (!existingProject) {
+      throw new Error(`Project with ID ${id} not found`);
+    }
+    
     // Prepare the data for Prisma
     const updateData: any = {
       ...data,
@@ -228,7 +296,11 @@ export class ProjectRepository extends BaseRepository<
     delete updateData.departmentId;
     delete updateData.updatedById;
 
-    return prisma.$transaction(async (tx: any) => {
+    // Use organization from existing project if not changing it
+    const organizationId = data.organizationId || existingProject.organizationId;
+    const prismaWithRLS = this.getPrismaWithContext(organizationId, userId);
+
+    return prismaWithRLS.$transaction(async (tx: any) => {
       const result = await tx.project.update({
         where: { id },
         data: updateData
@@ -239,7 +311,7 @@ export class ProjectRepository extends BaseRepository<
           userId,
           action: 'UPDATE',
           entityType: 'project',
-          entityId: result.id,
+          entityId: result.id
         },
       });
 
@@ -249,17 +321,58 @@ export class ProjectRepository extends BaseRepository<
 
   /**
    * Add or update a project's criteria score
+   * @param projectId - ID of the project
+   * @param criterionKeyOrId - Can be either a criterion key (e.g., "revenue") or a criterion ID (UUID)
+   * @param versionId - ID of the criteria version
+   * @param score - Numeric score
+   * @param comment - Optional comment
+   * @param userId - ID of the user making the change
    */
   async updateCriteriaScore(
     projectId: string, 
-    criterionId: string, 
+    criterionKeyOrId: string, 
     versionId: string,
     score: number, 
     comment: string | null,
     userId: string
   ): Promise<any> {
-    return prisma.$transaction(async (tx: any) => {
-      // Check if score exists
+    // Get the project to get its organization
+    const project = await this.findById(projectId);
+    
+    if (!project) {
+      throw new Error(`Project with ID ${projectId} not found`);
+    }
+    
+    const prismaWithRLS = this.getPrismaWithContext(project.organizationId, userId);
+    
+    return prismaWithRLS.$transaction(async (tx: any) => {
+      // First check if we're dealing with a key or an ID
+      let criterionId = criterionKeyOrId;
+      
+      // If it doesn't look like a UUID, assume it's a key and look up the ID
+      if (!criterionKeyOrId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        console.log(`Looking up criterion ID for key: ${criterionKeyOrId}`);
+        
+        // Find the criterion by key within the specified version
+        const criterion = await tx.criterion.findFirst({
+          where: {
+            key: criterionKeyOrId,
+            versionId: versionId
+          },
+          select: {
+            id: true
+          }
+        });
+        
+        if (!criterion) {
+          throw new Error(`Criterion with key ${criterionKeyOrId} not found in version ${versionId}`);
+        }
+        
+        criterionId = criterion.id;
+        console.log(`Found criterion ID: ${criterionId} for key: ${criterionKeyOrId}`);
+      }
+      
+      // Check if score exists using the resolved criterionId
       const existingScore = await tx.projectCriteriaScore.findFirst({
         where: {
           projectId,
@@ -312,7 +425,7 @@ export class ProjectRepository extends BaseRepository<
           userId,
           action: existingScore ? 'UPDATE' : 'CREATE',
           entityType: 'project_criteria_score',
-          entityId: result.id,
+          entityId: result.id
         },
       });
 
@@ -324,8 +437,17 @@ export class ProjectRepository extends BaseRepository<
    * Calculate project's overall score
    */
   async calculateOverallScore(projectId: string, versionId: string): Promise<number> {
-    // Get project scores and criteria
-    const scores = await prisma.projectCriteriaScore.findMany({
+    // Get the project to get its organization
+    const project = await this.findById(projectId);
+    
+    if (!project) {
+      throw new Error(`Project with ID ${projectId} not found`);
+    }
+    
+    const prismaWithRLS = this.getPrismaWithContext(project.organizationId);
+    
+    // Get project scores and criteria with RLS context
+    const scores = await prismaWithRLS.projectCriteriaScore.findMany({
       where: {
         projectId,
         versionId

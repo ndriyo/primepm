@@ -30,4 +30,25 @@ We employ a **Next.js** monorepo approach where both frontend and backend logic 
 - **Performance**: SSR for SEO-critical pages; client-side rendering for dynamic dashboards.  
 - **Security**: Strict role-based checks in Next.js API routes, plus Supabase rules.
 
+### API Route Handler Patterns
+- **Route Parameter Typing**: When creating API route handlers in Next.js App Router, use one of these patterns:
+  1. Type definition approach (preferred for reusability):
+     ```typescript
+     type Context = { params: { paramName: string } };
+     
+     export async function GET(request: NextRequest, context: Context) {
+       const { paramName } = context.params;
+       // Handler logic
+     }
+     ```
+  2. Inline typing approach:
+     ```typescript
+     export async function GET(request: NextRequest, { params }: { params: { paramName: string } }) {
+       const { paramName } = params;
+       // Handler logic
+     }
+     ```
+- **Error Handling**: All API route handlers should include try/catch blocks with appropriate error responses.
+- **Status Codes**: Use appropriate HTTP status codes (200, 400, 404, 500) with descriptive error messages.
+
 ---

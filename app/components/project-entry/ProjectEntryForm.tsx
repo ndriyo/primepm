@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useProjects } from '@/app/contexts/ProjectContext';
 import { useCriteria } from '@/app/contexts/CriteriaContext';
+import { useAuth } from '@/app/contexts/AuthContext';
 import { Project } from '@/src/data/projects';
 import ProjectInfoStep from '@/app/components/project-entry/ProjectInfoStep';
 import SelfAssessmentStep from '@/app/components/project-entry/SelfAssessmentStep';
@@ -11,32 +12,148 @@ import ReviewSubmitStep from '@/app/components/project-entry/ReviewSubmitStep';
 
 type FormStep = 'info' | 'assessment' | 'review';
 
+// Extended form data interface with departmentId
+interface ProjectFormData extends Partial<Project> {
+  departmentId?: string;
+  departmentName?: string;
+  criteriaComments?: Record<string, string>;
+}
+
 // Default new project template
-const defaultNewProject: Partial<Project> = {
+const defaultNewProject: ProjectFormData = {
   name: '',
   description: '',
   department: '',
-  status: 'planning',
+  departmentId: '',
+  status: 'initiation', // Default status for new projects
   criteria: {},
   tags: [],
   team: [],
 };
 
 export default function ProjectEntryForm() {
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get('projectId');
+  const [isEditMode, setIsEditMode] = useState(!!projectId);
   const router = useRouter();
-  const { projects } = useProjects();
-  const { criteria } = useCriteria();
+  const { projects, refreshProjects } = useProjects();
+  const { criteria, loading: criteriaLoading } = useCriteria();
+  const { user, organization } = useAuth();
   
   const [currentStep, setCurrentStep] = useState<FormStep>('info');
-  const [formData, setFormData] = useState<Partial<Project>>(defaultNewProject);
-  const [durationMonths, setDurationMonths] = useState<number>(1);
+  const [formData, setFormData] = useState<ProjectFormData>(defaultNewProject);
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [endDate, setEndDate] = useState<Date>(() => {
+    // Default end date is 1 month from now
+    const date = new Date();
+    date.setMonth(date.getMonth() + 1);
+    return date;
+  });
   const [resourceMandays, setResourceMandays] = useState<number>(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(isEditMode);
 
-  // Initialize criteria scores when criteria are loaded
+  // Fetch project data if in edit mode
   useEffect(() => {
-    if (criteria.length > 0) {
+    if (isEditMode && projectId) {
+      const fetchProjectData = async () => {
+        setIsLoading(true);
+        try {
+          if (!organization || !user) {
+            throw new Error('Authentication required');
+          }
+          
+          const headers: HeadersInit = {
+            'x-organization-id': organization.id,
+            'x-user-id': user.id,
+            'x-user-role': user.role,
+          };
+          
+          const response = await fetch(`/api/projects/${projectId}?includeScores=true`, { headers });
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch project data');
+          }
+          
+          const projectData = await response.json();
+          
+          // Extract comments and scores from projectScores if available
+          const criteriaComments: Record<string, string> = {};
+          const criteriaScores: Record<string, number> = {};
+          
+          if (projectData.projectScores && Array.isArray(projectData.projectScores)) {
+            projectData.projectScores.forEach((score: { comment?: string; score?: number; criterion?: { key: string } }) => {
+              if (score.criterion?.key) {
+                // Save comments if available
+                if (score.comment) {
+                  criteriaComments[score.criterion.key] = score.comment;
+                }
+                
+                // Save scores if available
+                if (typeof score.score === 'number') {
+                  criteriaScores[score.criterion.key] = score.score;
+                }
+              }
+            });
+          }
+          
+          console.log('Extracted comments:', criteriaComments);
+          console.log('Extracted scores:', criteriaScores);
+          
+          // Update form data with project data
+          setFormData({
+            ...projectData,
+            id: projectData.id,
+            name: projectData.name,
+            description: projectData.description,
+            department: projectData.department,
+            // Set both department and departmentId to ensure dropdown works correctly
+            departmentId: projectData.departmentId || projectData.department,
+            budget: projectData.budget,
+            resources: projectData.resources,
+            tags: projectData.tags || [],
+            team: projectData.team || [],
+            // Use extracted scores instead of criteria property 
+            // which might not be properly populated
+            criteria: criteriaScores,
+            // Add extracted comments
+            criteriaComments: criteriaComments
+          });
+          
+          console.log('Loaded project data:', projectData);
+          console.log('Department ID set to:', projectData.departmentId || projectData.department);
+          
+          // Update dates
+          if (projectData.startDate) {
+            setStartDate(new Date(projectData.startDate));
+          }
+          
+          if (projectData.endDate) {
+            setEndDate(new Date(projectData.endDate));
+          }
+          
+          // Update resources
+          if (projectData.resources) {
+            setResourceMandays(projectData.resources);
+          }
+          
+        } catch (error) {
+          console.error('Error fetching project data:', error);
+          setErrors({ submit: 'Failed to load project data. Please try again.' });
+          router.push('/selection');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      fetchProjectData();
+    }
+  }, [isEditMode, projectId, organization, user, router]);
+
+  // Initialize criteria scores when criteria are loaded (for new projects only)
+  useEffect(() => {
+    if (criteria.length > 0 && !isEditMode) {
       const initialCriteriaScores: Record<string, number> = {};
       criteria.forEach(criterion => {
         initialCriteriaScores[criterion.key] = 5; // Default mid-value on 1-10 scale
@@ -44,17 +161,34 @@ export default function ProjectEntryForm() {
       
       setFormData(prev => ({
         ...prev,
-        criteria: initialCriteriaScores
+        criteria: {
+          ...initialCriteriaScores,
+          ...prev.criteria // Keep any existing criteria scores
+        }
       }));
     }
-  }, [criteria]);
+  }, [criteria, isEditMode]);
 
-  // Handle form input changes
+  // Handle form input changes 
   const handleInfoChange = (fieldName: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: value
-    }));
+    // Special case for department selection
+    if (fieldName === 'department') {
+      // value will be departmentId from select dropdown
+      const departmentId = value;
+      
+      // Update the form data - department name will be retrieved from the context when needed
+      setFormData(prev => ({
+        ...prev,
+        departmentId: departmentId,
+        department: departmentId // Keep ID in department field for backward compatibility
+      }));
+    } else {
+      // Normal field update
+      setFormData(prev => ({
+        ...prev,
+        [fieldName]: value
+      }));
+    }
     
     // Clear error for this field if any
     if (errors[fieldName]) {
@@ -73,6 +207,17 @@ export default function ProjectEntryForm() {
       criteria: {
         ...prev.criteria,
         [criterionKey]: value
+      }
+    }));
+  };
+  
+  // Handle criteria comment changes
+  const handleCriteriaCommentChange = (criterionKey: string, comment: string) => {
+    setFormData(prev => ({
+      ...prev,
+      criteriaComments: {
+        ...(prev.criteriaComments || {}),
+        [criterionKey]: comment
       }
     }));
   };
@@ -106,8 +251,16 @@ export default function ProjectEntryForm() {
         newErrors.budget = 'Valid budget amount is required';
       }
       
-      if (durationMonths < 1) {
-        newErrors.duration = 'Duration must be at least 1 month';
+      if (!startDate) {
+        newErrors.startDate = 'Start date is required';
+      }
+      
+      if (!endDate) {
+        newErrors.endDate = 'End date is required';
+      }
+      
+      if (startDate && endDate && startDate >= endDate) {
+        newErrors.endDate = 'End date must be after start date';
       }
       
       if (resourceMandays < 1) {
@@ -155,56 +308,126 @@ export default function ProjectEntryForm() {
     // Validate all steps
     if (!validateCurrentStep()) return;
     
+    // Ensure user and organization context exists
+    if (!user || !organization) {
+      setErrors({ submit: 'User authentication required. Please log in again.' });
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      // Generate start and end dates based on duration
-      const startDate = new Date().toISOString().split('T')[0]; // Today
-      const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + durationMonths);
-      const endDateStr = endDate.toISOString().split('T')[0];
+      // Format dates as ISO-8601 DateTime strings with time component
+      const startDateTime = startDate.toISOString();
+      const endDateTime = endDate.toISOString();
       
-      // Generate a unique ID
-      const newId = `p${projects.length + 1}`;
+        // Make sure departmentId is set
+        // If we only have department but not departmentId, they should be the same
+        const department = formData.departmentId || formData.department || '';
+        
+        // Log department values for debugging
+        console.log('Department values:', {
+          department: formData.department,
+          departmentId: formData.departmentId,
+          finalValue: department
+        });
+        
+        // Assemble the final project data
+        const projectData = {
+          name: formData.name || '',
+          description: formData.description || '',
+          departmentId: department,  // Using the verified department ID
+          status: formData.status || 'initiation', // Ensure status is included
+          startDate: startDateTime,
+          endDate: endDateTime,
+          budget: formData.budget,
+          resources: resourceMandays,
+          tags: formData.tags || [],
+          organizationId: organization.id, // Required for database storage
+          criteriaScores: Object.entries(formData.criteria || {}).map(([key, score]) => ({
+            criterionKey: key,
+            score: score,
+            comment: formData.criteriaComments?.[key] || null
+          }))
+        };
+        
+        console.log('Submitting criteria with comments:', projectData.criteriaScores);
       
-      // Assemble the final project data
-      const newProject: Project = {
-        id: newId,
-        name: formData.name || '',
-        description: formData.description || '',
-        department: formData.department || '',
-        status: 'planning',
-        criteria: formData.criteria || {},
-        startDate,
-        endDate: endDateStr,
-        tags: formData.tags || [],
-        team: [], // Empty team as per requirements
-        budget: formData.budget,
+      // Include RLS headers for proper data filtering and access control
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'x-organization-id': organization.id,
+        'x-user-id': user.id,
+        'x-user-role': user.role,
       };
       
-      console.log('Submitting new project:', newProject);
+      let url = '/api/projects';
+      let method = 'POST';
       
-      // TODO: Connect to API for actual data persistence
-      // For now, just simulate success and redirect
+      // If editing, use PATCH method and include project ID in URL
+      if (isEditMode && projectId) {
+        url = `/api/projects/${projectId}`;
+        method = 'PATCH';
+        console.log('Updating existing project:', projectData);
+      } else {
+        console.log('Submitting new project to database:', projectData);
+      }
       
-      // Redirect to project details page after submission
-      setTimeout(() => {
+      // Submit to API
+      const response = await fetch(url, {
+        method,
+        headers,
+        body: JSON.stringify(projectData)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `Error ${response.status}: Failed to save project`);
+      }
+      
+      const savedProject = await response.json();
+      console.log('Successfully saved project:', savedProject);
+      
+      // Refresh projects list to include the new project
+      await refreshProjects();
+      
+      // Show success message and redirect
+      setErrors({});
+      
+      // If editing, redirect back to project details
+      if (isEditMode && projectId) {
+        router.push(`/details/${projectId}`);
+      } else {
         router.push('/selection');
-      }, 1000);
+      }
+      
     } catch (error) {
       console.error('Error submitting project:', error);
-      setErrors({ submit: 'Failed to submit project. Please try again.' });
+      setErrors({ 
+        submit: error instanceof Error ? error.message : 'Failed to submit project. Please try again.' 
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="mt-4">
-      {/* Progress steps */}
-      <div className="mb-8">
-        <div className="flex justify-between">
-          <div className={`flex-1 text-center ${currentStep === 'info' ? 'text-blue-600 font-semibold' : ''}`}>
+      <div className="mt-4">
+      <h1 className="text-2xl font-bold mb-6">{isEditMode ? 'Edit Project' : 'New Project'}</h1>
+      
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading project data...</p>
+          </div>
+        </div>
+      ) : (
+        <>
+        {/* Progress steps */}
+        <div className="mb-8">
+          <div className="flex justify-between">
+            <div className={`flex-1 text-center ${currentStep === 'info' ? 'text-blue-600 font-semibold' : ''}`}>
             <div className={`rounded-full h-8 w-8 flex items-center justify-center mx-auto mb-2 ${
               currentStep === 'info' ? 'bg-blue-600 text-white' : 
               currentStep === 'assessment' || currentStep === 'review' ? 'bg-green-500 text-white' : 'bg-gray-300'
@@ -248,11 +471,13 @@ export default function ProjectEntryForm() {
         {currentStep === 'info' && (
           <ProjectInfoStep 
             formData={formData}
-            durationMonths={durationMonths}
+            startDate={startDate}
+            endDate={endDate}
             resourceMandays={resourceMandays}
             errors={errors}
             onChange={handleInfoChange}
-            onDurationChange={setDurationMonths}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
             onResourceChange={setResourceMandays}
             onTagsChange={handleTagsChange}
           />
@@ -262,15 +487,18 @@ export default function ProjectEntryForm() {
           <SelfAssessmentStep 
             criteria={criteria}
             criteriaScores={formData.criteria || {}}
+            criteriaComments={formData.criteriaComments}
             errors={errors}
             onChange={handleCriteriaChange}
+            onCommentChange={handleCriteriaCommentChange}
           />
         )}
         
         {currentStep === 'review' && (
           <ReviewSubmitStep 
             formData={formData}
-            durationMonths={durationMonths}
+            startDate={startDate}
+            endDate={endDate}
             resourceMandays={resourceMandays}
             criteria={criteria}
           />
@@ -281,7 +509,7 @@ export default function ProjectEntryForm() {
           <div className="flex gap-2">
             <button
               className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition"
-              onClick={() => router.push('/selection')}
+              onClick={() => isEditMode && projectId ? router.push(`/details/${projectId}`) : router.push('/selection')}
               type="button"
             >
               Cancel
@@ -314,7 +542,7 @@ export default function ProjectEntryForm() {
               disabled={isSubmitting}
               type="button"
             >
-              {isSubmitting ? 'Submitting...' : 'Submit to Committee'}
+              {isSubmitting ? 'Submitting...' : isEditMode ? 'Update Project' : 'Submit to Committee'}
             </button>
           )}
         </div>
@@ -325,7 +553,9 @@ export default function ProjectEntryForm() {
             {errors.submit}
           </div>
         )}
-      </div>
+        </div>
+        </>
+      )}
     </div>
   );
 }

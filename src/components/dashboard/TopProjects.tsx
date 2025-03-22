@@ -1,11 +1,18 @@
-import { useProjects } from '@/app/contexts/ProjectContext';
-import { getTopProjects, Project } from '@/src/data/projects';
+import { useProjects, Project } from '@/app/contexts/ProjectContext';
 import { useRouter } from 'next/navigation';
 
 export const TopProjects = () => {
-  const { weightSettings, setSelectedProject } = useProjects();
-  const topProjects = getTopProjects(5, weightSettings);
+  const { projects, weightSettings, setSelectedProject, getProjectScore } = useProjects();
   const router = useRouter();
+  
+  // Calculate scores, sort, and take top 5 projects
+  const topProjects = [...projects]
+    .map(project => ({
+      ...project,
+      score: getProjectScore(project)
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
   
   const handleProjectClick = (project: Project) => {
     setSelectedProject(project);

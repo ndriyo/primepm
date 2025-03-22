@@ -3,20 +3,36 @@
 import { Project } from '@/src/data/projects';
 import { Criterion } from '@/app/contexts/CriteriaContext';
 import { calculateOverallScore } from '@/src/data/projects';
+import { useDepartments } from '@/app/contexts/DepartmentContext';
+
+interface ProjectFormData extends Partial<Project> {
+  departmentId?: string;
+}
 
 interface ReviewSubmitStepProps {
-  formData: Partial<Project>;
-  durationMonths: number;
+  formData: ProjectFormData;
+  startDate: Date;
+  endDate: Date;
   resourceMandays: number;
   criteria: Criterion[];
 }
 
 export default function ReviewSubmitStep({
   formData,
-  durationMonths,
+  startDate,
+  endDate,
   resourceMandays,
   criteria
 }: ReviewSubmitStepProps) {
+  // Get departments data
+  const { departments } = useDepartments();
+  
+  // Get department name by ID
+  const getDepartmentName = (departmentId?: string): string => {
+    if (!departmentId) return 'Not specified';
+    const department = departments.find(dept => dept.id === departmentId);
+    return department ? department.name : departmentId;
+  };
   // Get inverse criteria keys
   const inverseCriteria = criteria
     .filter(criterion => criterion.isInverse)
@@ -33,8 +49,8 @@ export default function ReviewSubmitStep({
       ...formData,
       id: 'temp',
       status: 'planning',
-      startDate: '',
-      endDate: '',
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
       team: formData.team || []
     } as Project;
     
@@ -48,17 +64,20 @@ export default function ReviewSubmitStep({
     return 'text-red-600';
   };
   
-  // Format a date string
-  const formatDate = (date: Date): string => {
-    return date.toISOString().split('T')[0];
+  // Format a date for display
+  const formatDateForDisplay = (date: Date): string => {
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
   
-  // Calculate estimated end date
-  const calculateEndDate = (): string => {
-    const startDate = new Date();
-    const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + durationMonths);
-    return formatDate(endDate);
+  // Calculate duration in months based on start and end dates
+  const calculateDurationMonths = (): number => {
+    const monthDiff = endDate.getMonth() - startDate.getMonth() + 
+      (12 * (endDate.getFullYear() - startDate.getFullYear()));
+    return Math.max(1, monthDiff); // Ensure at least 1 month
   };
 
   return (
@@ -80,7 +99,7 @@ export default function ReviewSubmitStep({
           
           <div>
             <h4 className="text-sm font-semibold text-gray-500">Division/Department</h4>
-            <p>{formData.department}</p>
+            <p>{getDepartmentName(formData.departmentId || formData.department)}</p>
           </div>
           
           <div>
@@ -89,8 +108,8 @@ export default function ReviewSubmitStep({
           </div>
           
           <div>
-            <h4 className="text-sm font-semibold text-gray-500">Duration</h4>
-            <p>{durationMonths} months (Est. end: {calculateEndDate()})</p>
+            <h4 className="text-sm font-semibold text-gray-500">Timeline</h4>
+            <p>{formatDateForDisplay(startDate)} to {formatDateForDisplay(endDate)} ({calculateDurationMonths()} months)</p>
           </div>
           
           <div>
@@ -134,7 +153,7 @@ export default function ReviewSubmitStep({
           <div className="w-full bg-gray-200 rounded-full h-2.5">
             <div 
               className="bg-blue-600 h-2.5 rounded-full" 
-              style={{ width: `${getOverallScore() * 10}%` }}
+              style={{ width: `${(getOverallScore() / 10) * 100}%` }}
             ></div>
           </div>
         </div>
@@ -170,13 +189,13 @@ export default function ReviewSubmitStep({
                     <span 
                       className={`text-sm font-medium ${
                         criterion.isInverse 
-                          ? formData.criteria[criterion.key] <= 3 ? 'text-green-600' : 
-                            formData.criteria[criterion.key] <= 7 ? 'text-yellow-600' : 'text-red-600'
-                          : formData.criteria[criterion.key] >= 8 ? 'text-green-600' :
-                            formData.criteria[criterion.key] >= 4 ? 'text-yellow-600' : 'text-red-600'
+                          ? formData.criteria[criterion.key] <= (criterion.scale?.min || 1) + Math.floor((criterion.scale?.max || 10) * 0.2) ? 'text-green-600' : 
+                            formData.criteria[criterion.key] <= (criterion.scale?.min || 1) + Math.floor((criterion.scale?.max || 10) * 0.7) ? 'text-yellow-600' : 'text-red-600'
+                          : formData.criteria[criterion.key] >= (criterion.scale?.min || 1) + Math.floor((criterion.scale?.max || 10) * 0.8) ? 'text-green-600' :
+                            formData.criteria[criterion.key] >= (criterion.scale?.min || 1) + Math.floor((criterion.scale?.max || 10) * 0.4) ? 'text-yellow-600' : 'text-red-600'
                       }`}
                     >
-                      {formData.criteria[criterion.key]} / 10
+                      {formData.criteria[criterion.key]} / {criterion.scale?.max || 10}
                     </span>
                   ) : (
                     <span className="text-sm text-gray-500">Not rated</span>

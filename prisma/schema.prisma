@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,344 +7,252 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Organization model - represents a company/organization in multi-tenant setup
 model Organization {
-  id            String         @id @default(uuid())
-  name          String
-  description   String?
-  
-  // Relations
-  departments   Department[]
-  users         User[]
-  projects      Project[]
-  portfolios    PortfolioSelection[]
+  id               String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name             String               @db.VarChar(255)
+  description      String?
+  createdAt        DateTime?            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime?            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdById      String?              @map("created_by") @db.Uuid
+  updatedById      String?              @map("updated_by") @db.Uuid
   criteriaVersions CriteriaVersion[]
-
-  // Audit fields
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
-  createdBy     User?          @relation("OrganizationCreatedBy", fields: [createdById], references: [id])
-  createdById   String?        @map("created_by")
-  updatedBy     User?          @relation("OrganizationUpdatedBy", fields: [updatedById], references: [id])
-  updatedById   String?        @map("updated_by")
+  departments      Department[]
+  createdBy        User?                @relation("OrganizationCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_organizations_created_by")
+  updatedBy        User?                @relation("OrganizationUpdatedBy", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_organizations_updated_by")
+  portfolios       PortfolioSelection[]
+  projects         Project[]
+  users            User[]
 
   @@map("organizations")
 }
 
-// Department model - represents departments within an organization
 model Department {
-  id            String         @id @default(uuid())
-  name          String
-  description   String?
-  
-  // Relations
-  organization  Organization   @relation(fields: [organizationId], references: [id])
-  organizationId String        @map("organization_id")
-  users         User[]
-  projects      Project[]
-
-  // Audit fields
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
-  createdBy     User?          @relation("DepartmentCreatedBy", fields: [createdById], references: [id])
-  createdById   String?        @map("created_by")
-  updatedBy     User?          @relation("DepartmentUpdatedBy", fields: [updatedById], references: [id])
-  updatedById   String?        @map("updated_by")
+  id             String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  name           String       @db.VarChar(255)
+  description    String?
+  createdAt      DateTime?    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime?    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdById    String?      @map("created_by") @db.Uuid
+  updatedById    String?      @map("updated_by") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdBy      User?        @relation("DepartmentCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_departments_created_by")
+  updatedBy      User?        @relation("DepartmentUpdatedBy", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_departments_updated_by")
+  projects       Project[]
+  users          User[]
 
   @@map("departments")
 }
 
-// User model - represents users with different roles
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  fullName      String         @map("full_name")
-  roles         String[]       // e.g., ["PMO", "Management", "Committee", "Project Manager"]
-  
-  // Relations
-  organization  Organization   @relation(fields: [organizationId], references: [id])
-  organizationId String        @map("organization_id")
-  department    Department?    @relation(fields: [departmentId], references: [id])
-  departmentId  String?        @map("department_id")
-  
-  // Projects created by this user
-  createdProjects Project[]    @relation("ProjectCreatedBy")
-  updatedProjects Project[]    @relation("ProjectUpdatedBy")
-  
-  // Portfolios created/updated by this user
-  createdPortfolios PortfolioSelection[] @relation("PortfolioCreatedBy")
-  updatedPortfolios PortfolioSelection[] @relation("PortfolioUpdatedBy")
-  
-  // Criteria versions created/updated by this user
-  createdCriteriaVersions CriteriaVersion[] @relation("CriteriaVersionCreatedBy")
-  updatedCriteriaVersions CriteriaVersion[] @relation("CriteriaVersionUpdatedBy")
-  
-  // Criteria created/updated by this user
-  createdCriteria Criterion[] @relation("CriterionCreatedBy")
-  updatedCriteria Criterion[] @relation("CriterionUpdatedBy")
-  
-  // Self-assessment criteria scores created/updated by this user
-  createdScores ProjectCriteriaScore[] @relation("ProjectScoreCreatedBy")
-  updatedScores ProjectCriteriaScore[] @relation("ProjectScoreUpdatedBy")
-  
-  // Committee scores provided by this user
-  committeeScores CommitteeScore[] @relation("CommitteeScoresByUser")
-  createdCommitteeScores CommitteeScore[] @relation("CommitteeScoreCreatedBy")
-  updatedCommitteeScores CommitteeScore[] @relation("CommitteeScoreUpdatedBy")
-  
-  // Organizations created/updated by this user
-  createdOrganizations Organization[] @relation("OrganizationCreatedBy")
-  updatedOrganizations Organization[] @relation("OrganizationUpdatedBy")
-  
-  // Departments created/updated by this user
-  createdDepartments Department[] @relation("DepartmentCreatedBy")
-  updatedDepartments Department[] @relation("DepartmentUpdatedBy")
-  
-  // Audit logs generated by this user
-  auditLogs      AuditLog[]
-  
-  // Self-referential for created/updated by
-  createdUsers   User[]    @relation("UserCreatedBy")
-  createdBy      User?     @relation("UserCreatedBy", fields: [createdById], references: [id])
-  createdById    String?   @map("created_by")
-  updatedUsers   User[]    @relation("UserUpdatedBy")
-  updatedBy      User?     @relation("UserUpdatedBy", fields: [updatedById], references: [id])
-  updatedById    String?   @map("updated_by")
-
-  // Audit fields
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  id                      String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email                   String                 @unique @db.VarChar(255)
+  fullName                String                 @map("full_name") @db.VarChar(255)
+  organizationId          String                 @map("organization_id") @db.Uuid
+  departmentId            String?                @map("department_id") @db.Uuid
+  roles                   String[]
+  createdAt               DateTime?              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime?              @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdById             String?                @map("created_by") @db.Uuid
+  updatedById             String?                @map("updated_by") @db.Uuid
+  auditLogs               AuditLog[]
+  createdCommitteeScores  CommitteeScore[]       @relation("CommitteeScoreCreatedBy")
+  updatedCommitteeScores  CommitteeScore[]       @relation("CommitteeScoreUpdatedBy")
+  committeeScores         CommitteeScore[]       @relation("CommitteeScoresByUser")
+  createdCriteria         Criterion[]            @relation("CriterionCreatedBy")
+  updatedCriteria         Criterion[]            @relation("CriterionUpdatedBy")
+  createdCriteriaVersions CriteriaVersion[]      @relation("CriteriaVersionCreatedBy")
+  updatedCriteriaVersions CriteriaVersion[]      @relation("CriteriaVersionUpdatedBy")
+  createdDepartments      Department[]           @relation("DepartmentCreatedBy")
+  updatedDepartments      Department[]           @relation("DepartmentUpdatedBy")
+  createdOrganizations    Organization[]         @relation("OrganizationCreatedBy")
+  updatedOrganizations    Organization[]         @relation("OrganizationUpdatedBy")
+  createdPortfolios       PortfolioSelection[]   @relation("PortfolioCreatedBy")
+  updatedPortfolios       PortfolioSelection[]   @relation("PortfolioUpdatedBy")
+  createdScores           ProjectCriteriaScore[] @relation("ProjectScoreCreatedBy")
+  updatedScores           ProjectCriteriaScore[] @relation("ProjectScoreUpdatedBy")
+  createdProjects         Project[]              @relation("ProjectCreatedBy")
+  updatedProjects         Project[]              @relation("ProjectUpdatedBy")
+  createdBy               User?                  @relation("UserCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_created_by")
+  createdUsers            User[]                 @relation("UserCreatedBy")
+  updatedBy               User?                  @relation("UserUpdatedBy", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_updated_by")
+  updatedUsers            User[]                 @relation("UserUpdatedBy")
+  department              Department?            @relation(fields: [departmentId], references: [id], onUpdate: NoAction)
+  organization            Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("users")
 }
 
-// CriteriaVersion model - groups criteria used in a specific time period
 model CriteriaVersion {
-  id            String         @id @default(uuid())
-  name          String
-  description   String?
-  isActive      Boolean        @default(false) @map("is_active")
-  
-  // Relations
-  organization  Organization   @relation(fields: [organizationId], references: [id])
-  organizationId String        @map("organization_id")
-  criteria      Criterion[]
+  id                  String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organizationId      String                 @map("organization_id") @db.Uuid
+  name                String                 @db.VarChar(255)
+  description         String?
+  isActive            Boolean?               @default(false) @map("is_active")
+  createdAt           DateTime?              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime?              @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdById         String?                @map("created_by") @db.Uuid
+  updatedById         String?                @map("updated_by") @db.Uuid
+  criteria            Criterion[]
+  createdBy           User?                  @relation("CriteriaVersionCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization        Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updatedBy           User?                  @relation("CriteriaVersionUpdatedBy", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pairwiseComparisons PairwiseComparison[]
-  projectScores ProjectCriteriaScore[]
-
-  // Audit fields
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
-  createdBy     User?          @relation("CriteriaVersionCreatedBy", fields: [createdById], references: [id])
-  createdById   String?        @map("created_by")
-  updatedBy     User?          @relation("CriteriaVersionUpdatedBy", fields: [updatedById], references: [id])
-  updatedById   String?        @map("updated_by")
+  projectScores       ProjectCriteriaScore[]
 
   @@map("criteria_versions")
 }
 
-// Criterion model - individual criteria for project evaluation
 model Criterion {
-  id            String         @id @default(uuid())
-  key           String         // Unique identifier like "revenue", "budget"
-  label         String         // Display name
-  description   String?
-  isInverse     Boolean        @default(false) @map("is_inverse") // True if higher values are worse
-  isDefault     Boolean        @default(false) @map("is_default")
-  weight        Float?         // Weight calculated from AHP
-  scale         Json?          // e.g., { "min": 1, "max": 10 }
-  rubric        Json?          // e.g., { "1": "Very low impact", "10": "Very high impact" }
-  
-  // Relations
-  version       CriteriaVersion @relation(fields: [versionId], references: [id])
-  versionId     String         @map("version_id")
-  projectScores ProjectCriteriaScore[]
-  committeeScores CommitteeScore[]
-  
-  // Pairwise comparison relations
-  comparisonsCriterionA PairwiseComparison[] @relation("CriterionA")
-  comparisonsCriterionB PairwiseComparison[] @relation("CriterionB")
-
-  // Audit fields
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
-  createdBy     User?          @relation("CriterionCreatedBy", fields: [createdById], references: [id])
-  createdById   String?        @map("created_by")
-  updatedBy     User?          @relation("CriterionUpdatedBy", fields: [updatedById], references: [id])
-  updatedById   String?        @map("updated_by")
+  id                    String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  versionId             String                 @map("version_id") @db.Uuid
+  key                   String                 @db.VarChar(50)
+  label                 String                 @db.VarChar(255)
+  description           String?
+  isInverse             Boolean?               @default(false) @map("is_inverse")
+  isDefault             Boolean?               @default(false) @map("is_default")
+  weight                Float?
+  scale                 Json?
+  rubric                Json?
+  createdAt             DateTime?              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime?              @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdById           String?                @map("created_by") @db.Uuid
+  updatedById           String?                @map("updated_by") @db.Uuid
+  committeeScores       CommitteeScore[]
+  createdBy             User?                  @relation("CriterionCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedBy             User?                  @relation("CriterionUpdatedBy", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  version               CriteriaVersion        @relation(fields: [versionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  comparisonsCriterionA PairwiseComparison[]   @relation("CriterionA")
+  comparisonsCriterionB PairwiseComparison[]   @relation("CriterionB")
+  projectScores         ProjectCriteriaScore[]
 
   @@map("criteria")
 }
 
-// PairwiseComparison model - stores AHP comparisons between criteria
 model PairwiseComparison {
-  id            String         @id @default(uuid())
-  value         Float          // Comparison value (e.g., 1/3, 1, 3)
-  
-  // Relations
-  version       CriteriaVersion @relation(fields: [versionId], references: [id])
-  versionId     String         @map("version_id")
-  
-  criterionA    Criterion      @relation("CriterionA", fields: [criterionAId], references: [id])
-  criterionAId  String         @map("criterion_a_id")
-  
-  criterionB    Criterion      @relation("CriterionB", fields: [criterionBId], references: [id])
-  criterionBId  String         @map("criterion_b_id")
-
-  // Audit fields
-  createdAt     DateTime       @default(now()) @map("created_at")
+  id           String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  versionId    String          @map("version_id") @db.Uuid
+  criterionAId String          @map("criterion_a_id") @db.Uuid
+  criterionBId String          @map("criterion_b_id") @db.Uuid
+  value        Float
+  createdAt    DateTime?       @default(now()) @map("created_at") @db.Timestamptz(6)
+  criterionA   Criterion       @relation("CriterionA", fields: [criterionAId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  criterionB   Criterion       @relation("CriterionB", fields: [criterionBId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  version      CriteriaVersion @relation(fields: [versionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("pairwise_comparisons")
 }
 
-// Project model - represents a project proposal
 model Project {
-  id            String         @id @default(uuid())
-  name          String
-  description   String?
-  status        String         // e.g., "planning", "in-progress", "completed", "on-hold"
-  startDate     DateTime       @map("start_date")
-  endDate       DateTime       @map("end_date")
-  budget        Float?
-  resources     Int            // Number of mandays
-  tags          String[]
-  
-  // Relations
-  organization  Organization   @relation(fields: [organizationId], references: [id])
-  organizationId String        @map("organization_id")
-  
-  department    Department?    @relation(fields: [departmentId], references: [id])
-  departmentId  String?        @map("department_id")
-  
-  projectScores ProjectCriteriaScore[]
-  committeeScores CommitteeScore[]
+  id                String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organizationId    String                 @map("organization_id") @db.Uuid
+  departmentId      String?                @map("department_id") @db.Uuid
+  name              String                 @db.VarChar(255)
+  description       String?
+  status            String                 @db.VarChar(50)
+  startDate         DateTime               @map("start_date") @db.Date
+  endDate           DateTime               @map("end_date") @db.Date
+  budget            Float?
+  resources         Int
+  tags              String[]
+  createdAt         DateTime?              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime?              @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdById       String                 @map("created_by") @db.Uuid
+  updatedById       String?                @map("updated_by") @db.Uuid
+  committeeScores   CommitteeScore[]
   portfolioProjects PortfolioProject[]
-
-  // Audit fields
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
-  createdBy     User           @relation("ProjectCreatedBy", fields: [createdById], references: [id])
-  createdById   String         @map("created_by")
-  updatedBy     User?          @relation("ProjectUpdatedBy", fields: [updatedById], references: [id])
-  updatedById   String?        @map("updated_by")
+  projectScores     ProjectCriteriaScore[]
+  createdBy         User                   @relation("ProjectCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  department        Department?            @relation(fields: [departmentId], references: [id], onUpdate: NoAction)
+  organization      Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updatedBy         User?                  @relation("ProjectUpdatedBy", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("projects")
 }
 
-// ProjectCriteriaScore model - self-assessment scores for project criteria
 model ProjectCriteriaScore {
-  id            String         @id @default(uuid())
-  score         Float
-  comment       String?
-  
-  // Relations
-  project       Project        @relation(fields: [projectId], references: [id])
-  projectId     String         @map("project_id")
-  
-  criterion     Criterion      @relation(fields: [criterionId], references: [id])
-  criterionId   String         @map("criterion_id")
-  
-  version       CriteriaVersion @relation(fields: [versionId], references: [id])
-  versionId     String         @map("version_id")
-
-  // Audit fields
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
-  createdBy     User           @relation("ProjectScoreCreatedBy", fields: [createdById], references: [id])
-  createdById   String         @map("created_by")
-  updatedBy     User?          @relation("ProjectScoreUpdatedBy", fields: [updatedById], references: [id])
-  updatedById   String?        @map("updated_by")
+  id          String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  projectId   String          @map("project_id") @db.Uuid
+  criterionId String          @map("criterion_id") @db.Uuid
+  versionId   String          @map("version_id") @db.Uuid
+  score       Float
+  comment     String?
+  createdAt   DateTime?       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime?       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdById String          @map("created_by") @db.Uuid
+  updatedById String?         @map("updated_by") @db.Uuid
+  createdBy   User            @relation("ProjectScoreCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  criterion   Criterion       @relation(fields: [criterionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updatedBy   User?           @relation("ProjectScoreUpdatedBy", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  version     CriteriaVersion @relation(fields: [versionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("project_criteria_scores")
 }
 
-// CommitteeScore model - scores provided by committee members
 model CommitteeScore {
-  id            String         @id @default(uuid())
-  score         Float
-  comment       String?
-  
-  // Relations
-  project       Project        @relation(fields: [projectId], references: [id])
-  projectId     String         @map("project_id")
-  
-  criterion     Criterion      @relation(fields: [criterionId], references: [id])
-  criterionId   String         @map("criterion_id")
-  
-  user          User           @relation("CommitteeScoresByUser", fields: [userId], references: [id])
-  userId        String         @map("user_id")
-
-  // Audit fields
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
-  createdBy     User           @relation("CommitteeScoreCreatedBy", fields: [createdById], references: [id])
-  createdById   String         @map("created_by")
-  updatedBy     User?          @relation("CommitteeScoreUpdatedBy", fields: [updatedById], references: [id])
-  updatedById   String?        @map("updated_by")
+  id          String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  projectId   String    @map("project_id") @db.Uuid
+  criterionId String    @map("criterion_id") @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  score       Float
+  comment     String?
+  createdAt   DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdById String    @map("created_by") @db.Uuid
+  updatedById String?   @map("updated_by") @db.Uuid
+  createdBy   User      @relation("CommitteeScoreCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  criterion   Criterion @relation(fields: [criterionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updatedBy   User?     @relation("CommitteeScoreUpdatedBy", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user        User      @relation("CommitteeScoresByUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("committee_scores")
 }
 
-// PortfolioSelection model - represents a portfolio selection cycle
 model PortfolioSelection {
-  id            String         @id @default(uuid())
-  name          String
-  description   String?
-  version       String         // Could be year or other identifier
-  status        String         // "draft" or "final"
-  selectionDate DateTime       @map("selection_date")
-  constraints   Json?          // JSON object for budget constraints, resource constraints, etc.
-  isActive      Boolean        @default(false) @map("is_active")
-  
-  // Relations
-  organization  Organization   @relation(fields: [organizationId], references: [id])
-  organizationId String        @map("organization_id")
-  
+  id                String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  organizationId    String             @map("organization_id") @db.Uuid
+  name              String             @db.VarChar(255)
+  description       String?
+  version           String             @db.VarChar(50)
+  status            String             @db.VarChar(50)
+  selectionDate     DateTime           @map("selection_date") @db.Date
+  constraints       Json?
+  isActive          Boolean?           @default(false) @map("is_active")
+  createdAt         DateTime?          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime?          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdById       String             @map("created_by") @db.Uuid
+  updatedById       String?            @map("updated_by") @db.Uuid
   portfolioProjects PortfolioProject[]
-
-  // Audit fields
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
-  createdBy     User           @relation("PortfolioCreatedBy", fields: [createdById], references: [id])
-  createdById   String         @map("created_by")
-  updatedBy     User?          @relation("PortfolioUpdatedBy", fields: [updatedById], references: [id])
-  updatedById   String?        @map("updated_by")
+  createdBy         User               @relation("PortfolioCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updatedBy         User?              @relation("PortfolioUpdatedBy", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("portfolio_selections")
 }
 
-// PortfolioProject model - junction table for portfolios and projects
 model PortfolioProject {
-  id            String         @id @default(uuid())
-  isSelected    Boolean        @default(false) @map("is_selected")
-  score         Float          // Overall project score in this portfolio
-  
-  // Relations
-  portfolio     PortfolioSelection @relation(fields: [portfolioId], references: [id])
-  portfolioId   String         @map("portfolio_id")
-  
-  project       Project        @relation(fields: [projectId], references: [id])
-  projectId     String         @map("project_id")
-
-  // Audit fields
-  createdAt     DateTime       @default(now()) @map("created_at")
+  id          String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  portfolioId String             @map("portfolio_id") @db.Uuid
+  projectId   String             @map("project_id") @db.Uuid
+  isSelected  Boolean?           @default(false) @map("is_selected")
+  score       Float
+  createdAt   DateTime?          @default(now()) @map("created_at") @db.Timestamptz(6)
+  portfolio   PortfolioSelection @relation(fields: [portfolioId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  project     Project            @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("portfolio_projects")
 }
 
-// AuditLog model - tracks user actions
 model AuditLog {
-  id            String         @id @default(uuid())
-  action        String         // "CREATE", "UPDATE", "DELETE"
-  entityType    String         @map("entity_type")
-  entityId      String         @map("entity_id")
-  
-  // Relations
-  user          User           @relation(fields: [userId], references: [id])
-  userId        String         @map("user_id")
-
-  // Timestamp
-  createdAt     DateTime       @default(now()) @map("created_at")
+  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  action     String    @db.VarChar(50)
+  entityType String    @map("entity_type") @db.VarChar(50)
+  entityId   String    @map("entity_id") @db.Uuid
+  createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  user       User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("audit_logs")
 }

@@ -114,14 +114,42 @@ export class CriteriaRepository {
    * Find criteria version by ID with associated criteria
    */
   async findVersionById(id: string): Promise<CriteriaVersion | null> {
-    return prisma.criteriaVersion.findUnique({
-      where: { id },
-      include: {
-        criteria: {
-          orderBy: { createdAt: 'asc' }
+    console.log(`[CriteriaRepository] Finding version by ID: ${id}`);
+    
+    // Execute with debug logging
+    try {
+      const result = await prisma.criteriaVersion.findUnique({
+        where: { id },
+        include: {
+          criteria: {
+            orderBy: { createdAt: 'asc' }
+          }
+        }
+      });
+      
+      console.log(`[CriteriaRepository] Version found: ${result ? 'Yes' : 'No'}`);
+      if (result) {
+        console.log(`[CriteriaRepository] Version name: ${result.name}`);
+        console.log(`[CriteriaRepository] Criteria included: ${result.criteria ? result.criteria.length : 'undefined'}`);
+        
+        // Debug criteria data
+        if (!result.criteria || result.criteria.length === 0) {
+          console.log(`[CriteriaRepository] No criteria found for version ${id}`);
+          
+          // Additional check - query criteria directly to see if any exist
+          const directCriteriaCount = await prisma.criterion.count({
+            where: { versionId: id }
+          });
+          
+          console.log(`[CriteriaRepository] Direct criteria count: ${directCriteriaCount}`);
         }
       }
-    });
+      
+      return result;
+    } catch (error) {
+      console.error(`[CriteriaRepository] Error finding version by ID:`, error);
+      throw error;
+    }
   }
 
   /**
@@ -198,9 +226,7 @@ export class CriteriaRepository {
           },
           data: {
             isActive: false,
-            updatedBy: {
-              connect: { id: data.updatedById }
-            }
+            updatedById: data.updatedById
           }
         });
       }

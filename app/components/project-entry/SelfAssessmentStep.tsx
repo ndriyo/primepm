@@ -6,8 +6,10 @@ import { Criterion } from '@/app/contexts/CriteriaContext';
 interface SelfAssessmentStepProps {
   criteria: Criterion[];
   criteriaScores: Record<string, number>;
+  criteriaComments?: Record<string, string>;
   errors: Record<string, string>;
   onChange: (criterionKey: string, value: number) => void;
+  onCommentChange?: (criterionKey: string, comment: string) => void;
 }
 
 // Option Card component for score selection
@@ -44,8 +46,10 @@ const OptionCard = ({
 export default function SelfAssessmentStep({
   criteria,
   criteriaScores,
+  criteriaComments = {},
   errors,
-  onChange
+  onChange,
+  onCommentChange
 }: SelfAssessmentStepProps) {
   // Track which criterion descriptions are expanded
   const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
@@ -172,6 +176,21 @@ export default function SelfAssessmentStep({
               
               {/* Option Cards */}
               {generateOptionCards(criterion)}
+              
+              {/* Comment field */}
+              <div className="mt-4">
+                <label htmlFor={`comment-${criterion.key}`} className="block text-sm font-medium text-gray-700 mb-1">
+                  Comment (optional)
+                </label>
+                <textarea
+                  id={`comment-${criterion.key}`}
+                  value={criteriaComments[criterion.key] || ''}
+                  onChange={(e) => onCommentChange?.(criterion.key, e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder={`Add any comments about your rating for ${criterion.label}...`}
+                  rows={3}
+                />
+              </div>
               
               {getCriterionError(criterion.key) && (
                 <p className="mt-2 text-sm text-red-600">{getCriterionError(criterion.key)}</p>

@@ -2,14 +2,21 @@
 
 import { useState } from 'react';
 import { Project } from '@/src/data/projects';
+import { useDepartments } from '@/app/contexts/DepartmentContext';
+
+interface ProjectFormData extends Partial<Project> {
+  departmentId?: string;
+}
 
 interface ProjectInfoStepProps {
-  formData: Partial<Project>;
-  durationMonths: number;
+  formData: ProjectFormData;
+  startDate: Date;
+  endDate: Date;
   resourceMandays: number;
   errors: Record<string, string>;
   onChange: (fieldName: string, value: any) => void;
-  onDurationChange: (months: number) => void;
+  onStartDateChange: (date: Date) => void;
+  onEndDateChange: (date: Date) => void;
   onResourceChange: (mandays: number) => void;
   onTagsChange: (tags: string[]) => void;
 }
@@ -24,34 +31,28 @@ const parseFormattedNumber = (formattedValue: string): number => {
   return parseInt(formattedValue.replace(/,/g, ''), 10) || 0;
 };
 
+// Format date for input
+const formatDateForInput = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function ProjectInfoStep({
   formData,
-  durationMonths,
+  startDate,
+  endDate,
   resourceMandays,
   errors,
   onChange,
-  onDurationChange,
+  onStartDateChange,
+  onEndDateChange,
   onResourceChange,
   onTagsChange
 }: ProjectInfoStepProps) {
   const [tagInput, setTagInput] = useState('');
-
-  // Predefined departments (can be expanded later)
-  const departments = [
-    'Information Technology',
-    'Marketing',
-    'Operations',
-    'Product Development',
-    'Human Resources',
-    'Business Intelligence',
-    'Legal & Compliance',
-    'Strategic Development',
-    'Facilities',
-    'Finance',
-    'Customer Service',
-    'Research & Development',
-    'Sales'
-  ];
+  const { departments, loading: departmentsLoading } = useDepartments();
 
   // Add a tag to the list
   const handleAddTag = () => {
@@ -73,6 +74,21 @@ export default function ProjectInfoStep({
     if (e.key === 'Enter') {
       e.preventDefault();
       handleAddTag();
+    }
+  };
+
+  // Handle date changes
+  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const dateValue = e.target.value;
+    if (dateValue) {
+      onStartDateChange(new Date(dateValue));
+    }
+  };
+
+  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const dateValue = e.target.value;
+    if (dateValue) {
+      onEndDateChange(new Date(dateValue));
     }
   };
 
@@ -119,14 +135,15 @@ export default function ProjectInfoStep({
         </label>
         <select
           id="project-department"
-          value={formData.department || ''}
+          value={formData.departmentId || formData.department || ''}
           onChange={(e) => onChange('department', e.target.value)}
           className={`w-full px-3 py-2 border ${errors.department ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+          disabled={departmentsLoading}
         >
           <option value="">Select a department</option>
           {departments.map((dept) => (
-            <option key={dept} value={dept}>
-              {dept}
+            <option key={dept.id} value={dept.id}>
+              {dept.name}
             </option>
           ))}
         </select>
@@ -160,23 +177,34 @@ export default function ProjectInfoStep({
         {errors.budget && <p className="mt-1 text-sm text-red-600">{errors.budget}</p>}
       </div>
       
-      {/* Duration in months */}
+      {/* Start Date */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="project-duration">
-          Duration (in months)*
+        <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="project-start-date">
+          Start Date*
         </label>
-        <div className="flex items-center">
-          <input
-            id="project-duration"
-            type="number"
-            min="1"
-            value={durationMonths}
-            onChange={(e) => onDurationChange(parseInt(e.target.value) || 1)}
-            className={`w-32 px-3 py-2 border ${errors.duration ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
-          />
-          <span className="ml-2 text-gray-500">months</span>
-        </div>
-        {errors.duration && <p className="mt-1 text-sm text-red-600">{errors.duration}</p>}
+        <input
+          id="project-start-date"
+          type="date"
+          value={formatDateForInput(startDate)}
+          onChange={handleStartDateChange}
+          className={`w-full px-3 py-2 border ${errors.startDate ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+        />
+        {errors.startDate && <p className="mt-1 text-sm text-red-600">{errors.startDate}</p>}
+      </div>
+      
+      {/* End Date */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="project-end-date">
+          End Date*
+        </label>
+        <input
+          id="project-end-date"
+          type="date"
+          value={formatDateForInput(endDate)}
+          onChange={handleEndDateChange}
+          className={`w-full px-3 py-2 border ${errors.endDate ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+        />
+        {errors.endDate && <p className="mt-1 text-sm text-red-600">{errors.endDate}</p>}
       </div>
       
       {/* Resources required (in mandays) */}

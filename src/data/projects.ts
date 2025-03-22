@@ -2,7 +2,7 @@ export interface Project {
   id: string;
   name: string;
   description: string;
-  status: 'planning' | 'in-progress' | 'completed' | 'on-hold';
+  status: 'initiation' | 'planning' | 'in-progress' | 'completed' | 'on-hold';
   criteria: Record<string, number>; // Dynamic criteria with scale 1-10
   startDate: string;
   endDate: string;
@@ -263,7 +263,7 @@ export const calculateOverallScore = (
     // For inverse criteria, invert the scale (10 - value + 1)
     // This makes lower values score higher
     if (inverseCriteria.includes(key)) {
-      value = 11 - value; // Invert scale: 1->10, 2->9, 3->8, etc.
+      value = 5 - value; // Invert scale: 1->10, 2->9, 3->8, etc.
     }
     
     weightedSum += value * weight;

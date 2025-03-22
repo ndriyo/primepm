@@ -1,0 +1,181 @@
+Date : 2025-03-21 11:38:26
+Directory : /Users/ndriyo/Documents/Code/primepm
+Total : 93 files,  10020 codes, 694 comments, 1051 blanks, all 11765 lines
+
+Languages
++--------------------+------------+------------+------------+------------+------------+
+| language           | files      | code       | comment    | blank      | total      |
++--------------------+------------+------------+------------+------------+------------+
+| JSON               |          4 |      3,550 |         -4 |         -6 |      3,540 |
+| TypeScript         |         24 |      2,721 |        413 |        472 |      3,606 |
+| TypeScript JSX     |         38 |      2,616 |        159 |        340 |      3,115 |
+| MS SQL             |          8 |        718 |        125 |        136 |        979 |
+| Markdown           |          9 |        422 |          0 |        112 |        534 |
+| JSON with Comments |          2 |         34 |          0 |          1 |         35 |
+| XML                |          2 |          0 |          0 |          0 |          0 |
+| JavaScript         |          3 |        -13 |          1 |          0 |        -12 |
+| HTML               |          1 |        -13 |          0 |         -1 |        -14 |
+| CSS                |          2 |        -15 |          0 |         -3 |        -18 |
++--------------------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                   |         93 |     10,020 |        694 |      1,051 |     11,765 |
+| . (Files)                                                                                           |         13 |      3,563 |          0 |          0 |      3,563 |
+| app                                                                                                 |         31 |      3,114 |        197 |        453 |      3,764 |
+| app (Files)                                                                                         |          4 |         91 |          1 |         14 |        106 |
+| app/api                                                                                             |          8 |        592 |         42 |        107 |        741 |
+| app/api/criteria                                                                                    |          5 |        325 |         18 |         51 |        394 |
+| app/api/criteria/[criterionId]                                                                      |          1 |         93 |          0 |          5 |         98 |
+| app/api/criteria/versions                                                                           |          4 |        232 |         18 |         46 |        296 |
+| app/api/criteria/versions (Files)                                                                   |          1 |         42 |          3 |          9 |         54 |
+| app/api/criteria/versions/[versionId]                                                               |          3 |        190 |         15 |         37 |        242 |
+| app/api/criteria/versions/[versionId] (Files)                                                       |          1 |         93 |          6 |         17 |        116 |
+| app/api/criteria/versions/[versionId]/comparisons                                                   |          1 |         41 |          4 |          8 |         53 |
+| app/api/criteria/versions/[versionId]/criteria                                                      |          1 |         56 |          5 |         12 |         73 |
+| app/api/projects                                                                                    |          3 |        267 |         24 |         56 |        347 |
+| app/api/projects (Files)                                                                            |          1 |         68 |          8 |         17 |         93 |
+| app/api/projects/[projectId]                                                                        |          2 |        199 |         16 |         39 |        254 |
+| app/api/projects/[projectId] (Files)                                                                |          1 |        133 |         11 |         27 |        171 |
+| app/api/projects/[projectId]/scores                                                                 |          1 |         66 |          5 |         12 |         83 |
+| app/components                                                                                      |         10 |      1,812 |         89 |        208 |      2,109 |
+| app/components/dashboard                                                                            |          1 |         39 |          0 |          6 |         45 |
+| app/components/dev                                                                                  |          1 |         77 |          1 |          9 |         87 |
+| app/components/project-details                                                                      |          2 |        508 |         14 |         52 |        574 |
+| app/components/project-entry                                                                        |          4 |        810 |         57 |        101 |        968 |
+| app/components/project-selection                                                                    |          1 |        121 |          7 |         16 |        144 |
+| app/components/reports                                                                              |          1 |        257 |         10 |         24 |        291 |
+| app/contexts                                                                                        |          3 |        531 |         61 |        102 |        694 |
+| app/criteria                                                                                        |          1 |         17 |          0 |          4 |         21 |
+| app/details                                                                                         |          2 |         37 |          4 |          9 |         50 |
+| app/details (Files)                                                                                 |          1 |         24 |          4 |          5 |         33 |
+| app/details/[projectId]                                                                             |          1 |         13 |          0 |          4 |         17 |
+| app/projects                                                                                        |          1 |         14 |          0 |          3 |         17 |
+| app/projects/new                                                                                    |          1 |         14 |          0 |          3 |         17 |
+| app/reports                                                                                         |          1 |         10 |          0 |          3 |         13 |
+| app/selection                                                                                       |          1 |         10 |          0 |          3 |         13 |
+| components                                                                                          |          3 |        152 |          4 |         18 |        174 |
+| components/layout                                                                                   |          2 |        116 |          4 |         14 |        134 |
+| components/ui                                                                                       |          1 |         36 |          0 |          4 |         40 |
+| memory-bank                                                                                         |          7 |        333 |          0 |         76 |        409 |
+| prisma                                                                                              |          9 |        797 |        125 |        166 |      1,088 |
+| prisma/migrations                                                                                   |          9 |        797 |        125 |        166 |      1,088 |
+| prisma/migrations/initial                                                                           |          2 |        331 |         52 |         59 |        442 |
+| prisma/migrations/supabase                                                                          |          7 |        466 |         73 |        107 |        646 |
+| public                                                                                              |          1 |          1 |          0 |          0 |          1 |
+| public/assets                                                                                       |          1 |          1 |          0 |          0 |          1 |
+| src                                                                                                 |         29 |      2,060 |        368 |        338 |      2,766 |
+| src (Files)                                                                                         |          4 |        -73 |         -1 |        -12 |        -86 |
+| src/assets                                                                                          |          1 |         -1 |          0 |          0 |         -1 |
+| src/components                                                                                      |          5 |        789 |         24 |         78 |        891 |
+| src/components/dashboard                                                                            |          1 |         10 |          0 |          1 |         11 |
+| src/components/project-selection                                                                    |          4 |        779 |         24 |         77 |        880 |
+| src/contexts                                                                                        |          2 |       -175 |         -9 |        -32 |       -216 |
+| src/data                                                                                            |          1 |          1 |          0 |          0 |          1 |
+| src/hooks                                                                                           |          2 |        472 |         52 |         75 |        599 |
+| src/lib                                                                                             |          3 |         93 |         27 |         22 |        142 |
+| src/pages                                                                                           |          4 |       -614 |        -15 |        -62 |       -691 |
+| src/repositories                                                                                    |          7 |      1,568 |        290 |        269 |      2,127 |
++-----------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| filename                                                                                            | language           | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| /Users/ndriyo/Documents/Code/primepm/.eslintrc.json                                                 | JSON with Comments |          8 |          0 |          1 |          9 |
+| /Users/ndriyo/Documents/Code/primepm/README.md                                                      | Markdown           |         10 |          0 |          6 |         16 |
+| /Users/ndriyo/Documents/Code/primepm/app/api/criteria/[criterionId]/route.ts                        | TypeScript         |         93 |          0 |          5 |         98 |
+| /Users/ndriyo/Documents/Code/primepm/app/api/criteria/versions/[versionId]/comparisons/route.ts     | TypeScript         |         41 |          4 |          8 |         53 |
+| /Users/ndriyo/Documents/Code/primepm/app/api/criteria/versions/[versionId]/criteria/route.ts        | TypeScript         |         56 |          5 |         12 |         73 |
+| /Users/ndriyo/Documents/Code/primepm/app/api/criteria/versions/[versionId]/route.ts                 | TypeScript         |         93 |          6 |         17 |        116 |
+| /Users/ndriyo/Documents/Code/primepm/app/api/criteria/versions/route.ts                             | TypeScript         |         42 |          3 |          9 |         54 |
+| /Users/ndriyo/Documents/Code/primepm/app/api/projects/[projectId]/route.ts                          | TypeScript         |        133 |         11 |         27 |        171 |
+| /Users/ndriyo/Documents/Code/primepm/app/api/projects/[projectId]/scores/route.ts                   | TypeScript         |         66 |          5 |         12 |         83 |
+| /Users/ndriyo/Documents/Code/primepm/app/api/projects/route.ts                                      | TypeScript         |         68 |          8 |         17 |         93 |
+| /Users/ndriyo/Documents/Code/primepm/app/components/dashboard/Dashboard.tsx                         | TypeScript JSX     |         39 |          0 |          6 |         45 |
+| /Users/ndriyo/Documents/Code/primepm/app/components/dev/DevAuthSwitcher.tsx                         | TypeScript JSX     |         77 |          1 |          9 |         87 |
+| /Users/ndriyo/Documents/Code/primepm/app/components/project-details/ProjectDetails.tsx              | TypeScript JSX     |        274 |          7 |         28 |        309 |
+| /Users/ndriyo/Documents/Code/primepm/app/components/project-details/ProjectInformation.tsx          | TypeScript JSX     |        234 |          7 |         24 |        265 |
+| /Users/ndriyo/Documents/Code/primepm/app/components/project-entry/ProjectEntryForm.tsx              | TypeScript JSX     |        269 |         22 |         41 |        332 |
+| /Users/ndriyo/Documents/Code/primepm/app/components/project-entry/ProjectInfoStep.tsx               | TypeScript JSX     |        214 |         14 |         20 |        248 |
+| /Users/ndriyo/Documents/Code/primepm/app/components/project-entry/ReviewSubmitStep.tsx              | TypeScript JSX     |        170 |          9 |         23 |        202 |
+| /Users/ndriyo/Documents/Code/primepm/app/components/project-entry/SelfAssessmentStep.tsx            | TypeScript JSX     |        157 |         12 |         17 |        186 |
+| /Users/ndriyo/Documents/Code/primepm/app/components/project-selection/ProjectSelection.tsx          | TypeScript JSX     |        121 |          7 |         16 |        144 |
+| /Users/ndriyo/Documents/Code/primepm/app/components/reports/Reports.tsx                             | TypeScript JSX     |        257 |         10 |         24 |        291 |
+| /Users/ndriyo/Documents/Code/primepm/app/contexts/AuthContext.tsx                                   | TypeScript JSX     |        114 |          9 |         17 |        140 |
+| /Users/ndriyo/Documents/Code/primepm/app/contexts/CriteriaContext.tsx                               | TypeScript JSX     |        329 |         48 |         69 |        446 |
+| /Users/ndriyo/Documents/Code/primepm/app/contexts/ProjectContext.tsx                                | TypeScript JSX     |         88 |          4 |         16 |        108 |
+| /Users/ndriyo/Documents/Code/primepm/app/criteria/page.tsx                                          | TypeScript JSX     |         17 |          0 |          4 |         21 |
+| /Users/ndriyo/Documents/Code/primepm/app/details/[projectId]/page.tsx                               | TypeScript JSX     |         13 |          0 |          4 |         17 |
+| /Users/ndriyo/Documents/Code/primepm/app/details/page.tsx                                           | TypeScript JSX     |         24 |          4 |          5 |         33 |
+| /Users/ndriyo/Documents/Code/primepm/app/globals.css                                                | CSS                |         22 |          0 |          3 |         25 |
+| /Users/ndriyo/Documents/Code/primepm/app/layout.tsx                                                 | TypeScript JSX     |         26 |          0 |          4 |         30 |
+| /Users/ndriyo/Documents/Code/primepm/app/page.tsx                                                   | TypeScript JSX     |         10 |          0 |          3 |         13 |
+| /Users/ndriyo/Documents/Code/primepm/app/projects/new/page.tsx                                      | TypeScript JSX     |         14 |          0 |          3 |         17 |
+| /Users/ndriyo/Documents/Code/primepm/app/providers.tsx                                              | TypeScript JSX     |         33 |          1 |          4 |         38 |
+| /Users/ndriyo/Documents/Code/primepm/app/reports/page.tsx                                           | TypeScript JSX     |         10 |          0 |          3 |         13 |
+| /Users/ndriyo/Documents/Code/primepm/app/selection/page.tsx                                         | TypeScript JSX     |         10 |          0 |          3 |         13 |
+| /Users/ndriyo/Documents/Code/primepm/components/layout/PageLayout.tsx                               | TypeScript JSX     |         26 |          2 |          5 |         33 |
+| /Users/ndriyo/Documents/Code/primepm/components/layout/Sidebar.tsx                                  | TypeScript JSX     |         90 |          2 |          9 |        101 |
+| /Users/ndriyo/Documents/Code/primepm/components/ui/ConfirmationDialog.tsx                           | TypeScript JSX     |         36 |          0 |          4 |         40 |
+| /Users/ndriyo/Documents/Code/primepm/eslint.config.js                                               | JavaScript         |        -27 |          0 |         -2 |        -29 |
+| /Users/ndriyo/Documents/Code/primepm/index.html                                                     | HTML               |        -13 |          0 |         -1 |        -14 |
+| /Users/ndriyo/Documents/Code/primepm/memory-bank/activeContext.md                                   | Markdown           |         53 |          0 |          7 |         60 |
+| /Users/ndriyo/Documents/Code/primepm/memory-bank/processFlow.md                                     | Markdown           |         27 |          0 |          5 |         32 |
+| /Users/ndriyo/Documents/Code/primepm/memory-bank/productContext.md                                  | Markdown           |         35 |          0 |         19 |         54 |
+| /Users/ndriyo/Documents/Code/primepm/memory-bank/progress.md                                        | Markdown           |         70 |          0 |          5 |         75 |
+| /Users/ndriyo/Documents/Code/primepm/memory-bank/projectBrief.md                                    | Markdown           |         65 |          0 |         22 |         87 |
+| /Users/ndriyo/Documents/Code/primepm/memory-bank/systemPatterns.md                                  | Markdown           |         45 |          0 |         10 |         55 |
+| /Users/ndriyo/Documents/Code/primepm/memory-bank/techContext.md                                     | Markdown           |         38 |          0 |          8 |         46 |
+| /Users/ndriyo/Documents/Code/primepm/next-env.d.ts                                                  | TypeScript         |          0 |          4 |          2 |          6 |
+| /Users/ndriyo/Documents/Code/primepm/next.config.mjs                                                | JavaScript         |         12 |          1 |          2 |         15 |
+| /Users/ndriyo/Documents/Code/primepm/package-lock.json                                              | JSON               |      3,583 |          0 |          0 |      3,583 |
+| /Users/ndriyo/Documents/Code/primepm/package.json                                                   | JSON               |          9 |          0 |          0 |          9 |
+| /Users/ndriyo/Documents/Code/primepm/prisma/migrations/initial/migration.sql                        | MS SQL             |        243 |         30 |         40 |        313 |
+| /Users/ndriyo/Documents/Code/primepm/prisma/migrations/initial/seed.sql                             | MS SQL             |         88 |         22 |         19 |        129 |
+| /Users/ndriyo/Documents/Code/primepm/prisma/migrations/supabase/README.md                           | Markdown           |         79 |          0 |         30 |        109 |
+| /Users/ndriyo/Documents/Code/primepm/prisma/migrations/supabase/migration.sql                       | MS SQL             |        235 |         30 |         40 |        305 |
+| /Users/ndriyo/Documents/Code/primepm/prisma/migrations/supabase/seed.sql                            | MS SQL             |         34 |         11 |         10 |         55 |
+| /Users/ndriyo/Documents/Code/primepm/prisma/migrations/supabase/seed_01_organizations_users.sql     | MS SQL             |         19 |          8 |          6 |         33 |
+| /Users/ndriyo/Documents/Code/primepm/prisma/migrations/supabase/seed_02_criteria.sql                | MS SQL             |         37 |          7 |          6 |         50 |
+| /Users/ndriyo/Documents/Code/primepm/prisma/migrations/supabase/seed_03_projects.sql                | MS SQL             |         19 |          6 |          5 |         30 |
+| /Users/ndriyo/Documents/Code/primepm/prisma/migrations/supabase/seed_04_portfolios.sql              | MS SQL             |         43 |         11 |         10 |         64 |
+| /Users/ndriyo/Documents/Code/primepm/public/assets/react.svg                                        | XML                |          1 |          0 |          0 |          1 |
+| /Users/ndriyo/Documents/Code/primepm/src/App.css                                                    | CSS                |        -37 |          0 |         -6 |        -43 |
+| /Users/ndriyo/Documents/Code/primepm/src/App.tsx                                                    | TypeScript JSX     |        -27 |          0 |         -3 |        -30 |
+| /Users/ndriyo/Documents/Code/primepm/src/assets/react.svg                                           | XML                |         -1 |          0 |          0 |         -1 |
+| /Users/ndriyo/Documents/Code/primepm/src/components/dashboard/TopProjects.tsx                       | TypeScript JSX     |         10 |          0 |          1 |         11 |
+| /Users/ndriyo/Documents/Code/primepm/src/components/project-selection/AHPWizard.tsx                 | TypeScript JSX     |        194 |          6 |         29 |        229 |
+| /Users/ndriyo/Documents/Code/primepm/src/components/project-selection/CriteriaManagement.tsx        | TypeScript JSX     |        211 |         10 |         15 |        236 |
+| /Users/ndriyo/Documents/Code/primepm/src/components/project-selection/CriteriaVersionManagement.tsx | TypeScript JSX     |        369 |          8 |         33 |        410 |
+| /Users/ndriyo/Documents/Code/primepm/src/components/project-selection/ProjectSelectionTable.tsx     | TypeScript JSX     |          5 |          0 |          0 |          5 |
+| /Users/ndriyo/Documents/Code/primepm/src/contexts/CriteriaContext.tsx                               | TypeScript JSX     |        -88 |         -5 |        -17 |       -110 |
+| /Users/ndriyo/Documents/Code/primepm/src/contexts/ProjectContext.tsx                                | TypeScript JSX     |        -87 |         -4 |        -15 |       -106 |
+| /Users/ndriyo/Documents/Code/primepm/src/data/projects.ts                                           | TypeScript         |          1 |          0 |          0 |          1 |
+| /Users/ndriyo/Documents/Code/primepm/src/hooks/useCriteria.ts                                       | TypeScript         |        284 |         31 |         45 |        360 |
+| /Users/ndriyo/Documents/Code/primepm/src/hooks/useProjects.ts                                       | TypeScript         |        188 |         21 |         30 |        239 |
+| /Users/ndriyo/Documents/Code/primepm/src/lib/adapters.ts                                            | TypeScript         |         34 |         12 |          7 |         53 |
+| /Users/ndriyo/Documents/Code/primepm/src/lib/fetchInterceptor.ts                                    | TypeScript         |         17 |          3 |          6 |         26 |
+| /Users/ndriyo/Documents/Code/primepm/src/lib/prisma.ts                                              | TypeScript         |         42 |         12 |          9 |         63 |
+| /Users/ndriyo/Documents/Code/primepm/src/main.tsx                                                   | TypeScript JSX     |         -9 |          0 |         -2 |        -11 |
+| /Users/ndriyo/Documents/Code/primepm/src/pages/Dashboard.tsx                                        | TypeScript JSX     |        -33 |          0 |         -5 |        -38 |
+| /Users/ndriyo/Documents/Code/primepm/src/pages/ProjectDetails.tsx                                   | TypeScript JSX     |       -253 |         -3 |        -25 |       -281 |
+| /Users/ndriyo/Documents/Code/primepm/src/pages/ProjectSelection.tsx                                 | TypeScript JSX     |        -72 |         -2 |         -9 |        -83 |
+| /Users/ndriyo/Documents/Code/primepm/src/pages/Reports.tsx                                          | TypeScript JSX     |       -256 |        -10 |        -23 |       -289 |
+| /Users/ndriyo/Documents/Code/primepm/src/repositories/BaseRepository.ts                             | TypeScript         |        129 |         37 |         35 |        201 |
+| /Users/ndriyo/Documents/Code/primepm/src/repositories/CriteriaRepository.ts                         | TypeScript         |        374 |         73 |         59 |        506 |
+| /Users/ndriyo/Documents/Code/primepm/src/repositories/OrganizationRepository.ts                     | TypeScript         |        141 |         27 |         26 |        194 |
+| /Users/ndriyo/Documents/Code/primepm/src/repositories/PortfolioRepository.ts                        | TypeScript         |        411 |         62 |         62 |        535 |
+| /Users/ndriyo/Documents/Code/primepm/src/repositories/ProjectRepository.ts                          | TypeScript         |        328 |         51 |         57 |        436 |
+| /Users/ndriyo/Documents/Code/primepm/src/repositories/UserRepository.ts                             | TypeScript         |        179 |         39 |         29 |        247 |
+| /Users/ndriyo/Documents/Code/primepm/src/repositories/index.ts                                      | TypeScript         |          6 |          1 |          1 |          8 |
+| /Users/ndriyo/Documents/Code/primepm/src/vite-env.d.ts                                              | TypeScript         |          0 |         -1 |         -1 |         -2 |
+| /Users/ndriyo/Documents/Code/primepm/tailwind.config.js                                             | JavaScript         |          2 |          0 |          0 |          2 |
+| /Users/ndriyo/Documents/Code/primepm/tsconfig.app.json                                              | JSON               |        -22 |         -2 |         -3 |        -27 |
+| /Users/ndriyo/Documents/Code/primepm/tsconfig.json                                                  | JSON with Comments |         26 |          0 |          0 |         26 |
+| /Users/ndriyo/Documents/Code/primepm/tsconfig.node.json                                             | JSON               |        -20 |         -2 |         -3 |        -25 |
+| /Users/ndriyo/Documents/Code/primepm/vite.config.ts                                                 | TypeScript         |         -5 |         -1 |         -2 |         -8 |
+| Total                                                                                               |                    |     10,020 |        694 |      1,051 |     11,765 |
++-----------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+

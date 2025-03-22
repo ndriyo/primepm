@@ -1,28 +1,61 @@
 'use client';
 
 import { useState } from 'react';
-import { Project } from '@/src/data/projects';
-import { useProjects } from '@/app/contexts/ProjectContext';
-import { useCriteria } from '@/app/contexts/CriteriaContext';
 import { useRouter } from 'next/navigation';
 import { ProjectCard } from '@/src/components/project-selection/ProjectCard';
 import { ProjectMatrix } from '@/src/components/project-selection/ProjectMatrix';
 import { ProjectSelectionTable } from '@/src/components/project-selection/ProjectSelectionTable';
 import { CriteriaManagement } from '@/src/components/project-selection/CriteriaManagement';
+import { useProjects } from '@/src/hooks/useProjects';
+import { useCriteria } from '@/src/hooks/useCriteria';
+import { adaptRepositoryProjects } from '@/src/lib/adapters';
+import { Project } from '@/src/data/projects';
 
 export const ProjectSelection = () => {
-  const { projects, setSelectedProject } = useProjects();
-  const { activeVersion } = useCriteria();
+  // Sample organization ID - in a real app, this would come from auth context
+  const organizationId = "org-1"; // Placeholder - replace with actual org ID
+  
+  const { useProjectsQuery } = useProjects();
+  const { useActiveVersionQuery } = useCriteria();
+  
   const [viewMode, setViewMode] = useState<'matrix' | 'cards' | 'table' | 'criteria'>('table');
   const router = useRouter();
+
+  // Query hooks
+  const { 
+    data: repoProjects = [], 
+    isLoading: projectsLoading, 
+    error: projectsError 
+  } = useProjectsQuery({ organizationId, status: 'planning' });
   
-  // Filter projects to only show those in planning status
-  const filteredProjects = projects.filter(project => project.status === 'planning');
+  const {
+    data: activeVersion,
+    isLoading: versionLoading,
+    error: versionError
+  } = useActiveVersionQuery(organizationId);
+
+  // Convert repository projects to the format expected by UI components
+  const projects = adaptRepositoryProjects(repoProjects);
 
   const handleSelectProject = (project: Project) => {
-    setSelectedProject(project);
+    // Navigate to project details
     router.push(`/details/${project.id}`);
   };
+  
+  // Handle loading states
+  if (projectsLoading) {
+    return <div className="flex justify-center p-8">Loading projects...</div>;
+  }
+  
+  // Handle error states
+  if (projectsError) {
+    return <div className="p-6 bg-red-50 border border-red-200 rounded-md">
+      <h3 className="text-lg font-medium text-red-800 mb-2">Error Loading Projects</h3>
+      <p className="text-red-700">
+        {projectsError instanceof Error ? projectsError.message : 'An unknown error occurred'}
+      </p>
+    </div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -60,12 +93,12 @@ export const ProjectSelection = () => {
         {/* Main content */}
         <div className="w-full">
           {viewMode === 'matrix' && (
-            <ProjectMatrix projects={filteredProjects} onSelectProject={handleSelectProject} />
+            <ProjectMatrix projects={projects} onSelectProject={handleSelectProject} />
           )}
           
           {viewMode === 'cards' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredProjects.map(project => (
+              {projects.map(project => (
                 <ProjectCard
                   key={project.id}
                   project={project}
@@ -77,13 +110,22 @@ export const ProjectSelection = () => {
           
           {viewMode === 'table' && (
             <ProjectSelectionTable 
-              projects={filteredProjects} 
+              projects={projects} 
               onSelectProject={handleSelectProject} 
             />
           )}
           
           {viewMode === 'criteria' && (
-            activeVersion ? (
+            versionLoading ? (
+              <div className="flex justify-center p-8">Loading criteria version...</div>
+            ) : versionError ? (
+              <div className="p-6 bg-red-50 border border-red-200 rounded-md">
+                <h3 className="text-lg font-medium text-red-800 mb-2">Error Loading Criteria Version</h3>
+                <p className="text-red-700">
+                  {versionError instanceof Error ? versionError.message : 'An unknown error occurred'}
+                </p>
+              </div>
+            ) : activeVersion ? (
               <CriteriaManagement versionId={activeVersion.id} />
             ) : (
               <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-md">

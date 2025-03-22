@@ -1,4 +1,4 @@
-import prisma from '../lib/prisma';
+import prisma, { getPrismaWithRLS } from '../lib/prisma';
 import { Prisma, PrismaClient } from '@prisma/client';
 
 // Define AuditLog type until Prisma client is generated
@@ -44,20 +44,46 @@ export abstract class BaseRepository<T, C, U> {
   }
 
   /**
+   * Gets a RLS-enabled Prisma client for the current organization
+   */
+  protected getPrismaWithContext(organizationId?: string, userId?: string) {
+    return getPrismaWithRLS(organizationId, userId);
+  }
+
+  /**
    * Finds all entities
    */
-  async findAll(organizationId?: string): Promise<T[]> {
-    const where: any = {};
-    if (organizationId) {
-      where.organizationId = organizationId;
+  async findAll(filters: { organizationId?: string } = {}): Promise<T[]> {
+    const { organizationId } = filters;
+    
+    if (!organizationId) {
+      throw new Error("Organization ID is required for findAll operations");
     }
-    return this.model.findMany({ where });
+
+    // Use RLS-enabled Prisma client
+    const prismaWithRLS = this.getPrismaWithContext(organizationId);
+    
+    // We don't need to specify organizationId in the where clause
+    // as RLS will handle the filtering, but we keep it for compatibility
+    // with direct DB access scenarios where RLS might be bypassed
+    const where: any = { organizationId };
+    
+    return prismaWithRLS[this.model.name].findMany({ where });
   }
 
   /**
    * Finds an entity by ID
    */
-  async findById(id: string): Promise<T | null> {
+  async findById(id: string, organizationId?: string): Promise<T | null> {
+    if (organizationId) {
+      // If we have organization context, use RLS
+      const prismaWithRLS = this.getPrismaWithContext(organizationId);
+      return prismaWithRLS[this.model.name].findUnique({
+        where: { id },
+      });
+    }
+    
+    // Fallback to non-RLS if no organization context
     return this.model.findUnique({
       where: { id },
     });
@@ -67,8 +93,17 @@ export abstract class BaseRepository<T, C, U> {
    * Creates a new entity with audit logging
    */
   async create(data: C, userId: string): Promise<T> {
-    return prisma.$transaction(async (tx: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use'>) => {
-      const result = await this.model.create({
+    // Extract organizationId from data if available
+    const organizationId = (data as any).organizationId;
+    
+    if (!organizationId) {
+      throw new Error("Organization ID is required to create entities");
+    }
+    
+    const prismaWithRLS = this.getPrismaWithContext(organizationId, userId);
+    
+    return prismaWithRLS.$transaction(async (tx: any) => {
+      const result = await tx[this.model.name].create({
         data,
       });
 
@@ -78,6 +113,7 @@ export abstract class BaseRepository<T, C, U> {
           action: 'CREATE',
           entityType: this.entityType,
           entityId: result.id,
+          organizationId, // Add organization to audit log
         },
       });
 
@@ -89,8 +125,23 @@ export abstract class BaseRepository<T, C, U> {
    * Updates an entity with audit logging
    */
   async update(id: string, data: U, userId: string): Promise<T> {
-    return prisma.$transaction(async (tx: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use'>) => {
-      const result = await this.model.update({
+    // First get the entity to get its organization
+    const existing: any = await this.findById(id);
+    
+    if (!existing) {
+      throw new Error(`Entity with ID ${id} not found`);
+    }
+    
+    const organizationId = existing.organizationId;
+    
+    if (!organizationId) {
+      throw new Error("Organization ID is required to update entities");
+    }
+    
+    const prismaWithRLS = this.getPrismaWithContext(organizationId, userId);
+    
+    return prismaWithRLS.$transaction(async (tx: any) => {
+      const result = await tx[this.model.name].update({
         where: { id },
         data,
       });
@@ -101,6 +152,7 @@ export abstract class BaseRepository<T, C, U> {
           action: 'UPDATE',
           entityType: this.entityType,
           entityId: id,
+          organizationId, // Add organization to audit log
         },
       });
 
@@ -112,8 +164,23 @@ export abstract class BaseRepository<T, C, U> {
    * Deletes an entity with audit logging
    */
   async delete(id: string, userId: string): Promise<T> {
-    return prisma.$transaction(async (tx: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use'>) => {
-      const result = await this.model.delete({
+    // First get the entity to get its organization
+    const existing: any = await this.findById(id);
+    
+    if (!existing) {
+      throw new Error(`Entity with ID ${id} not found`);
+    }
+    
+    const organizationId = existing.organizationId;
+    
+    if (!organizationId) {
+      throw new Error("Organization ID is required to delete entities");
+    }
+    
+    const prismaWithRLS = this.getPrismaWithContext(organizationId, userId);
+    
+    return prismaWithRLS.$transaction(async (tx: any) => {
+      const result = await tx[this.model.name].delete({
         where: { id },
       });
 
@@ -123,6 +190,7 @@ export abstract class BaseRepository<T, C, U> {
           action: 'DELETE',
           entityType: this.entityType,
           entityId: id,
+          organizationId, // Add organization to audit log
         },
       });
 

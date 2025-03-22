@@ -43,13 +43,24 @@
   - Entity relationships and type definitions
   - Multi-tenant data isolation with RLS
   - Role-based access control
+- Frontend connected to database repositories:
+  - API routes for entities (projects, criteria, versions)
+  - React Query hooks for data fetching and caching
+  - Adapter pattern to convert between repository and UI models
+  - Loading and error states in components
+  - Type-safe API calls with proper error handling
+- Mock authentication system for development:
+  - AuthContext provider with sample users and organizations
+  - Automatic auth header injection for API requests
+  - Developer UI for switching between users and organizations
+  - Integration with database RLS for proper data isolation
+  - Repository-level RLS support via Prisma client extensions
 
 ## In Progress
-- Connecting frontend components to database repositories
+- Full authentication system implementation with NextAuth
 - Committee review interface
 
 ## Next Steps
-- Authentication system implementation with NextAuth
 - User role management UI
 - Multi-tenant UI customization
 - Portfolio simulation based on constraints
@@ -57,8 +68,7 @@
 - Excel import for project bulk creation
 
 ## Known Issues
-- Frontend still using placeholder data instead of actual database
-- Missing authentication and authorization
+- Mock authentication is for development only - needs real implementation
 - Project selection algorithm not fully implemented
 - Form data is not persisted if user navigates away
 - Criteria weights need to be recalculated when criteria are added or removed

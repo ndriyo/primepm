@@ -19,6 +19,12 @@
   - Self-assessment against active criteria with card-based option selection
   - Review and submission workflow with formatted values
   - Added cancel button for easy navigation back to project list
+- Connected frontend components to database repositories:
+  - Created API routes for all entities (projects, criteria versions, criteria, scores)
+  - Implemented React Query hooks for data fetching, caching, and mutations
+  - Developed adapter pattern to convert between repository models and UI models
+  - Added loading states and error handling to components
+  - Implemented optimistic updates for better user experience
 
 ## Active Decisions
 - Using Next.js for both frontend and backend functionality
@@ -27,15 +33,24 @@
 - Using TypeScript for type safety across the application
 - Using multi-step forms for complex user inputs
 - Implementing a dynamic self-assessment system based on criteria definitions
+- Using React Query for server state management
+- Implementing the Repository pattern for data access with standardized CRUD operations
+- Using adapter pattern to bridge backend and frontend models
+
+## Recent Progress
+- Implemented a mock authentication system for development purposes:
+  - Created AuthContext with mock users and organizations
+  - Added authentication headers to API requests
+  - Modified repositories to respect Row-Level Security (RLS)
+  - Created DevAuthSwitcher component for easy user/role switching
 
 ## Next Steps
-- Connect the frontend to Supabase for data persistence
-- Implement authentication with NextAuth
-- Build out the multi-tenant functionality
+- Complete the real authentication implementation with NextAuth
+- Implement committee review interface for submitted projects
 - Implement portfolio simulation based on constraints
+- Further enhance multi-tenant functionality
 - Add data export/import functionality
 - Deploy the application to production environments
-- Add committee review interface for submitted projects
 
 ## Deployment Configuration
 - Added Netlify deployment configuration with netlify.toml

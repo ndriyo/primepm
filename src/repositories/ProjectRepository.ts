@@ -6,19 +6,19 @@ import { BaseRepository } from './BaseRepository';
 export interface Project {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   organizationId: string;
-  departmentId?: string;
+  departmentId?: string | null;
   status: string;
   startDate: Date;
   endDate: Date;
-  budget?: number;
+  budget?: number | null;
   resources: number;
   tags: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | null;
+  updatedAt: Date | null;
   createdById: string;
-  updatedById?: string;
+  updatedById?: string | null;
   projectScores?: any[];
   committeeScores?: any[];
 }
@@ -70,7 +70,7 @@ export class ProjectRepository extends BaseRepository<
   async findByOrganization(organizationId: string): Promise<Project[]> {
     const prismaWithRLS = this.getPrismaWithContext(organizationId);
     
-    return prismaWithRLS.project.findMany({
+    const projects = await prismaWithRLS.project.findMany({
       where: { organizationId },
       orderBy: { createdAt: 'desc' },
       include: {
@@ -81,6 +81,8 @@ export class ProjectRepository extends BaseRepository<
         }
       }
     });
+    
+    return projects as unknown as Project[];
   }
 
   /**
@@ -100,7 +102,7 @@ export class ProjectRepository extends BaseRepository<
     
     const prismaWithRLS = this.getPrismaWithContext(sampleProject.organizationId);
     
-    return prismaWithRLS.project.findMany({
+    const projects = await prismaWithRLS.project.findMany({
       where: { departmentId },
       orderBy: { createdAt: 'desc' },
       include: {
@@ -111,6 +113,8 @@ export class ProjectRepository extends BaseRepository<
         }
       }
     });
+    
+    return projects as unknown as Project[];
   }
 
   /**
@@ -119,7 +123,7 @@ export class ProjectRepository extends BaseRepository<
   async findByStatus(organizationId: string, status: string): Promise<Project[]> {
     const prismaWithRLS = this.getPrismaWithContext(organizationId);
     
-    return prismaWithRLS.project.findMany({
+    const projects = await prismaWithRLS.project.findMany({
       where: { 
         organizationId,
         status
@@ -133,6 +137,8 @@ export class ProjectRepository extends BaseRepository<
         }
       }
     });
+    
+    return projects as unknown as Project[];
   }
 
   /**
@@ -243,22 +249,22 @@ export class ProjectRepository extends BaseRepository<
     // Get RLS-enabled client
     const prismaWithRLS = this.getPrismaWithContext(data.organizationId, userId);
 
-    return prismaWithRLS.$transaction(async (tx: any) => {
-      const result = await tx.project.create({
-        data: createData
-      });
-
-      await tx.auditLog.create({
-        data: {
-          userId,
-          action: 'CREATE',
-          entityType: 'project',
-          entityId: result.id
-        },
-      });
-
-      return result;
+    // Create the project
+    const result = await prismaWithRLS.project.create({
+      data: createData
     });
+
+    // Create audit log entry
+    await prismaWithRLS.auditLog.create({
+      data: {
+        userId,
+        action: 'CREATE',
+        entityType: 'project',
+        entityId: result.id
+      },
+    });
+    
+    return result as unknown as Project;
   }
 
   /**
@@ -300,23 +306,23 @@ export class ProjectRepository extends BaseRepository<
     const organizationId = data.organizationId || existingProject.organizationId;
     const prismaWithRLS = this.getPrismaWithContext(organizationId, userId);
 
-    return prismaWithRLS.$transaction(async (tx: any) => {
-      const result = await tx.project.update({
-        where: { id },
-        data: updateData
-      });
-
-      await tx.auditLog.create({
-        data: {
-          userId,
-          action: 'UPDATE',
-          entityType: 'project',
-          entityId: result.id
-        },
-      });
-
-      return result;
+    // Update the project
+    const result = await prismaWithRLS.project.update({
+      where: { id },
+      data: updateData
     });
+
+    // Create audit log entry
+    await prismaWithRLS.auditLog.create({
+      data: {
+        userId,
+        action: 'UPDATE',
+        entityType: 'project',
+        entityId: result.id
+      },
+    });
+    
+    return result as unknown as Project;
   }
 
   /**
@@ -345,92 +351,90 @@ export class ProjectRepository extends BaseRepository<
     
     const prismaWithRLS = this.getPrismaWithContext(project.organizationId, userId);
     
-    return prismaWithRLS.$transaction(async (tx: any) => {
-      // First check if we're dealing with a key or an ID
-      let criterionId = criterionKeyOrId;
+    // First check if we're dealing with a key or an ID
+    let criterionId = criterionKeyOrId;
+    
+    // If it doesn't look like a UUID, assume it's a key and look up the ID
+    if (!criterionKeyOrId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      console.log(`Looking up criterion ID for key: ${criterionKeyOrId}`);
       
-      // If it doesn't look like a UUID, assume it's a key and look up the ID
-      if (!criterionKeyOrId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        console.log(`Looking up criterion ID for key: ${criterionKeyOrId}`);
-        
-        // Find the criterion by key within the specified version
-        const criterion = await tx.criterion.findFirst({
-          where: {
-            key: criterionKeyOrId,
-            versionId: versionId
-          },
-          select: {
-            id: true
-          }
-        });
-        
-        if (!criterion) {
-          throw new Error(`Criterion with key ${criterionKeyOrId} not found in version ${versionId}`);
-        }
-        
-        criterionId = criterion.id;
-        console.log(`Found criterion ID: ${criterionId} for key: ${criterionKeyOrId}`);
-      }
-      
-      // Check if score exists using the resolved criterionId
-      const existingScore = await tx.projectCriteriaScore.findFirst({
+      // Find the criterion by key within the specified version
+      const criterion = await prismaWithRLS.criterion.findFirst({
         where: {
-          projectId,
-          criterionId,
-          versionId
+          key: criterionKeyOrId,
+          versionId: versionId
+        },
+        select: {
+          id: true
         }
       });
-
-      let result;
       
-      if (existingScore) {
-        // Update existing score
-        result = await tx.projectCriteriaScore.update({
-          where: {
-            id: existingScore.id
-          },
-          data: {
-            score,
-            comment,
-            updatedBy: {
-              connect: { id: userId }
-            }
-          }
-        });
-      } else {
-        // Create new score
-        result = await tx.projectCriteriaScore.create({
-          data: {
-            score,
-            comment,
-            project: {
-              connect: { id: projectId }
-            },
-            criterion: {
-              connect: { id: criterionId }
-            },
-            version: {
-              connect: { id: versionId }
-            },
-            createdBy: {
-              connect: { id: userId }
-            }
-          }
-        });
+      if (!criterion) {
+        throw new Error(`Criterion with key ${criterionKeyOrId} not found in version ${versionId}`);
       }
-
-      // Log the action
-      await tx.auditLog.create({
-        data: {
-          userId,
-          action: existingScore ? 'UPDATE' : 'CREATE',
-          entityType: 'project_criteria_score',
-          entityId: result.id
-        },
-      });
-
-      return result;
+      
+      criterionId = criterion.id;
+      console.log(`Found criterion ID: ${criterionId} for key: ${criterionKeyOrId}`);
+    }
+    
+    // Check if score exists using the resolved criterionId
+    const existingScore = await prismaWithRLS.projectCriteriaScore.findFirst({
+      where: {
+        projectId,
+        criterionId,
+        versionId
+      }
     });
+
+    let result;
+    
+    if (existingScore) {
+      // Update existing score
+      result = await prismaWithRLS.projectCriteriaScore.update({
+        where: {
+          id: existingScore.id
+        },
+        data: {
+          score,
+          comment,
+          updatedBy: {
+            connect: { id: userId }
+          }
+        }
+      });
+    } else {
+      // Create new score
+      result = await prismaWithRLS.projectCriteriaScore.create({
+        data: {
+          score,
+          comment,
+          project: {
+            connect: { id: projectId }
+          },
+          criterion: {
+            connect: { id: criterionId }
+          },
+          version: {
+            connect: { id: versionId }
+          },
+          createdBy: {
+            connect: { id: userId }
+          }
+        }
+      });
+    }
+
+    // Log the action
+    await prismaWithRLS.auditLog.create({
+      data: {
+        userId,
+        action: existingScore ? 'UPDATE' : 'CREATE',
+        entityType: 'project_criteria_score',
+        entityId: result.id
+      },
+    });
+
+    return result;
   }
 
   /**

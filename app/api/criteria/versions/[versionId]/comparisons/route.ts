@@ -5,7 +5,7 @@ const criteriaRepo = new CriteriaRepository();
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { versionId: string } }
+  { params }: { params: Promise<{ versionId: string }> }
 ) {
   try {
     // Await the params object before accessing properties

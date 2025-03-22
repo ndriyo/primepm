@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Project, calculateOverallScore } from '@/src/data/projects';
+import { Project, calculateOverallScore } from '@/app/contexts/ProjectContext';
 import { useProjects } from '@/app/contexts/ProjectContext';
 import { ProjectRadarChart } from './ProjectRadarChart';
 
@@ -63,10 +63,6 @@ export const ProjectCard = ({ project, onClick }: ProjectCardProps) => {
             <div>
               <p className="text-gray-500">End Date</p>
               <p className="font-medium">{new Date(project.endDate).toLocaleDateString()}</p>
-            </div>
-            <div className="col-span-2">
-              <p className="text-gray-500">Team</p>
-              <p className="font-medium">{project.team.slice(0, 3).join(', ')}{project.team.length > 3 ? ` +${project.team.length - 3} more` : ''}</p>
             </div>
           </div>
           

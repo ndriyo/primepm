@@ -27,8 +27,7 @@ const defaultNewProject: ProjectFormData = {
   departmentId: '',
   status: 'initiation', // Default status for new projects
   criteria: {},
-  tags: [],
-  team: [],
+  tags: []
 };
 
 export default function ProjectEntryForm() {

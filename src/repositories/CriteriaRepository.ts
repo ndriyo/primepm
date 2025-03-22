@@ -6,29 +6,29 @@ export interface Criterion {
   id: string;
   key: string;
   label: string;
-  description?: string;
-  isInverse: boolean;
-  isDefault: boolean;
-  weight?: number;
-  scale?: Record<string, any>;
-  rubric?: Record<string, string>;
+  description?: string | null;
+  isInverse: boolean | null;
+  isDefault: boolean | null;
+  weight?: number | null;
+  scale?: Record<string, any> | null;
+  rubric?: Record<string, any> | null;
   versionId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  createdById?: string;
-  updatedById?: string;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+  createdById?: string | null;
+  updatedById?: string | null;
 }
 
 export interface CriteriaVersion {
   id: string;
   name: string;
-  description?: string;
-  isActive: boolean;
+  description?: string | null;
+  isActive: boolean | null;
   organizationId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  createdById?: string;
-  updatedById?: string;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+  createdById?: string | null;
+  updatedById?: string | null;
   criteria?: Criterion[];
 }
 
@@ -87,17 +87,20 @@ export class CriteriaRepository {
    * Find all criteria versions for an organization
    */
   async findVersionsByOrganization(organizationId: string): Promise<CriteriaVersion[]> {
-    return prisma.criteriaVersion.findMany({
+    const versions = await prisma.criteriaVersion.findMany({
       where: { organizationId },
       orderBy: { createdAt: 'desc' },
     });
+    
+    // Cast the Prisma result to our interface
+    return versions as unknown as CriteriaVersion[];
   }
 
   /**
    * Find active criteria version for an organization
    */
   async findActiveVersion(organizationId: string): Promise<CriteriaVersion | null> {
-    return prisma.criteriaVersion.findFirst({
+    const version = await prisma.criteriaVersion.findFirst({
       where: { 
         organizationId,
         isActive: true 
@@ -108,6 +111,9 @@ export class CriteriaRepository {
         }
       }
     });
+    
+    // Cast the Prisma result to our interface
+    return version as unknown as CriteriaVersion | null;
   }
 
   /**
@@ -145,7 +151,7 @@ export class CriteriaRepository {
         }
       }
       
-      return result;
+      return result as unknown as CriteriaVersion | null;
     } catch (error) {
       console.error(`[CriteriaRepository] Error finding version by ID:`, error);
       throw error;
@@ -294,16 +300,19 @@ export class CriteriaRepository {
    * Find criterion by ID
    */
   async findCriterionById(id: string): Promise<Criterion | null> {
-    return prisma.criterion.findUnique({
+    const criterion = await prisma.criterion.findUnique({
       where: { id }
     });
+    return criterion as unknown as Criterion | null;
   }
 
   /**
    * Create a criterion
    */
   async createCriterion(data: CriterionCreateInput, userId: string): Promise<Criterion> {
-    return prisma.$transaction(async (tx: any) => {
+    let result: any;
+    
+    await prisma.$transaction(async (tx: any) => {
       // Create criterion
       const createData: any = {
         key: data.key,
@@ -322,7 +331,7 @@ export class CriteriaRepository {
         }
       };
 
-      const result = await tx.criterion.create({
+      result = await tx.criterion.create({
         data: createData
       });
 
@@ -335,16 +344,18 @@ export class CriteriaRepository {
           entityId: result.id,
         },
       });
-
-      return result;
     });
+    
+    return result as unknown as Criterion;
   }
 
   /**
    * Update a criterion
    */
   async updateCriterion(id: string, data: CriterionUpdateInput, userId: string): Promise<Criterion> {
-    return prisma.$transaction(async (tx: any) => {
+    let result: any;
+    
+    await prisma.$transaction(async (tx: any) => {
       // Update criterion
       const updateData: any = {
         ...data,
@@ -356,7 +367,7 @@ export class CriteriaRepository {
       // Remove the updatedById field to avoid TS errors
       delete updateData.updatedById;
 
-      const result = await tx.criterion.update({
+      result = await tx.criterion.update({
         where: { id },
         data: updateData
       });
@@ -370,18 +381,20 @@ export class CriteriaRepository {
           entityId: id,
         },
       });
-
-      return result;
     });
+    
+    return result as unknown as Criterion;
   }
 
   /**
    * Delete a criterion
    */
   async deleteCriterion(id: string, userId: string): Promise<Criterion> {
-    return prisma.$transaction(async (tx: any) => {
+    let result: any;
+    
+    await prisma.$transaction(async (tx: any) => {
       // Delete criterion
-      const result = await tx.criterion.delete({
+      result = await tx.criterion.delete({
         where: { id }
       });
 
@@ -394,9 +407,9 @@ export class CriteriaRepository {
           entityId: id,
         },
       });
-
-      return result;
     });
+    
+    return result as unknown as Criterion;
   }
 
   /**

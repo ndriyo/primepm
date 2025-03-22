@@ -6,17 +6,17 @@ import { Project } from './ProjectRepository';
 export interface PortfolioSelection {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   version: string;
   status: 'draft' | 'final';
   selectionDate: Date;
-  constraints?: Record<string, any>;
-  isActive: boolean;
+  constraints?: Record<string, any> | null;
+  isActive: boolean | null;
   organizationId: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | null;
+  updatedAt: Date | null;
   createdById: string;
-  updatedById?: string;
+  updatedById?: string | null;
   portfolioProjects?: PortfolioProject[];
 }
 
@@ -26,7 +26,7 @@ export interface PortfolioProject {
   projectId: string;
   isSelected: boolean;
   score: number;
-  createdAt: Date;
+  createdAt: Date | null;
   project?: Project;
 }
 
@@ -66,17 +66,18 @@ export class PortfolioRepository {
    * Find all portfolio selections for an organization
    */
   async findSelectionsByOrganization(organizationId: string): Promise<PortfolioSelection[]> {
-    return prisma.portfolioSelection.findMany({
+    const selections = await prisma.portfolioSelection.findMany({
       where: { organizationId },
       orderBy: { createdAt: 'desc' },
     });
+    return selections as unknown as PortfolioSelection[];
   }
 
   /**
    * Find active portfolio selection
    */
   async findActiveSelection(organizationId: string): Promise<PortfolioSelection | null> {
-    return prisma.portfolioSelection.findFirst({
+    const selection = await prisma.portfolioSelection.findFirst({
       where: {
         organizationId,
         isActive: true
@@ -89,13 +90,14 @@ export class PortfolioRepository {
         }
       }
     });
+    return selection as unknown as PortfolioSelection | null;
   }
 
   /**
    * Find portfolio selection by ID
    */
   async findSelectionById(id: string): Promise<PortfolioSelection | null> {
-    return prisma.portfolioSelection.findUnique({
+    const selection = await prisma.portfolioSelection.findUnique({
       where: { id },
       include: {
         portfolioProjects: {
@@ -105,13 +107,16 @@ export class PortfolioRepository {
         }
       }
     });
+    return selection as unknown as PortfolioSelection | null;
   }
 
   /**
    * Create a portfolio selection
    */
   async createSelection(data: PortfolioSelectionCreateInput, userId: string): Promise<PortfolioSelection> {
-    return prisma.$transaction(async (tx: any) => {
+    let result: any;
+    
+    await prisma.$transaction(async (tx: any) => {
       // If making this version active, deactivate all others
       if (data.isActive) {
         await tx.portfolioSelection.updateMany({
@@ -145,7 +150,7 @@ export class PortfolioRepository {
         }
       };
 
-      const result = await tx.portfolioSelection.create({
+      result = await tx.portfolioSelection.create({
         data: createData
       });
 
@@ -158,16 +163,18 @@ export class PortfolioRepository {
           entityId: result.id,
         },
       });
-
-      return result;
     });
+    
+    return result as unknown as PortfolioSelection;
   }
 
   /**
    * Update a portfolio selection
    */
   async updateSelection(id: string, data: PortfolioSelectionUpdateInput, userId: string): Promise<PortfolioSelection> {
-    return prisma.$transaction(async (tx: any) => {
+    let result: any;
+    
+    await prisma.$transaction(async (tx: any) => {
       const selection = await tx.portfolioSelection.findUnique({
         where: { id },
         select: { organizationId: true }
@@ -205,7 +212,7 @@ export class PortfolioRepository {
       // Remove the updatedById field to avoid TS errors
       delete updateData.updatedById;
 
-      const result = await tx.portfolioSelection.update({
+      result = await tx.portfolioSelection.update({
         where: { id },
         data: updateData
       });
@@ -219,23 +226,25 @@ export class PortfolioRepository {
           entityId: id,
         },
       });
-
-      return result;
     });
+    
+    return result as unknown as PortfolioSelection;
   }
 
   /**
    * Delete a portfolio selection
    */
   async deleteSelection(id: string, userId: string): Promise<PortfolioSelection> {
-    return prisma.$transaction(async (tx: any) => {
+    let result: any;
+    
+    await prisma.$transaction(async (tx: any) => {
       // First delete all portfolio projects
       await tx.portfolioProject.deleteMany({
         where: { portfolioId: id }
       });
 
       // Then delete the selection
-      const result = await tx.portfolioSelection.delete({
+      result = await tx.portfolioSelection.delete({
         where: { id }
       });
 
@@ -248,16 +257,18 @@ export class PortfolioRepository {
           entityId: id,
         },
       });
-
-      return result;
     });
+    
+    return result as unknown as PortfolioSelection;
   }
 
   /**
    * Add a project to a portfolio
    */
   async addProjectToPortfolio(data: PortfolioProjectCreateInput, userId: string): Promise<PortfolioProject> {
-    return prisma.$transaction(async (tx: any) => {
+    let result: any;
+    
+    await prisma.$transaction(async (tx: any) => {
       // Check if project already exists in this portfolio
       const existingProject = await tx.portfolioProject.findFirst({
         where: {
@@ -268,7 +279,7 @@ export class PortfolioRepository {
 
       if (existingProject) {
         // Update existing
-        const result = await tx.portfolioProject.update({
+        result = await tx.portfolioProject.update({
           where: { id: existingProject.id },
           data: {
             isSelected: data.isSelected,
@@ -285,11 +296,9 @@ export class PortfolioRepository {
             entityId: result.id,
           },
         });
-
-        return result;
       } else {
         // Create new
-        const result = await tx.portfolioProject.create({
+        result = await tx.portfolioProject.create({
           data: {
             portfolio: {
               connect: { id: data.portfolioId }
@@ -311,10 +320,10 @@ export class PortfolioRepository {
             entityId: result.id,
           },
         });
-
-        return result;
       }
     });
+    
+    return result as unknown as PortfolioProject;
   }
 
   /**
@@ -359,7 +368,9 @@ export class PortfolioRepository {
     isSelected: boolean,
     userId: string
   ): Promise<PortfolioProject> {
-    return prisma.$transaction(async (tx: any) => {
+    let result: any;
+    
+    await prisma.$transaction(async (tx: any) => {
       const portfolioProject = await tx.portfolioProject.findFirst({
         where: {
           portfolioId,
@@ -372,7 +383,7 @@ export class PortfolioRepository {
       }
 
       // Update the portfolio project
-      const result = await tx.portfolioProject.update({
+      result = await tx.portfolioProject.update({
         where: { id: portfolioProject.id },
         data: { isSelected }
       });
@@ -386,9 +397,9 @@ export class PortfolioRepository {
           entityId: portfolioProject.id,
         },
       });
-
-      return result;
     });
+    
+    return result as unknown as PortfolioProject;
   }
 
   /**

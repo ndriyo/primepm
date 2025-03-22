@@ -15,10 +15,10 @@ const projectsWithDepartments = projects.map((project, index) => {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
-    const projectId = params.projectId;
+    const { projectId } = await params;
 
     // Get authentication and role information from headers
     const organizationId = request.headers.get("x-organization-id");

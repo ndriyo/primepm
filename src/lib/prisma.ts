@@ -25,17 +25,13 @@ export function getPrismaWithRLS(organizationId?: string, userId?: string) {
   // Create an extended client that sets RLS via PG session variables
   return prisma.$extends({
     query: {
-      async $allOperations({ 
-        args, 
-        query, 
-        model, 
-        operation 
-      }: { 
+      $allOperations(params: { 
         args: any; 
         query: (args: any) => Promise<any>; 
-        model: string | undefined;
+        model?: string | undefined; 
         operation: string;
       }) {
+        const { args, query } = params;
         // Don't attempt to add RLS headers to the query directly
         // Instead, we'll need to set up proper PostgreSQL RLS policies
         // and have the database enforce security

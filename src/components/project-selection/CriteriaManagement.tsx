@@ -201,7 +201,7 @@ export const CriteriaManagement = ({
       key: criterion.key,
       label: criterion.label,
       description: criterion.description || '',
-      isInverse: criterion.isInverse,
+      isInverse: criterion.isInverse ?? false,
       scale: criterion.scale as { min: number; max: number } || { min: 1, max: 5 },
       rubric: criterion.rubric || { 1: '', 2: '', 3: '', 4: '', 5: '' }
     });
@@ -558,7 +558,7 @@ export const CriteriaManagement = ({
                   {criterion.scale && <span className="ml-1">({criterion.scale.min}-{criterion.scale.max})</span>}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {criterion.weight !== undefined ? 
+                  {criterion.weight !== undefined && criterion.weight !== null ? 
                     `${(criterion.weight * 100).toFixed(1)}%` : 
                     <span className="text-yellow-500">Not set</span>
                   }

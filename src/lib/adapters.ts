@@ -27,9 +27,11 @@ export function adaptRepositoryProject(repoProject: RepoProject): DataProject {
   
   return {
     id: repoProject.id,
+    organizationId: repoProject.organizationId,
     name: repoProject.name,
     description: repoProject.description || '',
-    status: repoProject.status as 'planning' | 'in-progress' | 'completed' | 'on-hold',
+    resources: repoProject.resources || 0,
+    status: repoProject.status as 'initiation' | 'planning' | 'in-progress' | 'completed' | 'on-hold',
     criteria: criteria,
     startDate: repoProject.startDate instanceof Date 
       ? repoProject.startDate.toISOString().split('T')[0] 
@@ -37,7 +39,6 @@ export function adaptRepositoryProject(repoProject: RepoProject): DataProject {
     endDate: repoProject.endDate instanceof Date 
       ? repoProject.endDate.toISOString().split('T')[0] 
       : String(repoProject.endDate).split('T')[0],
-    team: team,
     department: departmentName,
     tags: Array.isArray(repoProject.tags) ? repoProject.tags : [],
     budget: repoProject.budget || undefined,

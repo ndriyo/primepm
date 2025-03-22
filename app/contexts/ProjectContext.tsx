@@ -379,3 +379,42 @@ export const useProjects = (): ProjectContextType => {
   }
   return context;
 };
+
+export const calculateOverallScore = (
+  project: Project, 
+  weights: Record<string, number> = {},
+  inverseCriteria: string[] = []
+) => {
+  // Get all criteria keys that exist in the project
+  const criteriaKeys = Object.keys(project.criteria);
+  
+  // Filter weights to only include criteria that exist in the project
+  const filteredWeights: Record<string, number> = {};
+  
+  // Default weight of 1 for all criteria if not specified
+  criteriaKeys.forEach(key => {
+    filteredWeights[key] = weights[key] || 1;
+  });
+  
+  const totalWeight = Object.values(filteredWeights).reduce((sum, weight) => sum + weight, 0);
+  
+  if (totalWeight === 0) return 0;
+  
+  let weightedSum = 0;
+  
+  // Calculate weighted sum, handling inverse criteria
+  criteriaKeys.forEach(key => {
+    let value = project.criteria[key];
+    const weight = filteredWeights[key] || 0;
+    
+    // For inverse criteria, invert the scale (10 - value + 1)
+    // This makes lower values score higher
+    if (inverseCriteria.includes(key)) {
+      value = 5 - value; // Invert scale: 1->10, 2->9, 3->8, etc.
+    }
+    
+    weightedSum += value * weight;
+  });
+  
+  return parseFloat((weightedSum / totalWeight).toFixed(2));
+};

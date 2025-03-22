@@ -50,8 +50,7 @@ export default function ReviewSubmitStep({
       id: 'temp',
       status: 'planning',
       startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      team: formData.team || []
+      endDate: endDate.toISOString()
     } as Project;
     
     return calculateOverallScore(tempProject, {}, inverseCriteria);

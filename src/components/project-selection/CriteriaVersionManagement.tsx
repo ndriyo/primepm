@@ -178,7 +178,7 @@ export const CriteriaVersionManagement = () => {
     setFormData({
       name: version.name,
       description: version.description || '',
-      isActive: version.isActive,
+      isActive: version.isActive ?? false,
     });
     setEditingId(version.id);
     setIsFormVisible(true);
@@ -411,7 +411,7 @@ export const CriteriaVersionManagement = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(version.createdAt).toLocaleDateString()}
+                    {version.createdAt ? new Date(version.createdAt).toLocaleDateString() : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button

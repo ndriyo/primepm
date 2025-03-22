@@ -8,11 +8,11 @@ export interface User {
   fullName: string;
   roles: string[];
   organizationId: string;
-  departmentId?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  createdById?: string;
-  updatedById?: string;
+  departmentId?: string | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+  createdById?: string | null;
+  updatedById?: string | null;
 }
 
 // Input types
@@ -48,36 +48,39 @@ export class UserRepository extends BaseRepository<
    * Find user by email
    */
   async findByEmail(email: string): Promise<User | null> {
-    return this.model.findUnique({
+    const user = await this.model.findUnique({
       where: { email }
     });
+    return user as unknown as User | null;
   }
 
   /**
    * Find users by organization
    */
   async findByOrganization(organizationId: string): Promise<User[]> {
-    return this.model.findMany({
+    const users = await this.model.findMany({
       where: { organizationId },
       orderBy: { fullName: 'asc' }
     });
+    return users as unknown as User[];
   }
 
   /**
    * Find users by department
    */
   async findByDepartment(departmentId: string): Promise<User[]> {
-    return this.model.findMany({
+    const users = await this.model.findMany({
       where: { departmentId },
       orderBy: { fullName: 'asc' }
     });
+    return users as unknown as User[];
   }
 
   /**
    * Find users by role
    */
   async findByRole(organizationId: string, role: string): Promise<User[]> {
-    return this.model.findMany({
+    const users = await this.model.findMany({
       where: {
         organizationId,
         roles: {
@@ -86,6 +89,7 @@ export class UserRepository extends BaseRepository<
       },
       orderBy: { fullName: 'asc' }
     });
+    return users as unknown as User[];
   }
 
   /**
@@ -112,8 +116,10 @@ export class UserRepository extends BaseRepository<
       })
     };
 
-    return prisma.$transaction(async (tx: any) => {
-      const result = await tx.user.create({
+    let result: any;
+    
+    await prisma.$transaction(async (tx: any) => {
+      result = await tx.user.create({
         data: createData
       });
 
@@ -126,9 +132,9 @@ export class UserRepository extends BaseRepository<
           entityId: result.id,
         },
       });
-
-      return result;
     });
+    
+    return result as unknown as User;
   }
 
   /**
@@ -156,8 +162,10 @@ export class UserRepository extends BaseRepository<
     delete updateData.departmentId;
     delete updateData.updatedById;
 
-    return prisma.$transaction(async (tx: any) => {
-      const result = await tx.user.update({
+    let result: any;
+    
+    await prisma.$transaction(async (tx: any) => {
+      result = await tx.user.update({
         where: { id },
         data: updateData
       });
@@ -171,9 +179,9 @@ export class UserRepository extends BaseRepository<
           entityId: id,
         },
       });
-
-      return result;
     });
+    
+    return result as unknown as User;
   }
 
   /**
@@ -241,6 +249,6 @@ export class UserRepository extends BaseRepository<
       throw new Error(`User with ID ${id} not found`);
     }
 
-    return user;
+    return user as unknown as User & { department?: any };
   }
 }

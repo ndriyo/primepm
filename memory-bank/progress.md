@@ -55,6 +55,12 @@
   - Developer UI for switching between users and organizations
   - Integration with database RLS for proper data isolation
   - Repository-level RLS support via Prisma client extensions
+- TypeScript compliance throughout the application:
+  - Proper handling of nullable fields in repository interfaces
+  - Consistent type casting patterns for database results
+  - Correctly typed transaction handlers with appropriate return values
+  - Fixed Prisma client extension parameter typing in $allOperations
+  - Suspense boundaries for components using useSearchParams()
 
 ## In Progress
 - Full authentication system implementation with NextAuth

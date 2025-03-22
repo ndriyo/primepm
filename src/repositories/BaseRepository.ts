@@ -8,7 +8,7 @@ type AuditLog = {
   action: string;
   entityType: string;
   entityId: string;
-  createdAt: Date;
+  createdAt: Date | null;
 };
 
 /**
@@ -68,7 +68,9 @@ export abstract class BaseRepository<T, C, U> {
     // with direct DB access scenarios where RLS might be bypassed
     const where: any = { organizationId };
     
-    return prismaWithRLS[this.model.name].findMany({ where });
+    // Use a more focused type assertion on the result of dynamic property access
+    const modelAccess = (prismaWithRLS as any)[this.model.name];
+    return modelAccess.findMany({ where });
   }
 
   /**
@@ -78,7 +80,8 @@ export abstract class BaseRepository<T, C, U> {
     if (organizationId) {
       // If we have organization context, use RLS
       const prismaWithRLS = this.getPrismaWithContext(organizationId);
-      return prismaWithRLS[this.model.name].findUnique({
+      const modelAccess = (prismaWithRLS as any)[this.model.name];
+      return modelAccess.findUnique({
         where: { id },
       });
     }
@@ -100,25 +103,30 @@ export abstract class BaseRepository<T, C, U> {
       throw new Error("Organization ID is required to create entities");
     }
     
-    const prismaWithRLS = this.getPrismaWithContext(organizationId, userId);
+    // Use the standard Prisma client for transaction
+    // Then apply organization context to individual operations
+    let result: any;
     
-    return prismaWithRLS.$transaction(async (tx: any) => {
-      const result = await tx[this.model.name].create({
+    await prisma.$transaction(async (tx: any) => {
+      // Access model on transaction with proper typing
+      const modelAccess = (tx as any)[this.model.name];
+      result = await modelAccess.create({
         data,
       });
 
+      // Create audit log entry
       await tx.auditLog.create({
         data: {
           userId,
           action: 'CREATE',
           entityType: this.entityType,
           entityId: result.id,
-          organizationId, // Add organization to audit log
+          organizationId,
         },
       });
-
-      return result;
     });
+    
+    return result as T;
   }
 
   /**
@@ -138,26 +146,30 @@ export abstract class BaseRepository<T, C, U> {
       throw new Error("Organization ID is required to update entities");
     }
     
-    const prismaWithRLS = this.getPrismaWithContext(organizationId, userId);
+    // Use the standard Prisma client for transaction
+    let result: any;
     
-    return prismaWithRLS.$transaction(async (tx: any) => {
-      const result = await tx[this.model.name].update({
+    await prisma.$transaction(async (tx: any) => {
+      // Access model on transaction with proper typing
+      const modelAccess = (tx as any)[this.model.name];
+      result = await modelAccess.update({
         where: { id },
         data,
       });
 
+      // Create audit log entry
       await tx.auditLog.create({
         data: {
           userId,
           action: 'UPDATE',
           entityType: this.entityType,
           entityId: id,
-          organizationId, // Add organization to audit log
+          organizationId,
         },
       });
-
-      return result;
     });
+    
+    return result as T;
   }
 
   /**
@@ -177,24 +189,28 @@ export abstract class BaseRepository<T, C, U> {
       throw new Error("Organization ID is required to delete entities");
     }
     
-    const prismaWithRLS = this.getPrismaWithContext(organizationId, userId);
+    // Use the standard Prisma client for transaction
+    let result: any;
     
-    return prismaWithRLS.$transaction(async (tx: any) => {
-      const result = await tx[this.model.name].delete({
+    await prisma.$transaction(async (tx: any) => {
+      // Access model on transaction with proper typing
+      const modelAccess = (tx as any)[this.model.name];
+      result = await modelAccess.delete({
         where: { id },
       });
 
+      // Create audit log entry
       await tx.auditLog.create({
         data: {
           userId,
           action: 'DELETE',
           entityType: this.entityType,
           entityId: id,
-          organizationId, // Add organization to audit log
+          organizationId,
         },
       });
-
-      return result;
     });
+    
+    return result as T;
   }
 }

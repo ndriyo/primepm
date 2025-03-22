@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProjects } from '@/app/contexts/ProjectContext';
 import { ProjectRadarChart } from '@/src/components/project-selection/ProjectRadarChart';
-import { Project } from '@/src/data/projects';
+import { Project } from '@/app/contexts/ProjectContext';
 
 interface ProjectDetailsProps {
   projectId?: string;
@@ -138,20 +138,6 @@ export const ProjectDetails = ({ projectId }: ProjectDetailsProps) => {
                   )}{' '}
                   months
                 </p>
-              </div>
-            </div>
-            
-            <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Team Members</h3>
-              <div className="flex flex-wrap gap-2">
-                {currentProject.team.map((member, index) => (
-                  <div key={index} className="flex items-center bg-gray-100 rounded-full px-3 py-1">
-                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-primary-500 flex items-center justify-center text-white text-xs font-medium mr-2">
-                      {member.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <span className="text-sm font-medium text-gray-700">{member}</span>
-                  </div>
-                ))}
               </div>
             </div>
             

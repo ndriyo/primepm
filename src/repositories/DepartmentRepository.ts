@@ -5,11 +5,11 @@ export interface Department {
   id: string;
   organizationId: string;
   name: string;
-  description?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  createdById?: string;
-  updatedById?: string;
+  description?: string | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+  createdById?: string | null;
+  updatedById?: string | null;
 }
 
 export interface DepartmentCreateInput {
@@ -42,9 +42,12 @@ export class DepartmentRepository extends BaseRepository<
   async findByOrganization(organizationId: string): Promise<Department[]> {
     const prismaWithRLS = this.getPrismaWithContext(organizationId);
     
-    return prismaWithRLS.department.findMany({
+    const departments = await prismaWithRLS.department.findMany({
       where: { organizationId },
       orderBy: { name: 'asc' }
     });
+    
+    // Cast the Prisma result to our interface
+    return departments as unknown as Department[];
   }
 }

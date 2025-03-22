@@ -23,7 +23,7 @@ async function findCriterionAndVerifyVersion(criterionId: string, versionId: str
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { versionId: string } }
+  { params }: { params: Promise<{ versionId: string }> }
 ) {
   try {
     // Await the params object before accessing properties
@@ -70,7 +70,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { versionId: string } }
+  { params }: { params: Promise<{ versionId: string }>}
 ) {
   try {
     // Await the params object before accessing properties
@@ -112,7 +112,7 @@ export async function POST(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { versionId: string } }
+  { params }: { params: Promise<{ versionId: string }> }
 ) {
   try {
     // Await the params object before accessing properties

@@ -5,7 +5,7 @@ const criteriaRepo = new CriteriaRepository();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { criterionId: string } }
+  { params }: { params: Promise<{ criterionId: string }> }
 ) {
   try {
     // Await the params object before accessing properties
@@ -29,7 +29,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { criterionId: string } }
+  { params }: { params: Promise<{ criterionId: string }> }
 ) {
   try {
     // Await the params object before accessing properties
@@ -65,7 +65,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { criterionId: string } }
+  { params }: { params: Promise<{ criterionId: string }> }
 ) {
   try {
     // Await the params object before accessing properties

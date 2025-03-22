@@ -43,6 +43,19 @@
   - Added authentication headers to API requests
   - Modified repositories to respect Row-Level Security (RLS)
   - Created DevAuthSwitcher component for easy user/role switching
+- Fixed TypeScript errors in Prisma client extension for RLS:
+  - Updated parameter type definition in $allOperations to make the model parameter optional
+  - Implemented focused type assertions for dynamic model access in BaseRepository:
+    - Used `(prismaWithRLS as any)[this.model.name]` to create direct model access variables
+    - Applied the same approach to transaction objects in CRUD operations
+    - Extracted model and auditLog access into variables with proper type assertions
+  - Improved code maintainability by using a consistent pattern for Prisma model access
+- Resolved additional TypeScript compilation issues:
+  - Fixed type mismatch in `src/lib/prisma.ts` to properly handle the parameters in $allOperations
+  - Updated repository models (User, Project) to better reflect nullable fields from the database using union types like `string | null` and `Date | null`
+  - Refactored transaction handling in repositories to properly return typed results
+  - Added proper type casting with `as unknown as User` pattern to ensure consistent typing
+  - Added Suspense boundary around components using `useSearchParams()` hook to fix Next.js CSR bailout warnings
 
 ## Next Steps
 - Complete the real authentication implementation with NextAuth

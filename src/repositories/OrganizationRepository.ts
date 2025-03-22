@@ -5,22 +5,22 @@ import { BaseRepository } from './BaseRepository';
 export interface Organization {
   id: string;
   name: string;
-  description?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  createdById?: string;
-  updatedById?: string;
+  description?: string | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+  createdById?: string | null;
+  updatedById?: string | null;
 }
 
 export interface Department {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   organizationId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  createdById?: string;
-  updatedById?: string;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+  createdById?: string | null;
+  updatedById?: string | null;
 }
 
 // Input types
@@ -75,14 +75,16 @@ export class OrganizationRepository extends BaseRepository<
       throw new Error(`Organization with ID ${id} not found`);
     }
 
-    return organization;
+    return organization as unknown as Organization & { departments: Department[] };
   }
 
   /**
    * Create a department
    */
   async createDepartment(data: DepartmentCreateInput, userId: string): Promise<Department> {
-    return prisma.$transaction(async (tx: any) => {
+    let result: any;
+    
+    await prisma.$transaction(async (tx: any) => {
       // Create the department
       const createData: any = {
         name: data.name,
@@ -95,7 +97,7 @@ export class OrganizationRepository extends BaseRepository<
         }
       };
 
-      const result = await tx.department.create({
+      result = await tx.department.create({
         data: createData
       });
 
@@ -108,35 +110,39 @@ export class OrganizationRepository extends BaseRepository<
           entityId: result.id,
         },
       });
-
-      return result;
     });
+    
+    return result as unknown as Department;
   }
 
   /**
    * Find department by ID
    */
   async findDepartment(id: string): Promise<Department | null> {
-    return prisma.department.findUnique({
+    const department = await prisma.department.findUnique({
       where: { id }
     });
+    return department as unknown as Department | null;
   }
 
   /**
    * Find departments by organization
    */
   async findDepartmentsByOrganization(organizationId: string): Promise<Department[]> {
-    return prisma.department.findMany({
+    const departments = await prisma.department.findMany({
       where: { organizationId },
       orderBy: { name: 'asc' }
     });
+    return departments as unknown as Department[];
   }
 
   /**
    * Update department
    */
   async updateDepartment(id: string, data: DepartmentUpdateInput, userId: string): Promise<Department> {
-    return prisma.$transaction(async (tx: any) => {
+    let result: any;
+    
+    await prisma.$transaction(async (tx: any) => {
       // Update the department
       const updateData: any = {
         ...data,
@@ -148,7 +154,7 @@ export class OrganizationRepository extends BaseRepository<
       // Remove the updatedById field
       delete updateData.updatedById;
 
-      const result = await tx.department.update({
+      result = await tx.department.update({
         where: { id },
         data: updateData
       });
@@ -162,18 +168,20 @@ export class OrganizationRepository extends BaseRepository<
           entityId: id,
         },
       });
-
-      return result;
     });
+    
+    return result as unknown as Department;
   }
 
   /**
    * Delete department
    */
   async deleteDepartment(id: string, userId: string): Promise<Department> {
-    return prisma.$transaction(async (tx: any) => {
+    let result: any;
+    
+    await prisma.$transaction(async (tx: any) => {
       // Delete the department
-      const result = await tx.department.delete({
+      result = await tx.department.delete({
         where: { id }
       });
 
@@ -186,8 +194,8 @@ export class OrganizationRepository extends BaseRepository<
           entityId: id,
         },
       });
-
-      return result;
     });
+    
+    return result as unknown as Department;
   }
 }

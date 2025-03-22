@@ -10,6 +10,12 @@
 - Project data model with sample projects
 - Project selection table view
 - Navigation between main application sections
+- Responsive layout with improved UX:
+  - Collapsible sidebar with toggle functionality
+  - Proper content resizing when sidebar is collapsed
+  - Persistent sidebar state across page navigation
+  - Mobile-friendly navigation with fixed header
+  - CSS Grid and Flexbox layout for better space utilization
 - Criteria management interface with versioning:
   - Create, edit, and delete criteria versions
   - Set active version for project scoring

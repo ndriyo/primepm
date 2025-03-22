@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   ChartPieIcon,
   ViewColumnsIcon,
   DocumentTextIcon,
   HomeIcon,
-  Bars3Icon
+  Bars3Icon,
+  XMarkIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
 
 interface NavItem {
@@ -23,19 +26,37 @@ const navigation: NavItem[] = [
 
 export const Sidebar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  
+  // Load user preference for desktop sidebar state from localStorage (if available)
+  useEffect(() => {
+    const savedState = localStorage.getItem('desktopSidebarOpen');
+    if (savedState !== null) {
+      setDesktopSidebarOpen(savedState === 'true');
+    }
+  }, []);
+  
+  // Save user preference when desktop sidebar state changes
+  useEffect(() => {
+    localStorage.setItem('desktopSidebarOpen', String(desktopSidebarOpen));
+  }, [desktopSidebarOpen]);
   const location = useLocation();
 
   return (
     <>
       {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-16 left-0 z-40 w-full bg-white shadow-sm p-4 flex items-center">
+      <div className="lg:hidden fixed top-0 left-0 z-40 w-full bg-white shadow-sm p-4 flex items-center">
         <button
           type="button"
           className="text-gray-500 hover:text-gray-600"
-          onClick={() => setSidebarOpen(true)}
+          onClick={() => setSidebarOpen(!sidebarOpen)}
         >
-          <span className="sr-only">Open sidebar</span>
-          <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+          <span className="sr-only">Toggle sidebar</span>
+          {sidebarOpen ? (
+            <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+          ) : (
+            <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+          )}
         </button>
         <div className="ml-4 flex items-center">
           <img
@@ -57,9 +78,37 @@ export const Sidebar = () => {
       <div
         className={`fixed top-0 left-0 z-50 h-screen w-64 bg-white shadow-lg transform transition-transform ease-in-out duration-300 flex flex-col ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 lg:static lg:z-auto lg:h-full`}
+        } lg:relative lg:z-auto ${
+          desktopSidebarOpen ? 'lg:translate-x-0' : 'lg:-translate-x-full'
+        }`}
       >
+        {/* Desktop sidebar toggle button */}
+        <div className="hidden lg:block absolute right-0 top-4 transform translate-x-12 z-20">
+          <button
+            type="button"
+            className="bg-white p-2 rounded-r-md shadow-md border border-l-0 border-gray-200 text-gray-500 hover:text-gray-700"
+            onClick={() => setDesktopSidebarOpen(!desktopSidebarOpen)}
+          >
+            <span className="sr-only">Toggle sidebar</span>
+            {desktopSidebarOpen ? (
+              <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
+            ) : (
+              <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
+            )}
+          </button>
+        </div>
 
+        {/* Mobile close button */}
+        <div className="lg:hidden flex justify-end p-4">
+          <button
+            type="button"
+            className="text-gray-500 hover:text-gray-700"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+          </button>
+        </div>
+        
         <nav className="px-4 overflow-y-auto flex-1 py-5">
           <ul className="space-y-2">
             {navigation.map((item) => {

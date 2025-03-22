@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
 import DevAuthSwitcher from './components/dev/DevAuthSwitcher';
+import { SidebarProvider } from './contexts/SidebarContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,8 +21,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} bg-gray-50 min-h-screen`}>
         <Providers>
-          {children}
-          <DevAuthSwitcher />
+          <SidebarProvider>
+            {children}
+            <DevAuthSwitcher />
+          </SidebarProvider>
         </Providers>
       </body>
     </html>

@@ -276,13 +276,14 @@ export const calculateOverallScore = (
     // For inverse criteria, invert the scale (10 - value + 1)
     // This makes lower values score higher
     if (inverseCriteria.includes(key)) {
-      value = 5 - value; // Invert scale: 1->10, 2->9, 3->8, etc.
+      value = 6 - value; // Invert scale: 1->10, 2->9, 3->8, etc.
     }
     
     weightedSum += value * weight;
   });
   
-  return parseFloat((weightedSum / totalWeight).toFixed(2));
+//  return parseFloat((weightedSum / totalWeight).toFixed(2));
+  return weightedSum;
 };
 
 export const getProjectsByStatus = (status: Project['status']) => {

@@ -10,8 +10,12 @@ import {
   HomeIcon,
   Bars3Icon,
   AdjustmentsHorizontalIcon,
-  PlusCircleIcon
+  PlusCircleIcon,
+  XMarkIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
+import { useSidebar } from '@/app/contexts/SidebarContext';
 
 interface NavItem {
   name: string;
@@ -29,19 +33,24 @@ const navigation: NavItem[] = [
 
 export const Sidebar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { desktopSidebarOpen, toggleSidebar } = useSidebar();
   const pathname = usePathname();
 
   return (
     <>
       {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-16 left-0 z-40 w-full bg-white shadow-sm p-4 flex items-center">
+      <div className="lg:hidden fixed top-0 left-0 z-40 w-full bg-white shadow-sm p-4 flex items-center">
         <button
           type="button"
           className="text-gray-500 hover:text-gray-600"
-          onClick={() => setSidebarOpen(true)}
+          onClick={() => setSidebarOpen(!sidebarOpen)}
         >
-          <span className="sr-only">Open sidebar</span>
-          <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+          <span className="sr-only">Toggle sidebar</span>
+          {sidebarOpen ? (
+            <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+          ) : (
+            <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+          )}
         </button>
         <div className="ml-4 flex items-center">
           <img
@@ -53,18 +62,44 @@ export const Sidebar = () => {
       </div>
 
       {/* Mobile sidebar */}
-      <div
-        className={`fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden ${
-          sidebarOpen ? 'block' : 'hidden'
-        }`}
-        onClick={() => setSidebarOpen(false)}
-      ></div>
+      {/* Desktop sidebar toggle button - always visible, positioned outside when collapsed */}
+      <div className={`hidden lg:block fixed top-28 z-50 transition-all duration-300 ease-in-out ${
+        desktopSidebarOpen ? 'left-64' : 'left-0'
+      }`}>
+        <button
+          type="button"
+          className={`bg-white p-2 rounded-r-md shadow-md border border-l-0 border-gray-200 text-gray-500 hover:text-gray-700 ${
+            desktopSidebarOpen ? '-ml-3' : 'ml-0'
+          }`}
+          onClick={toggleSidebar}
+        >
+          <span className="sr-only">Toggle sidebar</span>
+          {desktopSidebarOpen ? (
+            <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
+          ) : (
+            <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
+          )}
+        </button>
+      </div>
 
       <div
-        className={`fixed top-0 left-0 z-50 h-screen w-64 bg-white shadow-lg transform transition-transform ease-in-out duration-300 flex flex-col ${
+        className={`fixed top-0 left-0 z-40 h-screen w-64 bg-white shadow-lg transform transition-transform ease-in-out duration-300 flex flex-col ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 lg:static lg:z-auto lg:h-full`}
+        } lg:relative lg:z-auto ${
+          desktopSidebarOpen ? 'lg:translate-x-0' : 'lg:-translate-x-full'
+        }`}
       >
+        {/* Sidebar header with logo and close button */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          {/* Mobile close button */}
+          <button
+            type="button"
+            className="lg:hidden text-gray-500 hover:text-gray-700"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+          </button>
+        </div>
 
         <nav className="px-4 overflow-y-auto flex-1 py-5">
           <ul className="space-y-2">

@@ -16,6 +16,11 @@
   - Persistent sidebar state across page navigation
   - Mobile-friendly navigation with fixed header
   - CSS Grid and Flexbox layout for better space utilization
+- Loading experience with skeleton placeholders:
+  - Skeleton components for cards, tables, text, and charts
+  - Pulse animation effect for visual feedback
+  - Component-specific skeleton placeholders matching actual content structure
+  - Loading wrappers for easy integration with React Query
 - Criteria management interface with versioning:
   - Create, edit, and delete criteria versions
   - Set active version for project scoring

@@ -25,6 +25,14 @@ We employ a **Next.js** monorepo approach where both frontend and backend logic 
 - **21st dev** component library for standardized UI elements (buttons, modals, forms).  
 - Reusable "Dashboard Layout" for each tenant's workspace.
 
+### Layout System
+- **Responsive Grid Layout**: Uses CSS Grid for main content organization
+- **Collapsible Sidebar**: Toggle-able sidebar with persistence via localStorage
+- **Context-based State Management**: SidebarContext provides sidebar state across components
+- **CSS Variables**: Custom properties for layout dimensions and transitions
+- **Mobile-First Approach**: Prioritizes mobile layout with progressive enhancement for larger screens
+- **Content Adaptation**: Content areas dynamically adjust when sidebar is collapsed/expanded
+
 ### Key Considerations
 - **Scalability**: Next.js serverless model handles concurrent requests gracefully.  
 - **Performance**: SSR for SEO-critical pages; client-side rendering for dynamic dashboards.  

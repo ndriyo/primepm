@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useCriteria, CriteriaVersion } from '@/app/contexts/CriteriaContext';
+import { useState, useEffect } from 'react';
+import { useCriteria } from '@/src/hooks/useCriteria';
+import { CriteriaVersion, CriteriaVersionCreateInput, CriteriaVersionUpdateInput } from '@/src/repositories/CriteriaRepository';
+import { useAuth } from '@/app/contexts/AuthContext';
 import { CriteriaManagement } from './CriteriaManagement';
 import { AHPWizard } from './AHPWizard';
 import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
@@ -21,24 +23,82 @@ const initialVersionFormData: VersionFormData = {
 };
 
 export const CriteriaVersionManagement = () => {
+  const { organization, user } = useAuth();
+  const organizationId = organization?.id || '';
+  
+  // Use the React Query hooks from useCriteria
   const { 
-    versions, 
-    activeVersion, 
-    createVersion, 
-    updateVersion, 
-    deleteVersion, 
-    setActiveVersion,
-    criteriaByVersion
+    useVersionsQuery, 
+    useActiveVersionQuery, 
+    useCreateVersion,
+    useUpdateVersion,
+    useDeleteVersion,
+    useCriteriaQuery
   } = useCriteria();
   
+  // Fetch versions
+  const { 
+    data: versions = [], 
+    isLoading: versionsLoading,
+    error: versionsError 
+  } = useVersionsQuery(organizationId);
+  
+  // Fetch active version
+  const { 
+    data: activeVersion,
+    isLoading: activeVersionLoading
+  } = useActiveVersionQuery(organizationId);
+  
+  // Mutations
+  const createVersionMutation = useCreateVersion();
+  const updateVersionMutation = useUpdateVersion();
+  const deleteVersionMutation = useDeleteVersion();
+  
+  // Component state
   const [formData, setFormData] = useState<VersionFormData>(initialVersionFormData);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isFormVisible, setIsFormVisible] = useState(false);
-  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(
-    activeVersion ? activeVersion.id : versions.length > 0 ? versions[0].id : null
-  );
+  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const [showAHPWizard, setShowAHPWizard] = useState(false);
   const [editingMode, setEditingMode] = useState<EditingMode>(null);
+  
+  // Fetch criteria for selected version
+  const { 
+    data: versionCriteria = [],
+    isLoading: criteriaLoading,
+    error: criteriaError
+  } = useCriteriaQuery(selectedVersionId || '');
+  
+  // Add debugging to track criteria loading
+  useEffect(() => {
+    if (selectedVersionId) {
+      console.log(`[CriteriaVersionManagement] Selected version ID: ${selectedVersionId}`);
+      console.log(`[CriteriaVersionManagement] Criteria loading state: ${criteriaLoading}`);
+      console.log(`[CriteriaVersionManagement] Criteria error: ${criteriaError ? criteriaError.message : 'none'}`);
+      console.log(`[CriteriaVersionManagement] Criteria data: `, versionCriteria);
+      
+      // Also log direct raw API request to compare
+      if (!criteriaLoading && selectedVersionId) {
+        fetch(`/api/criteria/versions/${selectedVersionId}/criteria`)
+          .then(res => res.json())
+          .then(data => {
+            console.log(`[CriteriaVersionManagement] Direct API fetch result:`, data);
+          })
+          .catch(err => {
+            console.error(`[CriteriaVersionManagement] Direct API fetch error:`, err);
+          });
+      }
+    }
+  }, [selectedVersionId, criteriaLoading, criteriaError, versionCriteria]);
+  
+  // Set initial selected version once data is loaded
+  useEffect(() => {
+    if (!selectedVersionId && versions.length > 0) {
+      setSelectedVersionId(
+        activeVersion?.id || versions[0]?.id || null
+      );
+    }
+  }, [versions, activeVersion, selectedVersionId]);
   
   // Confirmation dialog states
   const [confirmDialog, setConfirmDialog] = useState({
@@ -72,13 +132,39 @@ export const CriteriaVersionManagement = () => {
       return;
     }
 
+    if (!user || !organizationId) {
+      alert('User or organization not found');
+      return;
+    }
+
     if (editingId) {
       // Update existing version
-      updateVersion(editingId, formData);
+      const updateData: CriteriaVersionUpdateInput = {
+        name: formData.name,
+        description: formData.description,
+        isActive: formData.isActive,
+        updatedById: user.id
+      };
+      
+      updateVersionMutation.mutate({ 
+        id: editingId, 
+        data: updateData
+      });
     } else {
       // Create new version
-      const newVersionId = createVersion(formData);
-      setSelectedVersionId(newVersionId);
+      const createData: CriteriaVersionCreateInput = {
+        name: formData.name,
+        description: formData.description,
+        isActive: formData.isActive,
+        organizationId: organizationId,
+        createdById: user.id
+      };
+      
+      createVersionMutation.mutate(createData, {
+        onSuccess: (data) => {
+          setSelectedVersionId(data.id);
+        }
+      });
     }
 
     // Reset form
@@ -91,8 +177,8 @@ export const CriteriaVersionManagement = () => {
   const handleEdit = (version: CriteriaVersion) => {
     setFormData({
       name: version.name,
-      description: version.description,
-      isActive: version.isActive,
+      description: version.description || '',
+      isActive: version.isActive ?? false,
     });
     setEditingId(version.id);
     setIsFormVisible(true);
@@ -100,24 +186,43 @@ export const CriteriaVersionManagement = () => {
   };
 
   const handleDelete = (id: string) => {
+    if (!user) {
+      alert('User not found');
+      return;
+    }
+    
     setConfirmDialog({
       isOpen: true,
       message: 'This version and all its criteria will be lost.',
       onConfirm: () => {
-        const success = deleteVersion(id);
-        if (!success) {
-          alert('Cannot delete the only version. Create another version first.');
-        } else if (selectedVersionId === id) {
-          // If the deleted version was selected, select the active version or the first one
-          setSelectedVersionId(activeVersion ? activeVersion.id : versions.length > 0 ? versions[0].id : null);
-        }
-        setConfirmDialog({ ...confirmDialog, isOpen: false });
+        deleteVersionMutation.mutate({ id, userId: user.id }, {
+          onSuccess: () => {
+            if (selectedVersionId === id) {
+              // If the deleted version was selected, select the active version or the first one
+              setSelectedVersionId(activeVersion?.id || (versions.length > 0 ? versions[0]?.id : null));
+            }
+          },
+          onError: (error) => {
+            alert(`Error deleting version: ${error.message}`);
+          }
+        });
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
       },
     });
   };
 
   const handleActivate = (id: string) => {
-    setActiveVersion(id);
+    if (!user) {
+      alert('User not found');
+      return;
+    }
+    
+    const updateData: CriteriaVersionUpdateInput = {
+      isActive: true,
+      updatedById: user.id
+    };
+    
+    updateVersionMutation.mutate({ id, data: updateData });
   };
 
   const handleCancel = () => {
@@ -137,7 +242,6 @@ export const CriteriaVersionManagement = () => {
 
   const handleRunAHP = () => {
     if (selectedVersionId) {
-      const versionCriteria = criteriaByVersion[selectedVersionId] || [];
       if (versionCriteria.length < 2) {
         alert('You need at least 2 criteria to run the AHP wizard.');
         return;
@@ -153,6 +257,16 @@ export const CriteriaVersionManagement = () => {
   const handleCriteriaEditingEnd = () => {
     setEditingMode(null);
   };
+
+  // Loading states
+  if (versionsLoading || activeVersionLoading) {
+    return <div className="p-6">Loading criteria versions...</div>;
+  }
+
+  // Error states
+  if (versionsError) {
+    return <div className="p-6 text-red-500">Error loading criteria versions</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -241,6 +355,7 @@ export const CriteriaVersionManagement = () => {
                 <button
                   type="submit"
                   className="btn btn-primary btn-sm"
+                  disabled={createVersionMutation.isPending || updateVersionMutation.isPending}
                 >
                   {editingId ? 'Update' : 'Create'} Version
                 </button>
@@ -271,7 +386,7 @@ export const CriteriaVersionManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {versions.map(version => (
+              {versions.map((version: CriteriaVersion) => (
                 <tr 
                   key={version.id} 
                   className={selectedVersionId === version.id ? 'bg-blue-50' : ''}
@@ -296,7 +411,7 @@ export const CriteriaVersionManagement = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(version.createdAt).toLocaleDateString()}
+                    {version.createdAt ? new Date(version.createdAt).toLocaleDateString() : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
@@ -356,23 +471,32 @@ export const CriteriaVersionManagement = () => {
         <div className={`card p-6 ${editingMode === 'version' ? 'opacity-50 pointer-events-none' : ''}`}>
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium text-gray-900">
-              Criteria for: {versions.find(v => v.id === selectedVersionId)?.name}
+              Criteria for: {versions.find((v: CriteriaVersion) => v.id === selectedVersionId)?.name}
             </h3>
             <button
               onClick={handleRunAHP}
               className="btn btn-primary btn-sm"
-              disabled={editingMode === 'version'}
+              disabled={editingMode === 'version' || criteriaLoading || versionCriteria.length < 2}
             >
               Run AHP Wizard
             </button>
           </div>
           
-          <CriteriaManagement 
-            versionId={selectedVersionId} 
-            onEditingStart={handleCriteriaEditingStart}
-            onEditingEnd={handleCriteriaEditingEnd}
-            isDisabled={editingMode === 'version'}
-          />
+          {criteriaLoading ? (
+            <div>Loading criteria...</div>
+          ) : criteriaError ? (
+            <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-md">
+              Error loading criteria: {criteriaError.message}
+            </div>
+          ) : (
+            <CriteriaManagement 
+              versionId={selectedVersionId} 
+              onEditingStart={handleCriteriaEditingStart}
+              onEditingEnd={handleCriteriaEditingEnd}
+              isDisabled={editingMode === 'version'}
+              apiCriteria={versionCriteria}
+            />
+          )}
         </div>
       )}
 
@@ -380,7 +504,7 @@ export const CriteriaVersionManagement = () => {
         <div className="card p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium text-gray-900">
-              AHP Wizard for: {versions.find(v => v.id === selectedVersionId)?.name}
+              AHP Wizard for: {versions.find((v: CriteriaVersion) => v.id === selectedVersionId)?.name}
             </h3>
             <button
               onClick={() => setShowAHPWizard(false)}

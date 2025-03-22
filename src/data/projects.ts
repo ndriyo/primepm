@@ -2,18 +2,21 @@ export interface Project {
   id: string;
   name: string;
   description: string;
-  status: 'planning' | 'in-progress' | 'completed' | 'on-hold';
-  criteria: Record<string, number>; // Dynamic criteria with scale 1-10
+  organizationId: string;
+  status: 'initiation' | 'planning' | 'in-progress' | 'completed' | 'on-hold';
+  criteria: Record<string, number>; // Dynamic criteria
   startDate: string;
   endDate: string;
-  team: string[];
   department: string;
+  resources: number;
   tags: string[];
+  budget?: number; // Project budget in currency units
 }
 
 export const projects: Project[] = [
   {
     id: 'p1',
+    organizationId: '11111111-1111-1111-1111-111111111111',
     name: 'Digital Transformation Initiative',
     description: 'Enterprise-wide digital transformation to modernize legacy systems and implement cloud solutions.',
     status: 'in-progress',
@@ -26,12 +29,13 @@ export const projects: Project[] = [
     },
     startDate: '2025-01-15',
     endDate: '2025-12-31',
-    team: ['John Smith', 'Maria Chen', 'Robert Taylor', 'Sarah Johnson'],
     department: 'Information Technology',
+    resources: 100,
     tags: ['digital', 'cloud', 'transformation', 'high-priority'],
   },
   {
     id: 'p2',
+    organizationId: '11111111-1111-1111-1111-111111111111',
     name: 'Customer Experience Redesign',
     description: 'Redesign the customer experience journey across all touchpoints to improve satisfaction and loyalty.',
     status: 'planning',
@@ -44,12 +48,13 @@ export const projects: Project[] = [
     },
     startDate: '2025-04-01',
     endDate: '2025-09-30',
-    team: ['Emily Wong', 'David Miller', 'Lisa Chen'],
     department: 'Marketing',
+    resources: 100,
     tags: ['customer-experience', 'design', 'marketing'],
   },
   {
     id: 'p3',
+    organizationId: '11111111-1111-1111-1111-111111111111',
     name: 'Supply Chain Optimization',
     description: 'Optimize the supply chain to reduce costs and improve delivery times.',
     status: 'in-progress',
@@ -62,12 +67,13 @@ export const projects: Project[] = [
     },
     startDate: '2025-02-10',
     endDate: '2025-08-15',
-    team: ['Michael Rodriguez', 'Susan Lee', 'James Wilson'],
     department: 'Operations',
+    resources: 100,
     tags: ['supply-chain', 'optimization', 'logistics'],
   },
   {
     id: 'p4',
+    organizationId: '11111111-1111-1111-1111-111111111111',
     name: 'New Product Launch: Smart Office',
     description: 'Launch a new product line focused on smart office technologies.',
     status: 'planning',
@@ -80,12 +86,13 @@ export const projects: Project[] = [
     },
     startDate: '2025-06-01',
     endDate: '2026-01-31',
-    team: ['Patricia Evans', 'Thomas Brown', 'Jennifer Davis', 'Andrew Wilson'],
     department: 'Product Development',
+    resources: 100,
     tags: ['product-launch', 'innovation', 'tech', 'high-priority'],
   },
   {
     id: 'p5',
+    organizationId: '11111111-1111-1111-1111-111111111111',
     name: 'Employee Wellness Program',
     description: 'Implement a comprehensive employee wellness program to improve satisfaction and productivity.',
     status: 'completed',
@@ -98,12 +105,13 @@ export const projects: Project[] = [
     },
     startDate: '2024-10-01',
     endDate: '2025-02-28',
-    team: ['Sandra Martinez', 'Kevin Thompson'],
     department: 'Human Resources',
+    resources: 100,
     tags: ['hr', 'wellness', 'employee-experience'],
   },
   {
     id: 'p6',
+    organizationId: '11111111-1111-1111-1111-111111111111',
     name: 'Data Analytics Platform',
     description: 'Build a centralized data analytics platform to improve decision-making across departments.',
     status: 'in-progress',
@@ -116,12 +124,13 @@ export const projects: Project[] = [
     },
     startDate: '2025-01-05',
     endDate: '2025-10-15',
-    team: ['Daniel Kim', 'Rachel Green', 'Alex Johnson', 'Maya Patel'],
     department: 'Business Intelligence',
+    resources: 100,
     tags: ['data', 'analytics', 'decision-making', 'high-priority'],
   },
   {
     id: 'p7',
+    organizationId: '11111111-1111-1111-1111-111111111111',
     name: 'Sustainability Initiative',
     description: 'Implement sustainability practices across the organization to reduce environmental impact.',
     status: 'planning',
@@ -134,12 +143,13 @@ export const projects: Project[] = [
     },
     startDate: '2025-05-01',
     endDate: '2026-04-30',
-    team: ['Chris Peterson', 'Olivia Wang', 'Nathan Thompson'],
     department: 'Operations',
+    resources: 100,
     tags: ['sustainability', 'environmental', 'corporate-responsibility'],
   },
   {
     id: 'p8',
+    organizationId: '11111111-1111-1111-1111-111111111111',
     name: 'Mobile Application Overhaul',
     description: 'Completely redesign and rebuild the company mobile application with new features.',
     status: 'on-hold',
@@ -152,12 +162,13 @@ export const projects: Project[] = [
     },
     startDate: '2025-03-15',
     endDate: '2025-09-30',
-    team: ['Tyler Jones', 'Samantha Lee', 'Ryan Martinez'],
     department: 'Information Technology',
+    resources: 100,
     tags: ['mobile', 'app-development', 'customer-facing'],
   },
   {
     id: 'p9',
+    organizationId: '11111111-1111-1111-1111-111111111111',
     name: 'Market Expansion: Asia',
     description: 'Strategic initiative to expand business operations into key Asian markets.',
     status: 'planning',
@@ -170,12 +181,13 @@ export const projects: Project[] = [
     },
     startDate: '2025-07-01',
     endDate: '2026-06-30',
-    team: ['Linda Park', 'Jason Wong', 'Michelle Tanaka', 'Robert Chen', 'Elizabeth Sanders'],
     department: 'Strategic Development',
+    resources: 100,
     tags: ['international', 'expansion', 'asia', 'high-priority'],
   },
   {
     id: 'p10',
+    organizationId: '11111111-1111-1111-1111-111111111111',
     name: 'Regulatory Compliance Update',
     description: 'Update systems and processes to comply with new regulatory requirements.',
     status: 'in-progress',
@@ -188,12 +200,13 @@ export const projects: Project[] = [
     },
     startDate: '2025-01-01',
     endDate: '2025-06-30',
-    team: ['Jonathan Lewis', 'Karen Miller', 'David Clark'],
     department: 'Legal & Compliance',
+    resources: 100,
     tags: ['compliance', 'regulatory', 'legal'],
   },
   {
     id: 'p11',
+    organizationId: '11111111-1111-1111-1111-111111111111',
     name: 'AI Assistant Implementation',
     description: 'Implement AI-powered assistants across customer service and internal support functions.',
     status: 'planning',
@@ -206,12 +219,13 @@ export const projects: Project[] = [
     },
     startDate: '2025-04-15',
     endDate: '2025-11-30',
-    team: ['Sophia Rodriguez', 'Ethan Williams', 'Ava Johnson', 'Noah Garcia'],
     department: 'Information Technology',
+    resources: 100,
     tags: ['ai', 'automation', 'customer-service', 'innovation'],
   },
   {
     id: 'p12',
+    organizationId: '11111111-1111-1111-1111-111111111111',
     name: 'Office Relocation',
     description: 'Relocate the headquarters to a new facility to accommodate growth and improve workspace.',
     status: 'on-hold',
@@ -224,8 +238,8 @@ export const projects: Project[] = [
     },
     startDate: '2025-08-01',
     endDate: '2026-02-28',
-    team: ['Benjamin Harris', 'Jessica Taylor', 'Matthew Anderson'],
     department: 'Facilities',
+    resources: 100,
     tags: ['facilities', 'relocation', 'infrastructure'],
   },
 ];
@@ -262,7 +276,7 @@ export const calculateOverallScore = (
     // For inverse criteria, invert the scale (10 - value + 1)
     // This makes lower values score higher
     if (inverseCriteria.includes(key)) {
-      value = 11 - value; // Invert scale: 1->10, 2->9, 3->8, etc.
+      value = 5 - value; // Invert scale: 1->10, 2->9, 3->8, etc.
     }
     
     weightedSum += value * weight;

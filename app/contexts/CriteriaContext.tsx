@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { useAuth } from '@/app/contexts/AuthContext';
 
 // Basic criterion interface
 export interface Criterion {
@@ -72,6 +73,11 @@ interface CriteriaContextType {
   // AHP operations
   savePairwiseComparisons: (versionId: string, comparisons: PairwiseComparison[]) => void;
   calculateWeights: (versionId: string) => void;
+  
+  // Data fetching
+  loading: boolean;
+  error: string | null;
+  refreshCriteria: () => Promise<void>;
 }
 
 // Default criteria
@@ -101,45 +107,126 @@ const CRITERIA_BY_VERSION_STORAGE_KEY = 'prime-pm-criteria-by-version';
 const CriteriaContext = createContext<CriteriaContextType | undefined>(undefined);
 
 export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
+  const { user, organization } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   // Legacy state for backward compatibility
-  const [criteria, setCriteria] = useState<Criterion[]>(() => {
-    if (typeof window !== 'undefined') {
-      const savedCriteria = localStorage.getItem(CRITERIA_STORAGE_KEY);
-      return savedCriteria ? JSON.parse(savedCriteria) : defaultCriteria;
-    }
-    return defaultCriteria;
-  });
+  const [criteria, setCriteria] = useState<Criterion[]>(defaultCriteria);
 
   // New version-based state
-  const [versions, setVersions] = useState<CriteriaVersion[]>(() => {
-    if (typeof window !== 'undefined') {
-      const savedVersions = localStorage.getItem(VERSIONS_STORAGE_KEY);
-      return savedVersions ? JSON.parse(savedVersions) : [defaultVersion];
-    }
-    return [defaultVersion];
-  });
-
-  const [criteriaByVersion, setCriteriaByVersion] = useState<Record<string, Criterion[]>>(() => {
-    if (typeof window !== 'undefined') {
-      const savedCriteriaByVersion = localStorage.getItem(CRITERIA_BY_VERSION_STORAGE_KEY);
-      if (savedCriteriaByVersion) {
-        return JSON.parse(savedCriteriaByVersion);
-      }
-    }
-    return { [defaultVersion.id]: [...defaultCriteria] };
+  const [versions, setVersions] = useState<CriteriaVersion[]>([defaultVersion]);
+  const [criteriaByVersion, setCriteriaByVersion] = useState<Record<string, Criterion[]>>({
+    [defaultVersion.id]: [...defaultCriteria]
   });
 
   // Get active version
   const activeVersion = versions.find(v => v.isActive) || null;
 
-  // Save to localStorage whenever state changes
+  // Function to fetch criteria and versions from the database
+  const fetchCriteria = useCallback(async () => {
+    // Only fetch if we have organization context
+    if (!organization || !user) {
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Include RLS headers for proper data filtering
+      const headers: HeadersInit = {
+        'x-organization-id': organization.id,
+        'x-user-id': user.id,
+        'x-user-role': user.role,
+      };
+      
+      // Fetch all versions
+      console.log('Fetching criteria versions from database');
+      // Include organizationId as a query parameter
+      const versionsResponse = await fetch(`/api/criteria/versions?organizationId=${organization.id}`, { 
+        headers 
+      });
+      
+      if (!versionsResponse.ok) {
+        const errorText = await versionsResponse.text();
+        console.error(`Server error: ${errorText}`);
+        throw new Error(`Failed to fetch criteria versions: ${versionsResponse.status}`);
+      }
+      
+      const versionsData = await versionsResponse.json();
+      
+      // Transform versions data if needed
+      const transformedVersions = versionsData.map((version: any) => ({
+        ...version,
+        createdAt: new Date(version.createdAt),
+        updatedAt: new Date(version.updatedAt),
+      }));
+      
+      setVersions(transformedVersions.length > 0 ? transformedVersions : [defaultVersion]);
+      
+      // Find active version
+      const activeVersion = transformedVersions.find((v: CriteriaVersion) => v.isActive);
+      
+      if (activeVersion) {
+        // Fetch criteria for the active version
+        console.log(`Fetching criteria for active version ${activeVersion.id}`);
+        const criteriaResponse = await fetch(`/api/criteria/versions/${activeVersion.id}/criteria`, { headers });
+        
+        if (!criteriaResponse.ok) {
+          throw new Error('Failed to fetch criteria for active version');
+        }
+        
+        const criteriaData = await criteriaResponse.json();
+        
+        // Transform criteria data if needed
+        const transformedCriteria = criteriaData.map((criterion: any) => ({
+          ...criterion,
+          isDefault: criterion.isDefault || false,
+          // Transform rubric if needed
+          rubric: criterion.rubric || {}
+        }));
+        
+        // Update both criteria and criteriaByVersion
+        setCriteria(transformedCriteria);
+        setCriteriaByVersion(prev => ({
+          ...prev,
+          [activeVersion.id]: transformedCriteria,
+        }));
+      } else if (transformedVersions.length > 0) {
+        // If there are versions but none is active, set the first one as active
+        // This is a fallback and should rarely happen
+        setVersions(prevVersions => 
+          prevVersions.map((v, index) => ({ ...v, isActive: index === 0 }))
+        );
+      }
+    } catch (err) {
+      console.error('Error fetching criteria:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      
+      // Use default values if fetching fails, not localStorage
+      setCriteria(defaultCriteria);
+      setVersions([defaultVersion]);
+      setCriteriaByVersion({ [defaultVersion.id]: [...defaultCriteria] });
+    } finally {
+      setLoading(false);
+    }
+  }, [organization, user]);
+  
+  // Fetch criteria when organization or user changes
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    fetchCriteria();
+  }, [fetchCriteria, organization?.id, user?.id]);
+  
+  // Save to localStorage as fallback
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !loading) {
       localStorage.setItem(CRITERIA_STORAGE_KEY, JSON.stringify(criteria));
       localStorage.setItem(VERSIONS_STORAGE_KEY, JSON.stringify(versions));
       localStorage.setItem(CRITERIA_BY_VERSION_STORAGE_KEY, JSON.stringify(criteriaByVersion));
     }
-  }, [criteria, versions, criteriaByVersion]);
+  }, [criteria, versions, criteriaByVersion, loading]);
 
   // Helper functions
   const generateId = (prefix: string = 'c'): string => {
@@ -429,6 +516,11 @@ export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
         // AHP operations
         savePairwiseComparisons,
         calculateWeights,
+        
+        // Data fetching state
+        loading,
+        error,
+        refreshCriteria: fetchCriteria
       }}
     >
       {children}

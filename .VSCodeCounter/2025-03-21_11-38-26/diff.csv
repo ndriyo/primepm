@@ -1,0 +1,95 @@
+"filename", "language", "TypeScript", "TypeScript JSX", "JSON", "JSON with Comments", "XML", "Markdown", "JavaScript", "MS SQL", "CSS", "HTML", "comment", "blank", "total"
+"/Users/ndriyo/Documents/Code/primepm/.eslintrc.json", "JSON with Comments", 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 1, 9
+"/Users/ndriyo/Documents/Code/primepm/README.md", "Markdown", 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 6, 16
+"/Users/ndriyo/Documents/Code/primepm/app/api/criteria/[criterionId]/route.ts", "TypeScript", 93, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 98
+"/Users/ndriyo/Documents/Code/primepm/app/api/criteria/versions/[versionId]/comparisons/route.ts", "TypeScript", 41, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 8, 53
+"/Users/ndriyo/Documents/Code/primepm/app/api/criteria/versions/[versionId]/criteria/route.ts", "TypeScript", 56, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 12, 73
+"/Users/ndriyo/Documents/Code/primepm/app/api/criteria/versions/[versionId]/route.ts", "TypeScript", 93, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 17, 116
+"/Users/ndriyo/Documents/Code/primepm/app/api/criteria/versions/route.ts", "TypeScript", 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 9, 54
+"/Users/ndriyo/Documents/Code/primepm/app/api/projects/[projectId]/route.ts", "TypeScript", 133, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 27, 171
+"/Users/ndriyo/Documents/Code/primepm/app/api/projects/[projectId]/scores/route.ts", "TypeScript", 66, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 12, 83
+"/Users/ndriyo/Documents/Code/primepm/app/api/projects/route.ts", "TypeScript", 68, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 17, 93
+"/Users/ndriyo/Documents/Code/primepm/app/components/dashboard/Dashboard.tsx", "TypeScript JSX", 0, 39, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 45
+"/Users/ndriyo/Documents/Code/primepm/app/components/dev/DevAuthSwitcher.tsx", "TypeScript JSX", 0, 77, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 87
+"/Users/ndriyo/Documents/Code/primepm/app/components/project-details/ProjectDetails.tsx", "TypeScript JSX", 0, 274, 0, 0, 0, 0, 0, 0, 0, 0, 7, 28, 309
+"/Users/ndriyo/Documents/Code/primepm/app/components/project-details/ProjectInformation.tsx", "TypeScript JSX", 0, 234, 0, 0, 0, 0, 0, 0, 0, 0, 7, 24, 265
+"/Users/ndriyo/Documents/Code/primepm/app/components/project-entry/ProjectEntryForm.tsx", "TypeScript JSX", 0, 269, 0, 0, 0, 0, 0, 0, 0, 0, 22, 41, 332
+"/Users/ndriyo/Documents/Code/primepm/app/components/project-entry/ProjectInfoStep.tsx", "TypeScript JSX", 0, 214, 0, 0, 0, 0, 0, 0, 0, 0, 14, 20, 248
+"/Users/ndriyo/Documents/Code/primepm/app/components/project-entry/ReviewSubmitStep.tsx", "TypeScript JSX", 0, 170, 0, 0, 0, 0, 0, 0, 0, 0, 9, 23, 202
+"/Users/ndriyo/Documents/Code/primepm/app/components/project-entry/SelfAssessmentStep.tsx", "TypeScript JSX", 0, 157, 0, 0, 0, 0, 0, 0, 0, 0, 12, 17, 186
+"/Users/ndriyo/Documents/Code/primepm/app/components/project-selection/ProjectSelection.tsx", "TypeScript JSX", 0, 121, 0, 0, 0, 0, 0, 0, 0, 0, 7, 16, 144
+"/Users/ndriyo/Documents/Code/primepm/app/components/reports/Reports.tsx", "TypeScript JSX", 0, 257, 0, 0, 0, 0, 0, 0, 0, 0, 10, 24, 291
+"/Users/ndriyo/Documents/Code/primepm/app/contexts/AuthContext.tsx", "TypeScript JSX", 0, 114, 0, 0, 0, 0, 0, 0, 0, 0, 9, 17, 140
+"/Users/ndriyo/Documents/Code/primepm/app/contexts/CriteriaContext.tsx", "TypeScript JSX", 0, 329, 0, 0, 0, 0, 0, 0, 0, 0, 48, 69, 446
+"/Users/ndriyo/Documents/Code/primepm/app/contexts/ProjectContext.tsx", "TypeScript JSX", 0, 88, 0, 0, 0, 0, 0, 0, 0, 0, 4, 16, 108
+"/Users/ndriyo/Documents/Code/primepm/app/criteria/page.tsx", "TypeScript JSX", 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 21
+"/Users/ndriyo/Documents/Code/primepm/app/details/[projectId]/page.tsx", "TypeScript JSX", 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 17
+"/Users/ndriyo/Documents/Code/primepm/app/details/page.tsx", "TypeScript JSX", 0, 24, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 33
+"/Users/ndriyo/Documents/Code/primepm/app/globals.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 22, 0, 0, 3, 25
+"/Users/ndriyo/Documents/Code/primepm/app/layout.tsx", "TypeScript JSX", 0, 26, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 30
+"/Users/ndriyo/Documents/Code/primepm/app/page.tsx", "TypeScript JSX", 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 13
+"/Users/ndriyo/Documents/Code/primepm/app/projects/new/page.tsx", "TypeScript JSX", 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 17
+"/Users/ndriyo/Documents/Code/primepm/app/providers.tsx", "TypeScript JSX", 0, 33, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 38
+"/Users/ndriyo/Documents/Code/primepm/app/reports/page.tsx", "TypeScript JSX", 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 13
+"/Users/ndriyo/Documents/Code/primepm/app/selection/page.tsx", "TypeScript JSX", 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 13
+"/Users/ndriyo/Documents/Code/primepm/components/layout/PageLayout.tsx", "TypeScript JSX", 0, 26, 0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 33
+"/Users/ndriyo/Documents/Code/primepm/components/layout/Sidebar.tsx", "TypeScript JSX", 0, 90, 0, 0, 0, 0, 0, 0, 0, 0, 2, 9, 101
+"/Users/ndriyo/Documents/Code/primepm/components/ui/ConfirmationDialog.tsx", "TypeScript JSX", 0, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 40
+"/Users/ndriyo/Documents/Code/primepm/eslint.config.js", "JavaScript", 0, 0, 0, 0, 0, 0, -27, 0, 0, 0, 0, -2, -29
+"/Users/ndriyo/Documents/Code/primepm/index.html", "HTML", 0, 0, 0, 0, 0, 0, 0, 0, 0, -13, 0, -1, -14
+"/Users/ndriyo/Documents/Code/primepm/memory-bank/activeContext.md", "Markdown", 0, 0, 0, 0, 0, 53, 0, 0, 0, 0, 0, 7, 60
+"/Users/ndriyo/Documents/Code/primepm/memory-bank/processFlow.md", "Markdown", 0, 0, 0, 0, 0, 27, 0, 0, 0, 0, 0, 5, 32
+"/Users/ndriyo/Documents/Code/primepm/memory-bank/productContext.md", "Markdown", 0, 0, 0, 0, 0, 35, 0, 0, 0, 0, 0, 19, 54
+"/Users/ndriyo/Documents/Code/primepm/memory-bank/progress.md", "Markdown", 0, 0, 0, 0, 0, 70, 0, 0, 0, 0, 0, 5, 75
+"/Users/ndriyo/Documents/Code/primepm/memory-bank/projectBrief.md", "Markdown", 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 22, 87
+"/Users/ndriyo/Documents/Code/primepm/memory-bank/systemPatterns.md", "Markdown", 0, 0, 0, 0, 0, 45, 0, 0, 0, 0, 0, 10, 55
+"/Users/ndriyo/Documents/Code/primepm/memory-bank/techContext.md", "Markdown", 0, 0, 0, 0, 0, 38, 0, 0, 0, 0, 0, 8, 46
+"/Users/ndriyo/Documents/Code/primepm/next-env.d.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 2, 6
+"/Users/ndriyo/Documents/Code/primepm/next.config.mjs", "JavaScript", 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 1, 2, 15
+"/Users/ndriyo/Documents/Code/primepm/package-lock.json", "JSON", 0, 0, 3583, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3583
+"/Users/ndriyo/Documents/Code/primepm/package.json", "JSON", 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9
+"/Users/ndriyo/Documents/Code/primepm/prisma/migrations/initial/migration.sql", "MS SQL", 0, 0, 0, 0, 0, 0, 0, 243, 0, 0, 30, 40, 313
+"/Users/ndriyo/Documents/Code/primepm/prisma/migrations/initial/seed.sql", "MS SQL", 0, 0, 0, 0, 0, 0, 0, 88, 0, 0, 22, 19, 129
+"/Users/ndriyo/Documents/Code/primepm/prisma/migrations/supabase/README.md", "Markdown", 0, 0, 0, 0, 0, 79, 0, 0, 0, 0, 0, 30, 109
+"/Users/ndriyo/Documents/Code/primepm/prisma/migrations/supabase/migration.sql", "MS SQL", 0, 0, 0, 0, 0, 0, 0, 235, 0, 0, 30, 40, 305
+"/Users/ndriyo/Documents/Code/primepm/prisma/migrations/supabase/seed.sql", "MS SQL", 0, 0, 0, 0, 0, 0, 0, 34, 0, 0, 11, 10, 55
+"/Users/ndriyo/Documents/Code/primepm/prisma/migrations/supabase/seed_01_organizations_users.sql", "MS SQL", 0, 0, 0, 0, 0, 0, 0, 19, 0, 0, 8, 6, 33
+"/Users/ndriyo/Documents/Code/primepm/prisma/migrations/supabase/seed_02_criteria.sql", "MS SQL", 0, 0, 0, 0, 0, 0, 0, 37, 0, 0, 7, 6, 50
+"/Users/ndriyo/Documents/Code/primepm/prisma/migrations/supabase/seed_03_projects.sql", "MS SQL", 0, 0, 0, 0, 0, 0, 0, 19, 0, 0, 6, 5, 30
+"/Users/ndriyo/Documents/Code/primepm/prisma/migrations/supabase/seed_04_portfolios.sql", "MS SQL", 0, 0, 0, 0, 0, 0, 0, 43, 0, 0, 11, 10, 64
+"/Users/ndriyo/Documents/Code/primepm/public/assets/react.svg", "XML", 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1
+"/Users/ndriyo/Documents/Code/primepm/src/App.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, -37, 0, 0, -6, -43
+"/Users/ndriyo/Documents/Code/primepm/src/App.tsx", "TypeScript JSX", 0, -27, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3, -30
+"/Users/ndriyo/Documents/Code/primepm/src/assets/react.svg", "XML", 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, -1
+"/Users/ndriyo/Documents/Code/primepm/src/components/dashboard/TopProjects.tsx", "TypeScript JSX", 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 11
+"/Users/ndriyo/Documents/Code/primepm/src/components/project-selection/AHPWizard.tsx", "TypeScript JSX", 0, 194, 0, 0, 0, 0, 0, 0, 0, 0, 6, 29, 229
+"/Users/ndriyo/Documents/Code/primepm/src/components/project-selection/CriteriaManagement.tsx", "TypeScript JSX", 0, 211, 0, 0, 0, 0, 0, 0, 0, 0, 10, 15, 236
+"/Users/ndriyo/Documents/Code/primepm/src/components/project-selection/CriteriaVersionManagement.tsx", "TypeScript JSX", 0, 369, 0, 0, 0, 0, 0, 0, 0, 0, 8, 33, 410
+"/Users/ndriyo/Documents/Code/primepm/src/components/project-selection/ProjectSelectionTable.tsx", "TypeScript JSX", 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5
+"/Users/ndriyo/Documents/Code/primepm/src/contexts/CriteriaContext.tsx", "TypeScript JSX", 0, -88, 0, 0, 0, 0, 0, 0, 0, 0, -5, -17, -110
+"/Users/ndriyo/Documents/Code/primepm/src/contexts/ProjectContext.tsx", "TypeScript JSX", 0, -87, 0, 0, 0, 0, 0, 0, 0, 0, -4, -15, -106
+"/Users/ndriyo/Documents/Code/primepm/src/data/projects.ts", "TypeScript", 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"/Users/ndriyo/Documents/Code/primepm/src/hooks/useCriteria.ts", "TypeScript", 284, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31, 45, 360
+"/Users/ndriyo/Documents/Code/primepm/src/hooks/useProjects.ts", "TypeScript", 188, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 30, 239
+"/Users/ndriyo/Documents/Code/primepm/src/lib/adapters.ts", "TypeScript", 34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 7, 53
+"/Users/ndriyo/Documents/Code/primepm/src/lib/fetchInterceptor.ts", "TypeScript", 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 26
+"/Users/ndriyo/Documents/Code/primepm/src/lib/prisma.ts", "TypeScript", 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 9, 63
+"/Users/ndriyo/Documents/Code/primepm/src/main.tsx", "TypeScript JSX", 0, -9, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, -11
+"/Users/ndriyo/Documents/Code/primepm/src/pages/Dashboard.tsx", "TypeScript JSX", 0, -33, 0, 0, 0, 0, 0, 0, 0, 0, 0, -5, -38
+"/Users/ndriyo/Documents/Code/primepm/src/pages/ProjectDetails.tsx", "TypeScript JSX", 0, -253, 0, 0, 0, 0, 0, 0, 0, 0, -3, -25, -281
+"/Users/ndriyo/Documents/Code/primepm/src/pages/ProjectSelection.tsx", "TypeScript JSX", 0, -72, 0, 0, 0, 0, 0, 0, 0, 0, -2, -9, -83
+"/Users/ndriyo/Documents/Code/primepm/src/pages/Reports.tsx", "TypeScript JSX", 0, -256, 0, 0, 0, 0, 0, 0, 0, 0, -10, -23, -289
+"/Users/ndriyo/Documents/Code/primepm/src/repositories/BaseRepository.ts", "TypeScript", 129, 0, 0, 0, 0, 0, 0, 0, 0, 0, 37, 35, 201
+"/Users/ndriyo/Documents/Code/primepm/src/repositories/CriteriaRepository.ts", "TypeScript", 374, 0, 0, 0, 0, 0, 0, 0, 0, 0, 73, 59, 506
+"/Users/ndriyo/Documents/Code/primepm/src/repositories/OrganizationRepository.ts", "TypeScript", 141, 0, 0, 0, 0, 0, 0, 0, 0, 0, 27, 26, 194
+"/Users/ndriyo/Documents/Code/primepm/src/repositories/PortfolioRepository.ts", "TypeScript", 411, 0, 0, 0, 0, 0, 0, 0, 0, 0, 62, 62, 535
+"/Users/ndriyo/Documents/Code/primepm/src/repositories/ProjectRepository.ts", "TypeScript", 328, 0, 0, 0, 0, 0, 0, 0, 0, 0, 51, 57, 436
+"/Users/ndriyo/Documents/Code/primepm/src/repositories/UserRepository.ts", "TypeScript", 179, 0, 0, 0, 0, 0, 0, 0, 0, 0, 39, 29, 247
+"/Users/ndriyo/Documents/Code/primepm/src/repositories/index.ts", "TypeScript", 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 8
+"/Users/ndriyo/Documents/Code/primepm/src/vite-env.d.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -2
+"/Users/ndriyo/Documents/Code/primepm/tailwind.config.js", "JavaScript", 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2
+"/Users/ndriyo/Documents/Code/primepm/tsconfig.app.json", "JSON", 0, 0, -22, 0, 0, 0, 0, 0, 0, 0, -2, -3, -27
+"/Users/ndriyo/Documents/Code/primepm/tsconfig.json", "JSON with Comments", 0, 0, 0, 26, 0, 0, 0, 0, 0, 0, 0, 0, 26
+"/Users/ndriyo/Documents/Code/primepm/tsconfig.node.json", "JSON", 0, 0, -20, 0, 0, 0, 0, 0, 0, 0, -2, -3, -25
+"/Users/ndriyo/Documents/Code/primepm/vite.config.ts", "TypeScript", -5, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -2, -8
+"Total", "-", 2721, 2616, 3550, 34, 0, 422, -13, 718, -15, -13, 694, 1051, 11765

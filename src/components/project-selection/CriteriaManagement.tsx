@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useCriteria, Criterion } from '@/app/contexts/CriteriaContext';
+import { Criterion, CriterionCreateInput, CriterionUpdateInput } from '@/src/repositories/CriteriaRepository';
+// Import the API-based hook
+import { useCriteria } from '@/src/hooks/useCriteria';
 import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
+import { useAuth } from '@/app/contexts/AuthContext';
 
 interface CriteriaFormData {
   key: string;
@@ -23,6 +26,7 @@ interface CriteriaManagementProps {
   onEditingStart?: () => void;
   onEditingEnd?: () => void;
   isDisabled?: boolean;
+  apiCriteria?: Criterion[]; // Add API criteria from parent component
 }
 
 const initialFormData: CriteriaFormData = {
@@ -43,21 +47,38 @@ const initialFormData: CriteriaFormData = {
   }
 };
 
+// Default criteria for the "Add Default Criteria" button
+const defaultCriteria = [
+  { key: 'revenue', label: 'Revenue Impact', description: 'Potential revenue generation or savings', isInverse: false },
+  { key: 'policyImpact', label: 'Policy Impact', description: 'Impact on organizational policies and strategies', isInverse: false },
+  { key: 'budget', label: 'Budget', description: 'Required financial investment', isInverse: true },
+  { key: 'resources', label: 'Resources', description: 'Required human and other resources', isInverse: true },
+  { key: 'complexity', label: 'Complexity', description: 'Technical and implementation complexity', isInverse: true }
+];
+
 export const CriteriaManagement = ({ 
   versionId, 
   onEditingStart, 
   onEditingEnd,
-  isDisabled = false 
+  isDisabled = false,
+  apiCriteria = [] 
 }: CriteriaManagementProps) => {
-  const { 
-    criteriaByVersion, 
-    addCriterionToVersion, 
-    updateCriterionInVersion, 
-    removeCriterionFromVersion,
-    getDefaultCriteria
+  const { user } = useAuth();
+  
+  // Get the hooks from useCriteria
+  const {
+    useCreateCriterion,
+    useUpdateCriterion,
+    useDeleteCriterion
   } = useCriteria();
   
-  const criteria = criteriaByVersion[versionId] || [];
+  // Initialize the mutations
+  const createCriterionMutation = useCreateCriterion();
+  const updateCriterionMutation = useUpdateCriterion();
+  const deleteCriterionMutation = useDeleteCriterion();
+  
+  // State
+  const [displayCriteria, setDisplayCriteria] = useState<Criterion[]>([]);
   const [formData, setFormData] = useState<CriteriaFormData>(initialFormData);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isFormVisible, setIsFormVisible] = useState(false);
@@ -69,8 +90,15 @@ export const CriteriaManagement = ({
     onConfirm: () => {},
   });
 
+  // Set display criteria from API
+  useEffect(() => {
+    if (apiCriteria && apiCriteria.length > 0) {
+      setDisplayCriteria(apiCriteria);
+    }
+  }, [apiCriteria]);
+
   // Calculate total weight and check if any criteria are missing weights
-  const totalWeight = criteria.reduce((sum, criterion) => 
+  const totalWeight = displayCriteria.reduce((sum: number, criterion: Criterion) => 
     sum + (criterion.weight || 0), 0
   );
   
@@ -78,7 +106,7 @@ export const CriteriaManagement = ({
   const isWeightComplete = Math.abs(totalWeight - 1) < 0.01;
   
   // Check if any criteria are missing weights
-  const hasUnsetWeights = criteria.some(criterion => criterion.weight === undefined);
+  const hasUnsetWeights = displayCriteria.some((criterion: Criterion) => criterion.weight === undefined);
 
   // Notify parent component when editing starts/ends
   useEffect(() => {
@@ -107,6 +135,11 @@ export const CriteriaManagement = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      alert('User not found');
+      return;
+    }
 
     // Validate form
     if (!formData.key.trim() || !formData.label.trim()) {
@@ -115,7 +148,7 @@ export const CriteriaManagement = ({
     }
 
     // Check for duplicate key
-    const keyExists = criteria.some(c => c.key === formData.key && c.id !== editingId);
+    const keyExists = displayCriteria.some((c: Criterion) => c.key === formData.key && c.id !== editingId);
     if (keyExists) {
       alert(`A criterion with key "${formData.key}" already exists`);
       return;
@@ -123,10 +156,38 @@ export const CriteriaManagement = ({
 
     if (editingId) {
       // Update existing criterion
-      updateCriterionInVersion(versionId, editingId, formData);
+      const updateData: CriterionUpdateInput = {
+        key: formData.key,
+        label: formData.label,
+        description: formData.description,
+        isInverse: formData.isInverse,
+        scale: formData.scale,
+        rubric: formData.rubric,
+        updatedById: user.id
+      };
+      
+      updateCriterionMutation.mutate({
+        id: editingId,
+        data: updateData,
+        versionId: versionId
+      });
     } else {
       // Add new criterion
-      addCriterionToVersion(versionId, formData);
+      const createData: CriterionCreateInput = {
+        key: formData.key,
+        label: formData.label,
+        description: formData.description,
+        isInverse: formData.isInverse,
+        scale: formData.scale,
+        rubric: formData.rubric,
+        versionId: versionId,
+        createdById: user.id
+      };
+      
+      createCriterionMutation.mutate({
+        versionId: versionId,
+        data: createData
+      });
     }
 
     // Reset form
@@ -139,9 +200,9 @@ export const CriteriaManagement = ({
     setFormData({
       key: criterion.key,
       label: criterion.label,
-      description: criterion.description,
-      isInverse: criterion.isInverse,
-      scale: criterion.scale || { min: 1, max: 5 },
+      description: criterion.description || '',
+      isInverse: criterion.isInverse ?? false,
+      scale: criterion.scale as { min: number; max: number } || { min: 1, max: 5 },
       rubric: criterion.rubric || { 1: '', 2: '', 3: '', 4: '', 5: '' }
     });
     setEditingId(criterion.id);
@@ -149,33 +210,52 @@ export const CriteriaManagement = ({
   };
 
   const handleDelete = (id: string) => {
-    const criterionToDelete = criteria.find(c => c.id === id);
+    if (!user) {
+      alert('User not found');
+      return;
+    }
+    
+    const criterionToDelete = displayCriteria.find((c: Criterion) => c.id === id);
     if (!criterionToDelete) return;
     
     setConfirmDialog({
       isOpen: true,
       message: `Criterion "${criterionToDelete.label}" will be removed.`,
       onConfirm: () => {
-        removeCriterionFromVersion(versionId, id);
+        deleteCriterionMutation.mutate({ 
+          id, 
+          userId: user.id 
+        });
         setConfirmDialog({ ...confirmDialog, isOpen: false });
       },
     });
   };
 
   const handleReset = () => {
+    if (!user) {
+      alert('User not found');
+      return;
+    }
+    
     setConfirmDialog({
       isOpen: true,
       message: 'Default criteria will be added to this version.',
       onConfirm: () => {
-        const defaultCriteria = getDefaultCriteria();
         defaultCriteria.forEach(criterion => {
           // Skip if a criterion with the same key already exists
-          if (!criteria.some(c => c.key === criterion.key)) {
-            addCriterionToVersion(versionId, {
+          if (!displayCriteria.some((c: Criterion) => c.key === criterion.key)) {
+            const createData: CriterionCreateInput = {
               key: criterion.key,
               label: criterion.label,
               description: criterion.description,
               isInverse: criterion.isInverse,
+              versionId: versionId,
+              createdById: user.id
+            };
+            
+            createCriterionMutation.mutate({
+              versionId: versionId,
+              data: createData
             });
           }
         });
@@ -223,7 +303,7 @@ export const CriteriaManagement = ({
       </div>
 
       {/* Weight Warnings */}
-      {criteria.length > 0 && (
+      {displayCriteria.length > 0 && (
         <>
           {/* Warning for incomplete total weight */}
           {!isWeightComplete && (
@@ -425,6 +505,7 @@ export const CriteriaManagement = ({
               <button
                 type="submit"
                 className="btn btn-primary btn-sm"
+                disabled={createCriterionMutation.isPending || updateCriterionMutation.isPending}
               >
                 {editingId ? 'Update' : 'Add'} Criterion
               </button>
@@ -461,7 +542,7 @@ export const CriteriaManagement = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {criteria.map(criterion => (
+            {displayCriteria.map((criterion: Criterion) => (
               <tr key={criterion.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {criterion.label}
@@ -477,7 +558,7 @@ export const CriteriaManagement = ({
                   {criterion.scale && <span className="ml-1">({criterion.scale.min}-{criterion.scale.max})</span>}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {criterion.weight !== undefined ? 
+                  {criterion.weight !== undefined && criterion.weight !== null ? 
                     `${(criterion.weight * 100).toFixed(1)}%` : 
                     <span className="text-yellow-500">Not set</span>
                   }
@@ -509,7 +590,7 @@ export const CriteriaManagement = ({
                 </td>
               </tr>
             ))}
-            {criteria.length === 0 && (
+            {displayCriteria.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
                   No criteria defined. Click "Add New Criterion" to create one.

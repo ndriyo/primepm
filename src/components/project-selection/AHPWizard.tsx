@@ -1,7 +1,23 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useCriteria, Criterion, ComparisonValue, PairwiseComparison } from '@/app/contexts/CriteriaContext';
+import { Criterion } from '@/src/repositories/CriteriaRepository';
+import { useCriteria } from '@/src/hooks/useCriteria';
+import { useAuth } from '@/app/contexts/AuthContext';
+
+// Comparison value for AHP (same as in context)
+enum ComparisonValue {
+  LESS_IMPORTANT = 1/3,  // A is less important than B
+  EQUAL_IMPORTANCE = 1,  // A and B are equally important
+  MORE_IMPORTANT = 3     // A is more important than B
+}
+
+// Pairwise comparison for AHP
+interface PairwiseComparison {
+  criterionAId: string;
+  criterionBId: string;
+  value: ComparisonValue;
+}
 
 interface AHPWizardProps {
   versionId: string;
@@ -9,8 +25,13 @@ interface AHPWizardProps {
 }
 
 export const AHPWizard = ({ versionId, onComplete }: AHPWizardProps) => {
-  const { criteriaByVersion, savePairwiseComparisons } = useCriteria();
-  const criteria = criteriaByVersion[versionId] || [];
+  // Get current user for auth
+  const { user } = useAuth();
+  
+  // Get the criteria and save comparison mutation from the API-based hook
+  const { useCriteriaQuery, useSavePairwiseComparisons } = useCriteria();
+  const { data: criteria = [] } = useCriteriaQuery(versionId);
+  const savePairwiseComparisonsMutation = useSavePairwiseComparisons();
   
   // Generate all unique pairs of criteria
   const pairs = useMemo(() => {
@@ -28,6 +49,8 @@ export const AHPWizard = ({ versionId, onComplete }: AHPWizardProps) => {
   const [showResults, setShowResults] = useState(false);
 
   const handleComparisonSelect = (value: ComparisonValue) => {
+    if (currentPairIndex >= pairs.length) return;
+    
     const currentPair = pairs[currentPairIndex];
     
     // Update comparisons
@@ -68,8 +91,26 @@ export const AHPWizard = ({ versionId, onComplete }: AHPWizardProps) => {
   };
 
   const handleSaveWeights = () => {
-    savePairwiseComparisons(versionId, comparisons);
-    onComplete();
+    if (!user) {
+      alert('User not found');
+      return;
+    }
+    
+    // Use the savePairwiseComparisons mutation to save to the database
+    savePairwiseComparisonsMutation.mutate({
+      versionId,
+      comparisons,
+      userId: user.id
+    }, {
+      onSuccess: () => {
+        console.log('Weights calculated and saved to database successfully');
+        onComplete();
+      },
+      onError: (error) => {
+        console.error('Error saving weights:', error);
+        alert('There was an error saving the weights. Please try again.');
+      }
+    });
   };
 
   const getCurrentComparisonValue = (): ComparisonValue | null => {
@@ -119,8 +160,9 @@ export const AHPWizard = ({ versionId, onComplete }: AHPWizardProps) => {
           <button
             onClick={handleSaveWeights}
             className="btn btn-primary btn-sm"
+            disabled={savePairwiseComparisonsMutation.isPending}
           >
-            Calculate Weights
+            {savePairwiseComparisonsMutation.isPending ? 'Calculating...' : 'Calculate Weights'}
           </button>
         </div>
       </div>
@@ -128,6 +170,10 @@ export const AHPWizard = ({ versionId, onComplete }: AHPWizardProps) => {
   }
 
   // Show the current pair comparison
+  if (pairs.length === 0 || currentPairIndex >= pairs.length) {
+    return <div>Loading criteria pairs...</div>;
+  }
+  
   const currentPair = pairs[currentPairIndex];
   const criterionA = currentPair[0];
   const criterionB = currentPair[1];

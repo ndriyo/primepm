@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
+import DevAuthSwitcher from './components/dev/DevAuthSwitcher';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,7 +19,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-gray-50 min-h-screen`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <DevAuthSwitcher />
+        </Providers>
       </body>
     </html>
   );

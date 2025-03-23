@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { useAuth } from '@/app/contexts/AuthContext';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Basic criterion interface
 export interface Criterion {
@@ -91,7 +92,7 @@ const defaultCriteria: Criterion[] = [
 
 // Default version
 const defaultVersion: CriteriaVersion = {
-  id: 'v1',
+  id: '88888888-8888-8888-8888-888888888888', // Using the ID seen in logs
   name: 'Default Version',
   description: 'Default criteria version',
   isActive: true,
@@ -99,41 +100,35 @@ const defaultVersion: CriteriaVersion = {
   updatedAt: new Date(),
 };
 
-// Local storage keys
-const CRITERIA_STORAGE_KEY = 'prime-pm-criteria';
-const VERSIONS_STORAGE_KEY = 'prime-pm-criteria-versions';
-const CRITERIA_BY_VERSION_STORAGE_KEY = 'prime-pm-criteria-by-version';
-
 const CriteriaContext = createContext<CriteriaContextType | undefined>(undefined);
 
 export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
   const { user, organization } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   
-  // Legacy state for backward compatibility
   const [criteria, setCriteria] = useState<Criterion[]>(defaultCriteria);
-
-  // New version-based state
   const [versions, setVersions] = useState<CriteriaVersion[]>([defaultVersion]);
   const [criteriaByVersion, setCriteriaByVersion] = useState<Record<string, Criterion[]>>({
     [defaultVersion.id]: [...defaultCriteria]
   });
 
-  // Get active version
-  const activeVersion = versions.find(v => v.isActive) || null;
+  // Helper functions
+  const generateId = (prefix: string = 'c'): string => {
+    return `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  };
 
-  // Function to fetch criteria and versions from the database
-  const fetchCriteria = useCallback(async () => {
-    // Only fetch if we have organization context
-    if (!organization || !user) {
-      setLoading(false);
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      setError(null);
+  // Use React Query for versions
+  const { 
+    data: versionsData,
+    isLoading: versionsLoading,
+    error: versionsError,
+    refetch: refetchVersions 
+  } = useQuery({
+    queryKey: ['criteria-versions', organization?.id],
+    queryFn: async () => {
+      if (!organization || !user) {
+        return [defaultVersion];
+      }
       
       // Include RLS headers for proper data filtering
       const headers: HeadersInit = {
@@ -142,95 +137,116 @@ export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
         'x-user-role': user.role,
       };
       
-      // Fetch all versions
-      console.log('Fetching criteria versions from database');
-      // Include organizationId as a query parameter
-      const versionsResponse = await fetch(`/api/criteria/versions?organizationId=${organization.id}`, { 
-        headers 
-      });
+      // Include organizationId as query parameter
+      const response = await fetch(`/api/criteria/versions?organizationId=${organization.id}`, { headers });
       
-      if (!versionsResponse.ok) {
-        const errorText = await versionsResponse.text();
-        console.error(`Server error: ${errorText}`);
-        throw new Error(`Failed to fetch criteria versions: ${versionsResponse.status}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch criteria versions: ${response.status}`);
       }
       
-      const versionsData = await versionsResponse.json();
+      const data = await response.json();
       
-      // Transform versions data if needed
-      const transformedVersions = versionsData.map((version: any) => ({
+      // Transform dates
+      return data.map((version: any) => ({
         ...version,
         createdAt: new Date(version.createdAt),
         updatedAt: new Date(version.updatedAt),
       }));
+    },
+    enabled: !!organization && !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes - versions change rarely
+  });
+  
+  // Update local state when React Query data changes
+  useEffect(() => {
+    if (versionsData && versionsData.length > 0) {
+      setVersions(prevVersions => {
+        // Only update if there's an actual change in the data
+        if (prevVersions.length === versionsData.length && 
+            JSON.stringify(prevVersions) === JSON.stringify(versionsData)) {
+          return prevVersions; // No change needed
+        }
+        return versionsData;
+      });
+    }
+  }, [versionsData]);
+  
+  // Get active version
+  const activeVersion = versions.find(v => v.isActive) || null;
+  
+  // Use React Query for criteria of active version
+  const { 
+    data: criteriaData,
+    isLoading: criteriaLoading,
+    error: criteriaError,
+    refetch: refetchCriteria 
+  } = useQuery({
+    queryKey: ['criteria', activeVersion?.id],
+    queryFn: async () => {
+      if (!organization || !user || !activeVersion) {
+        return defaultCriteria;
+      }
       
-      setVersions(transformedVersions.length > 0 ? transformedVersions : [defaultVersion]);
+      const headers: HeadersInit = {
+        'x-organization-id': organization.id,
+        'x-user-id': user.id,
+        'x-user-role': user.role,
+      };
       
-      // Find active version
-      const activeVersion = transformedVersions.find((v: CriteriaVersion) => v.isActive);
+      const response = await fetch(`/api/criteria/versions/${activeVersion.id}/criteria`, { headers });
       
-      if (activeVersion) {
-        // Fetch criteria for the active version
-        console.log(`Fetching criteria for active version ${activeVersion.id}`);
-        const criteriaResponse = await fetch(`/api/criteria/versions/${activeVersion.id}/criteria`, { headers });
-        
-        if (!criteriaResponse.ok) {
-          throw new Error('Failed to fetch criteria for active version');
+      if (!response.ok) {
+        throw new Error('Failed to fetch criteria for active version');
+      }
+      
+      const data = await response.json();
+      
+      // Transform data if needed
+      return data.map((criterion: any) => ({
+        ...criterion,
+        isDefault: criterion.isDefault || false,
+        rubric: criterion.rubric || {}
+      }));
+    },
+    enabled: !!organization && !!user && !!activeVersion,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+  
+  // Update local state when React Query data changes
+  useEffect(() => {
+    if (criteriaData && criteriaData.length > 0 && activeVersion) {
+      setCriteria(criteriaData);
+      setCriteriaByVersion(prev => {
+        // Check if current data differs from what we already have
+        const currentVersion = prev[activeVersion.id];
+        if (currentVersion && 
+            currentVersion.length === criteriaData.length && 
+            JSON.stringify(currentVersion) === JSON.stringify(criteriaData)) {
+          return prev; // No change needed
         }
         
-        const criteriaData = await criteriaResponse.json();
-        
-        // Transform criteria data if needed
-        const transformedCriteria = criteriaData.map((criterion: any) => ({
-          ...criterion,
-          isDefault: criterion.isDefault || false,
-          // Transform rubric if needed
-          rubric: criterion.rubric || {}
-        }));
-        
-        // Update both criteria and criteriaByVersion
-        setCriteria(transformedCriteria);
-        setCriteriaByVersion(prev => ({
+        // Update with new data
+        return {
           ...prev,
-          [activeVersion.id]: transformedCriteria,
-        }));
-      } else if (transformedVersions.length > 0) {
-        // If there are versions but none is active, set the first one as active
-        // This is a fallback and should rarely happen
-        setVersions(prevVersions => 
-          prevVersions.map((v, index) => ({ ...v, isActive: index === 0 }))
-        );
-      }
-    } catch (err) {
-      console.error('Error fetching criteria:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      
-      // Use default values if fetching fails, not localStorage
-      setCriteria(defaultCriteria);
-      setVersions([defaultVersion]);
-      setCriteriaByVersion({ [defaultVersion.id]: [...defaultCriteria] });
-    } finally {
-      setLoading(false);
+          [activeVersion.id]: criteriaData,
+        };
+      });
     }
-  }, [organization, user]);
+  }, [criteriaData, activeVersion]);
   
-  // Fetch criteria when organization or user changes
-  useEffect(() => {
-    fetchCriteria();
-  }, [fetchCriteria, organization?.id, user?.id]);
+  // Combined loading state
+  const loading = versionsLoading || criteriaLoading;
   
-  // Save to localStorage as fallback
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !loading) {
-      localStorage.setItem(CRITERIA_STORAGE_KEY, JSON.stringify(criteria));
-      localStorage.setItem(VERSIONS_STORAGE_KEY, JSON.stringify(versions));
-      localStorage.setItem(CRITERIA_BY_VERSION_STORAGE_KEY, JSON.stringify(criteriaByVersion));
-    }
-  }, [criteria, versions, criteriaByVersion, loading]);
-
-  // Helper functions
-  const generateId = (prefix: string = 'c'): string => {
-    return `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  // Combined error
+  const error = versionsError 
+    ? (versionsError as Error).message 
+    : criteriaError 
+      ? (criteriaError as Error).message 
+      : null;
+  
+  // Refresh all criteria data
+  const refreshCriteria = async () => {
+    await Promise.all([refetchVersions(), refetchCriteria()]);
   };
 
   // Legacy functions for backward compatibility
@@ -245,14 +261,29 @@ export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
       isDefault: false,
     };
     setCriteria([...criteria, newCriterion]);
+    
+    // Add to active version if it exists
+    if (activeVersion) {
+      setCriteriaByVersion(prev => ({
+        ...prev,
+        [activeVersion.id]: [...(prev[activeVersion.id] || []), newCriterion],
+      }));
+    }
   };
 
   const updateCriterion = (id: string, updates: Partial<Omit<Criterion, 'id' | 'isDefault'>>) => {
-    setCriteria(
-      criteria.map(criterion => 
-        criterion.id === id ? { ...criterion, ...updates } : criterion
-      )
+    const updatedCriteria = criteria.map(criterion => 
+      criterion.id === id ? { ...criterion, ...updates } : criterion
     );
+    setCriteria(updatedCriteria);
+    
+    // Update in active version if it exists
+    if (activeVersion) {
+      setCriteriaByVersion(prev => ({
+        ...prev,
+        [activeVersion.id]: updatedCriteria,
+      }));
+    }
   };
 
   const removeCriterion = (id: string): boolean => {
@@ -262,14 +293,31 @@ export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
     }
 
     setCriteria(criteria.filter(criterion => criterion.id !== id));
+    
+    // Remove from active version if it exists
+    if (activeVersion) {
+      setCriteriaByVersion(prev => ({
+        ...prev,
+        [activeVersion.id]: (prev[activeVersion.id] || []).filter(c => c.id !== id),
+      }));
+    }
+    
     return true;
   };
 
   const resetToDefaultCriteria = () => {
     setCriteria(defaultCriteria);
+    
+    // Reset active version if it exists
+    if (activeVersion) {
+      setCriteriaByVersion(prev => ({
+        ...prev,
+        [activeVersion.id]: [...defaultCriteria],
+      }));
+    }
   };
 
-  // New version-based functions
+  // Version operations
   const createVersion = (version: Omit<CriteriaVersion, 'id' | 'createdAt' | 'updatedAt'>): string => {
     const now = new Date();
     const newVersion: CriteriaVersion = {
@@ -357,8 +405,12 @@ export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
     setVersions(prevVersions => 
       prevVersions.map(v => ({ ...v, isActive: v.id === id }))
     );
+    
+    // Trigger React Query refetch with new active version
+    queryClient.invalidateQueries({ queryKey: ['criteria'] });
   };
 
+  // Criteria operations for versions
   const addCriterionToVersion = (versionId: string, criterion: Omit<Criterion, 'id' | 'isDefault'>): string => {
     const newCriterion: Criterion = {
       ...criterion,
@@ -371,6 +423,11 @@ export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
       [versionId]: [...(prev[versionId] || []), newCriterion],
     }));
     
+    // If this is the active version, also update the main criteria array
+    if (activeVersion && activeVersion.id === versionId) {
+      setCriteria(prev => [...prev, newCriterion]);
+    }
+    
     return newCriterion.id;
   };
 
@@ -381,6 +438,13 @@ export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
         criterion.id === id ? { ...criterion, ...updates } : criterion
       ),
     }));
+    
+    // If this is the active version, also update the main criteria array
+    if (activeVersion && activeVersion.id === versionId) {
+      setCriteria(prev => prev.map(criterion => 
+        criterion.id === id ? { ...criterion, ...updates } : criterion
+      ));
+    }
   };
 
   const removeCriterionFromVersion = (versionId: string, id: string): boolean => {
@@ -400,6 +464,11 @@ export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
       newState[versionId] = updatedCriteria;
       return newState;
     });
+    
+    // If this is the active version, also update the main criteria array
+    if (activeVersion && activeVersion.id === versionId) {
+      setCriteria(prev => prev.filter(criterion => criterion.id !== id));
+    }
     
     return true;
   };
@@ -425,6 +494,14 @@ export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
         weight: weights[index],
       })),
     }));
+    
+    // If this is the active version, also update the main criteria array
+    if (activeVersion && activeVersion.id === versionId) {
+      setCriteria(prev => prev.map((criterion, index) => ({
+        ...criterion,
+        weight: weights[index < weights.length ? index : 0],
+      })));
+    }
   };
 
   const calculateWeights = (versionId: string) => {
@@ -520,7 +597,7 @@ export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
         // Data fetching state
         loading,
         error,
-        refreshCriteria: fetchCriteria
+        refreshCriteria
       }}
     >
       {children}

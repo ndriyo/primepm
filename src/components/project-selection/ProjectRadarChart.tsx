@@ -1,10 +1,11 @@
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { Project } from '@/app/contexts/ProjectContext';
-import { useCriteria } from '@/app/contexts/CriteriaContext';
 import { useEffect, useState, useMemo } from 'react';
+import { Criterion } from '@/src/hooks/useCriteriaQuery';
 
 interface ProjectRadarChartProps {
   project: Project;
+  criteria?: Criterion[]; // Make criteria a prop with optional fallback to empty array
 }
 
 // Helper type for radar chart data
@@ -17,8 +18,7 @@ interface RadarChartItem {
   max: number;
 }
 
-export const ProjectRadarChart = ({ project }: ProjectRadarChartProps) => {
-  const { criteria } = useCriteria();
+export const ProjectRadarChart = ({ project, criteria = [] }: ProjectRadarChartProps) => {
   const [chartData, setChartData] = useState<RadarChartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasData, setHasData] = useState(false);
@@ -30,9 +30,6 @@ export const ProjectRadarChart = ({ project }: ProjectRadarChartProps) => {
   }, [chartData]);
   
   useEffect(() => {
-    console.log("ProjectRadarChart - Received project:", project);
-    console.log("ProjectRadarChart - Project criteria:", project.criteria);
-    console.log("ProjectRadarChart - Available criteria from context:", criteria);
     
     setIsLoading(true);
     
@@ -60,7 +57,7 @@ export const ProjectRadarChart = ({ project }: ProjectRadarChartProps) => {
           label: criterion.label || criterion.key,
           isInverse: criterion.isInverse || false,
           min: criterion.scale?.min !== undefined ? Number(criterion.scale.min) : 1,
-          max: criterion.scale?.max !== undefined ? Number(criterion.scale.max) : 10
+          max: criterion.scale?.max !== undefined ? Number(criterion.scale.max) : 5
         }])
       );
       
@@ -80,12 +77,12 @@ export const ProjectRadarChart = ({ project }: ProjectRadarChartProps) => {
         
         const { min, max } = criterionInfo;
         
-        console.log(`ProjectRadarChart - Processing criterion: ${key}`, {
-          rawValue: numValue,
-          isInverse: criterionInfo.isInverse,
-          label: criterionInfo.label,
-          scale: { min, max }
-        });
+        // console.log(`ProjectRadarChart - Processing criterion: ${key}`, {
+        //   rawValue: numValue,
+        //   isInverse: criterionInfo.isInverse,
+        //   label: criterionInfo.label,
+        //   scale: { min, max }
+        // });
         
         // Normalize value to 0-1 range based on min-max scale
         const normalizedValue = (numValue - min) / (max - min);

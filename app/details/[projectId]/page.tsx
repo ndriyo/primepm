@@ -10,6 +10,7 @@ export default function ProjectInformationPage() {
   
   return (
     <PageLayout>
+      {/* Directly use projectId from URL params with our optimized component */}
       <ProjectInformation projectId={projectId} />
     </PageLayout>
   );

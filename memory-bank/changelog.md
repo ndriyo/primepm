@@ -5,6 +5,14 @@ This file documents the changes made to the PrimePM application.
 ## [Unreleased]
 
 ## 2025-03-23
+### Fixed
+- Fixed infinite update loops in context providers:
+  - Eliminated "Maximum update depth exceeded" error in ProjectContext 
+  - Optimized the useEffect implementation in CriteriaContext to prevent unnecessary state updates
+  - Implemented deep comparison before updating state to reduce rerenders
+  - Fixed weight settings initialization to properly handle dependencies
+
+### Added
 - Added a comprehensive skeleton loading system:
   - Created base skeleton components (SkeletonElement, SkeletonText, SkeletonCard, SkeletonTable, SkeletonChart, SkeletonDashboard, and SkeletonProjectList)
   - Implemented specialized skeleton components for specific views:

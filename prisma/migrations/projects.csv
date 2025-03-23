@@ -1,0 +1,51 @@
+Project ID;Project Name;Description;Department;Budget;Start Date;End Date;Resources (mandays);Status;Tags;network_coverage_quality_improvement;regulatory_compliance;financial_viability_roi_npv;market_demand_subscriber_growth;implementation_risk_complexity
+p001;5G Tower Construction;Construct 5G towers in suburban areas to enhance coverage;Infrastructure;1500000;2025-01-10;2025-09-15;450;initiation;coverage,5g,infrastructure;5;3;4;4;2
+p002;Core Network Firewall Upgrade;Upgrade firewall for better data security and compliance;IT;300000;2025-02-01;2025-06-30;200;initiation;security,compliance,firewall;2;5;3;2;4
+p003;Fiber Optic Backbone Expansion;Lay fiber backbone across key regions to improve capacity;Infrastructure;1800000;2025-03-01;2025-10-01;400;initiation;fiber,infrastructure,capacity;4;2;4;3;3
+p004;Customer Self-Service Portal;Develop a self-service portal for customers to reduce wait times;IT;200000;2025-04-01;2025-09-01;100;initiation;portal,selfservice,customer;1;4;3;4;5
+p005;Mobile App Modernization;Revamp mobile app UX for better user engagement;IT;150000;2025-03-15;2025-08-31;80;initiation;app,ux,modernization;2;3;4;5;4
+p006;Smart City IoT Pilot;Test IoT infrastructure in collaboration with city council;R&D;600000;2025-02-10;2025-07-20;220;initiation;iot,smartcity,pilot;3;3;3;3;3
+p007;Data Center Power Redundancy;Enhance power backup systems in primary data center;Infrastructure;400000;2025-05-01;2025-11-01;120;initiation;datacenter,power,backup;3;2;3;2;4
+p008;International Roaming Expansion;Negotiate and enable wider roaming in new markets;Marketing;300000;2025-06-01;2025-11-30;100;initiation;roaming,marketing,newmarkets;2;3;4;5;4
+p009;Regulatory Audit Framework;Implement processes to meet upcoming regulatory audits;IT;120000;2025-01-20;2025-06-20;70;initiation;audit,compliance,process;1;5;2;2;5
+p010;LTE Capacity Boost;Upgrade existing LTE infrastructure to handle peak loads;Operation;500000;2025-02-15;2025-09-15;250;initiation;lte,operation,capacity;4;3;4;4;2
+p011;VoIP Billing Integration;Integrate VoIP billing with main billing system;IT;220000;2025-03-05;2025-08-05;80;initiation;voip,billing,integration;1;4;3;3;4
+p012;Green Energy Retrofit;Install solar panels at remote tower sites for sustainable power;Infrastructure;450000;2025-04-10;2025-10-10;150;initiation;green,solar,towers;3;2;4;2;3
+p013;Data Governance Overhaul;Establish data governance policies for compliance;IT;200000;2025-05-01;2025-10-01;100;initiation;datagovernance,compliance,policies;1;5;2;2;5
+p014;Fleet Management Automation;Automate fleet tracking and maintenance scheduling;Operation;180000;2025-06-01;2025-12-01;90;initiation;fleet,automation,maintenance;1;3;4;2;4
+p015;Next-Gen SMS Platform;Deploy advanced messaging platform with better analytics;IT;350000;2025-02-20;2025-08-20;150;initiation;sms,messaging,analytics;2;3;3;4;3
+p016;AI-Driven Customer Insights;Implement AI solutions for churn prediction and upselling;Marketing;800000;2025-03-10;2025-10-10;300;initiation;ai,customer,marketing;2;2;5;5;3
+p017;Edge Computing Trial;Pilot edge computing nodes for reduced latency;R&D;1000000;2025-04-05;2025-11-05;350;initiation;edge,rd,latency;4;2;3;4;2
+p018;Business Continuity Drill;Conduct large-scale failover test for mission-critical systems;Operation;180000;2025-05-15;2025-09-15;80;initiation;bcp,failover,test;1;4;2;2;5
+p019;Unified Communication Rollout;Merge chat, voice, and collaboration into one platform;IT;500000;2025-03-25;2025-09-25;250;initiation;communication,platform,collab;2;3;3;4;3
+p020;Customer Loyalty Program;Launch points-based rewards program for subscribers;Marketing;250000;2025-02-01;2025-07-01;100;initiation;loyalty,rewards,marketing;1;2;5;5;4
+p021;Global IP Transit Upgrade;Acquire better global IP transit for improved bandwidth;Infrastructure;1400000;2025-03-15;2025-11-15;400;initiation;iptransit,bandwidth,infra;5;3;4;4;2
+p022;Cloud Migration Phase 1;Migrate selected legacy apps to public cloud;IT;900000;2025-04-01;2025-10-01;300;initiation;cloud,migration,legacy;2;4;4;3;3
+p023;Mobile Gaming Partnership;Partner with gaming firms for optimized mobile experiences;Marketing;600000;2025-05-05;2025-12-05;250;initiation;gaming,marketing,partnership;2;2;5;5;3
+p024;Analytics Data Lake;Create centralized data lake for advanced analytics;IT;800000;2025-06-10;2025-12-20;350;initiation;analytics,datalake,ai;1;3;4;3;4
+p025;DR Site Modernization;Upgrade disaster recovery site with modern hardware;Infrastructure;700000;2025-07-01;2026-01-01;300;initiation;dr,hardware,modernization;3;2;3;2;3
+p026;Penetration Testing Program;Periodic pentesting for critical apps and networks;IT;200000;2025-01-25;2025-06-25;100;initiation;pentest,security,compliance;1;5;2;2;5
+p027;Local Content Accelerator;Deploy caching servers for popular local content;Operation;500000;2025-02-20;2025-09-20;250;initiation;cdn,operation,localcontent;4;2;4;4;2
+p028;Omnichannel Marketing;Unify email, SMS, and push campaigns in one platform;Marketing;550000;2025-03-15;2025-09-15;250;initiation;omnichannel,marketing,campaign;1;3;3;5;4
+p029;Satellite Connectivity Backup;Utilize satellite links for remote site failover;Infrastructure;300000;2025-04-05;2025-11-05;120;initiation;satellite,failover,infra;3;2;3;2;4
+p030;Enterprise API Gateway;Centralize internal/external APIs for partners;IT;450000;2025-05-10;2025-11-10;180;initiation;api,partners,centralize;2;4;4;3;3
+p031;In-house Training Academy;Develop specialized telecom training courses;Operation;180000;2025-06-01;2025-11-01;80;initiation;training,academy,operation;1;2;3;3;5
+p032;Customer Data Privacy Initiative;Enhance data privacy features to meet new regulations;IT;300000;2025-01-05;2025-07-05;150;initiation;privacy,regulation,dataprotection;1;5;2;2;5
+p033;5G Small Cell Densification;Increase small cells in high-traffic urban spots;Infrastructure;1200000;2025-02-10;2025-10-10;400;initiation;5g,smallcell,infra;5;3;5;5;2
+p034;Chatbot 2.0;Upgrade chatbot with NLP for better customer interactions;IT;200000;2025-03-20;2025-09-20;90;initiation;chatbot,nlp,customer;1;3;3;5;4
+p035;Smart Farming Partnership;Collaborate with agriculture sector for IoT-based solutions;R&D;600000;2025-04-10;2025-11-10;280;initiation;iot,smartfarming,rd;3;2;3;4;3
+p036;Spectrum Efficiency Testing;Pilot advanced radio algorithms to optimize spectrum usage;R&D;1000000;2025-05-01;2025-11-30;350;initiation;spectrum,radio,rd;4;2;4;3;2
+p037;Unified Vendor Management;Implement a single system for tracking vendor SLAs;Operation;250000;2025-06-15;2025-12-15;120;initiation;vendor,operation,slas;1;3;3;2;4
+p038;Internal Hackathon Series;Organize hackathons to foster innovation culture;Marketing;150000;2025-07-01;2025-10-01;60;initiation;hackathon,innovation,marketing;1;2;2;4;5
+p039;Data Warehouse Modernization;Upgrade data warehouse to support real-time analytics;IT;800000;2025-01-15;2025-07-15;350;initiation;datawarehouse,analytics,upgrade;2;4;4;3;3
+p040;Online Payments Revamp;Integrate new payment gateways and recurring billing;IT;400000;2025-02-01;2025-08-01;160;initiation;payments,billing,online;1;3;5;4;4
+p041;Emergency Services Priority;Improve routing for emergency calls and messages;Infrastructure;350000;2025-03-01;2025-09-01;150;initiation;emergency,infra,routing;5;4;2;2;2
+p042;AI-Driven Radio Planning;Deploy AI-based tools to optimize tower placement;R&D;900000;2025-04-15;2025-12-15;300;initiation;ai,radio,optimization;4;2;4;4;3
+p043;Cyber Threat Intelligence Portal;Centralize threat feeds and alerts for SOC team;IT;180000;2025-05-05;2025-10-05;80;initiation;cyber,threat,intel;1;5;2;1;5
+p044;Digital Signage Network;Create a digital signage advertising network for malls;Marketing;600000;2025-06-01;2025-12-01;250;initiation;digitalsignage,marketing,advertising;1;2;5;5;4
+p045;Open RAN Pilot;Test vendor-agnostic Open RAN solution in select sites;Infrastructure;1400000;2025-07-10;2026-02-10;400;initiation;openran,infrastructure,pilot;5;3;3;4;2
+p046;Billing Data Cleanse;Clean up duplicate or incorrect billing records;IT;200000;2025-01-25;2025-06-25;100;initiation;billing,dataquality,cleanup;1;4;3;2;5
+p047;Satellite Phone Service;Introduce satellite-based phone service for remote regions;Operation;700000;2025-02-15;2025-09-15;280;initiation;satphone,remote,operation;4;2;3;3;3
+p048;Campus 5G Demo;Showcase private 5G network for enterprise campus;Marketing;500000;2025-03-10;2025-09-10;200;initiation;5g,enterprise,demo;3;3;5;4;3
+p049;Next-Gen Router Deployment;Deploy advanced core routers for higher throughput;Infrastructure;1200000;2025-04-05;2025-12-05;400;initiation;router,core,infra;5;3;4;3;2
+p050;Smart Wearable Integration;Test wearable devices data streaming with telco services;R&D;800000;2025-05-20;2025-12-20;320;initiation;wearable,rd,healthtech;2;2;3;3;3

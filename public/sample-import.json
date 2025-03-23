@@ -1,0 +1,74 @@
+{
+  "projects": [
+    {
+      "name": "Web Portal Redesign",
+      "description": "Redesign the company's web portal to improve user experience and accessibility",
+      "department": "Information Technology",
+      "budget": 150000,
+      "resources": 220,
+      "startDate": "2025-04-01",
+      "endDate": "2025-08-31",
+      "status": "planning",
+      "tags": "web,redesign,portal,high-priority",
+      "criterion_1": 4,
+      "criterion_2": 5,
+      "criterion_3": 3
+    },
+    {
+      "name": "Mobile App Development",
+      "description": "Create a new mobile application for customer engagement and service requests",
+      "department": "Information Technology",
+      "budget": 200000,
+      "resources": 350,
+      "startDate": "2025-05-15",
+      "endDate": "2025-12-15",
+      "status": "initiation",
+      "tags": "mobile,app,customer",
+      "criterion_1": 4,
+      "criterion_2": 4,
+      "criterion_3": 4
+    },
+    {
+      "name": "Marketing Automation",
+      "description": "Implement marketing automation tools to streamline campaign management",
+      "department": "Marketing",
+      "budget": 120000,
+      "resources": 180,
+      "startDate": "2025-03-15",
+      "endDate": "2025-06-30",
+      "status": "planning",
+      "tags": "marketing,automation,campaign",
+      "criterion_1": 3,
+      "criterion_2": 5,
+      "criterion_3": 4
+    },
+    {
+      "name": "Operations Workflow Improvement",
+      "description": "Optimize the current operations workflow to reduce processing time and errors",
+      "department": "Operations",
+      "budget": 95000,
+      "resources": 150,
+      "startDate": "2025-06-01",
+      "endDate": "2025-09-30",
+      "status": "planning",
+      "tags": "operations,workflow,optimization",
+      "criterion_1": 5,
+      "criterion_2": 3,
+      "criterion_3": 4
+    },
+    {
+      "name": "Data Warehouse Expansion",
+      "description": "Expand the data warehouse capabilities to support increased analytics needs",
+      "department": "Information Technology",
+      "budget": 280000,
+      "resources": 320,
+      "startDate": "2025-07-01",
+      "endDate": "2026-01-31",
+      "status": "initiation",
+      "tags": "data,warehouse,analytics",
+      "criterion_1": 5,
+      "criterion_2": 4,
+      "criterion_3": 5
+    }
+  ]
+}

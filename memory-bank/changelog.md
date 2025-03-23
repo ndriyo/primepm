@@ -5,12 +5,35 @@ This file documents the changes made to the PrimePM application.
 ## [Unreleased]
 
 ## 2025-03-23
+### Enhanced
+- Improved project information search and filter functionality:
+  - Implemented combobox with multiple selection for department filtering
+  - Updated status filter to use combobox with values: 'initiation' | 'planning' | 'in-progress' | 'completed' | 'on-hold'
+  - Replaced number inputs with textboxes supporting thousand separators for budget and resources
+  - Fixed search functionality to properly search by name, description, and tags
+  - Removed criteria score filtering for better focus on essential filters
+  - Added pagination with page numbers for easier navigation through search results
+  - Enhanced API filtering with client-side state synchronization
+
+### Changed
+- Enhanced navigation between project views:
+  - Added Cancel button to project detail page for easier return to search
+  - Updated Cancel button in edit form to redirect to search page
+  - Removed "New Project" button from detail view to focus on current project
+  - Implemented XMarkIcon for Cancel button for visual clarity
+  - Created consistent button placement across project views
+
 ### Fixed
 - Fixed infinite update loops in context providers:
   - Eliminated "Maximum update depth exceeded" error in ProjectContext 
   - Optimized the useEffect implementation in CriteriaContext to prevent unnecessary state updates
   - Implemented deep comparison before updating state to reduce rerenders
   - Fixed weight settings initialization to properly handle dependencies
+- Fixed Next.js build errors:
+  - Corrected API route type errors by using Promise for route params in all dynamic routes
+  - Updated route handlers to properly await param values before use: `const { projectId } = await params`
+  - Added Suspense boundaries around components using `useSearchParams()` to fix CSR bailout warnings
+  - Implemented consistent pattern for API route parameter handling across the application
 
 ### Added
 - Added a comprehensive skeleton loading system:

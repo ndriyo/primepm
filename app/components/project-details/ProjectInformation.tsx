@@ -11,7 +11,8 @@ import { ProjectRadarChart } from '@/src/components/project-selection/ProjectRad
 import { 
   PlusCircleIcon, 
   PencilSquareIcon, 
-  TrashIcon 
+  TrashIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
 import { LoadingWrapper } from '@/components/ui/LoadingWrapper';
@@ -107,7 +108,7 @@ export const ProjectInformation = ({ projectId }: ProjectInformationProps) => {
       queryClient.invalidateQueries({ queryKey: ['project-details'] });
       
       // Navigate to projects selection page
-      router.push('/selection');
+      router.push('/details');
     } catch (error) {
       console.error('Error during project deletion:', error);
     } finally {
@@ -143,11 +144,12 @@ export const ProjectInformation = ({ projectId }: ProjectInformationProps) => {
         <h1 className="text-2xl font-bold text-gray-900">Project Information</h1>
         <div className="flex flex-wrap gap-2">
           <button
-            className="btn btn-primary flex items-center"
-            onClick={handleCreateProject}
+            className="btn btn-secondary flex items-center"
+            onClick={() => router.push('/details')}
+            disabled={isLoading}
           >
-            <PlusCircleIcon className="w-5 h-5 mr-1" />
-            New Project
+            <XMarkIcon className="w-5 h-5 mr-1" />
+            Cancel
           </button>
           <button
             className="btn btn-primary flex items-center"

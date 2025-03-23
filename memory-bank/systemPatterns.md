@@ -39,23 +39,22 @@ We employ a **Next.js** monorepo approach where both frontend and backend logic 
 - **Security**: Strict role-based checks in Next.js API routes, plus Supabase rules.
 
 ### API Route Handler Patterns
-- **Route Parameter Typing**: When creating API route handlers in Next.js App Router, use one of these patterns:
-  1. Type definition approach (preferred for reusability):
+- **Route Parameter Typing**: When creating API route handlers in Next.js App Router, use the Promise-based pattern:
+  1. Promise-based params approach (required for App Router):
      ```typescript
-     type Context = { params: { paramName: string } };
-     
-     export async function GET(request: NextRequest, context: Context) {
-       const { paramName } = context.params;
+     export async function GET(
+       request: NextRequest, 
+       { params }: { params: Promise<{ paramName: string }> }
+     ) {
+       // IMPORTANT: Await the params object before accessing properties
+       const { paramName } = await params;
        // Handler logic
      }
      ```
-  2. Inline typing approach:
-     ```typescript
-     export async function GET(request: NextRequest, { params }: { params: { paramName: string } }) {
-       const { paramName } = params;
-       // Handler logic
-     }
-     ```
+  
+  This pattern is necessary because in the App Router, dynamic route parameters are provided as a Promise that needs to be awaited before accessing the values.
+
+  Always be consistent with this pattern across all API routes to avoid type errors and ensure proper route parameter handling.
 - **Error Handling**: All API route handlers should include try/catch blocks with appropriate error responses.
 - **Status Codes**: Use appropriate HTTP status codes (200, 400, 404, 500) with descriptive error messages.
 

@@ -1,6 +1,14 @@
 # Project Progress Tracker
 
 ## What Works
+- Excel import feature:
+  - Download Excel template with dynamic criteria structure
+  - Upload and validation of Excel files with project data
+  - Comprehensive validation for project fields and criteria scores
+  - Role-based validation (PM can only import for their department)
+  - Support for both new projects and updates to existing projects
+  - Import interface with progress indicators and detailed validation results
+  - Single-page workflow with modular component architecture
 - Enhanced project search and filtering system:
   - Advanced filtering by multiple criteria (department, budget range, resources, dates, status, tags)
   - Improved search functionality across name, description, and tags fields
@@ -99,8 +107,7 @@
 - User role management UI
 - Multi-tenant UI customization
 - Portfolio simulation based on constraints
-- Data export/import functionality
-- Excel import for project bulk creation
+- Data export functionality
 
 ## Known Issues
 - Mock authentication is for development only - needs real implementation

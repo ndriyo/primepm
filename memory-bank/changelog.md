@@ -2,7 +2,18 @@
 
 This file documents the changes made to the PrimePM application.
 
-## [Unreleased]
+## 2025-03-24
+### Added
+- Excel Import Feature
+  - Added ability to import projects from Excel files
+  - Created new page at `/projects/import` with template download, file upload, and validation
+  - Implemented API endpoints for template generation, validation, and project importing
+  - Added "Import from Excel" button to Project Search page
+  - Created modular component structure for import workflow
+  - Implemented role-based validation for imported projects
+  - Added support for both new project creation and existing project updates
+  - Generated sample JSON file for testing import functionality
+
 
 ## 2025-03-23
 ### Enhanced

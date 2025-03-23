@@ -37,6 +37,7 @@ interface ProjectSearchContextType {
   removeFilter: (key: string) => void;
   handleSelectProject: (projectId: string) => void;
   handleCreateProject: () => void;
+  handleImportProjects: () => void;
   
   // Formatting utilities
   formatCurrency: (amount: number | undefined | null) => string;
@@ -424,6 +425,11 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
     router.push('/projects/new');
   };
   
+  // Navigate to import projects page
+  const handleImportProjects = () => {
+    router.push('/projects/import');
+  };
+  
   // Format dollar amount
   const formatCurrency = (amount: number | undefined | null) => {
     if (amount === undefined || amount === null) return '-';
@@ -477,6 +483,7 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
     removeFilter,
     handleSelectProject,
     handleCreateProject,
+    handleImportProjects,
     
     // Formatting utilities
     formatCurrency,

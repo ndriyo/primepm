@@ -7,6 +7,14 @@
 - Implementing project entry and self-assessment for Project Managers/Sponsors
 
 ## Recent Changes
+- Added Excel import functionality for batch project creation:
+  - Implemented file upload with drag-and-drop support
+  - Created dynamic template generation based on active criteria version
+  - Built validation engine with comprehensive error checking
+  - Developed modular component architecture for the import workflow
+  - Added role-based validation for project managers
+  - Implemented progress indicators for better user feedback
+  - Added support for both new projects and updates to existing projects
 - Enhanced search and filter functionality for project information management:
   - Implemented combobox with multiple selection for department filtering
   - Updated status filter to use combobox with values: 'initiation', 'planning', 'in-progress', 'completed', 'on-hold'
@@ -96,8 +104,8 @@
 - Implement portfolio simulation based on constraints
 - Further enhance multi-tenant functionality
 - Add data visualization for project comparisons
-- Implement batch operations for multiple projects
-- Add data export/import functionality
+- Implement additional batch operations for multiple projects
+- Add data export functionality
 - Deploy the application to production environments
 
 ## Deployment Configuration

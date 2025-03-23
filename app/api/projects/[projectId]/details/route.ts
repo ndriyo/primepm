@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/prisma';
 
-type Context = { params: { projectId: string } };
-
-export async function GET(request: NextRequest, context: Context) {
-  const { projectId } = context.params;
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ projectId: string }> }
+) {
+  // Await the params object before accessing properties
+  const { projectId } = await params;
   
   try {
     // Extract RLS headers

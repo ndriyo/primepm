@@ -7,6 +7,16 @@
 - Implementing project entry and self-assessment for Project Managers/Sponsors
 
 ## Recent Changes
+- Enhanced search and filter functionality for project information management:
+  - Implemented combobox with multiple selection for department filtering
+  - Updated status filter to use combobox with values: 'initiation', 'planning', 'in-progress', 'completed', 'on-hold'
+  - Replaced number inputs with textboxes supporting thousand separators for budget and resources
+  - Improved search functionality to properly search by name, description, or tags
+  - Added filter state synchronization with URL parameters for shareable search results
+- Improved navigation between project views:
+  - Added Cancel button to the project details page for easier return to search
+  - Updated navigation flow for editing project information
+  - Created consistent button placement across project views
 - Fixed infinite update loop issues in context providers:
   - Eliminated the "Maximum update depth exceeded" error in ProjectContext
   - Optimized context update mechanisms for better performance
@@ -74,12 +84,19 @@
   - Refactored transaction handling in repositories to properly return typed results
   - Added proper type casting with `as unknown as User` pattern to ensure consistent typing
   - Added Suspense boundary around components using `useSearchParams()` hook to fix Next.js CSR bailout warnings
+- Fixed Next.js API route type errors and build issues:
+  - Updated API route handlers to use Promise for route params (e.g., `{ params }: { params: Promise<{ projectId: string }> }`)
+  - Added await when accessing route parameters to properly resolve the Promise (e.g., `const { projectId } = await params`)
+  - Ensured consistency in API route parameter handling across all dynamic routes
+  - Added missing Suspense boundaries around components using `useSearchParams()` hook to prevent CSR bailout errors
 
 ## Next Steps
 - Complete the real authentication implementation with NextAuth
 - Implement committee review interface for submitted projects
 - Implement portfolio simulation based on constraints
 - Further enhance multi-tenant functionality
+- Add data visualization for project comparisons
+- Implement batch operations for multiple projects
 - Add data export/import functionality
 - Deploy the application to production environments
 

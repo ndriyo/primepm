@@ -508,7 +508,7 @@ export default function ProjectEntryForm() {
           <div className="flex gap-2">
             <button
               className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition"
-              onClick={() => isEditMode && projectId ? router.push(`/details/${projectId}`) : router.push('/selection')}
+              onClick={() => router.push('/details')}
               type="button"
             >
               Cancel

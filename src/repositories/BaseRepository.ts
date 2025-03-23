@@ -120,8 +120,7 @@ export abstract class BaseRepository<T, C, U> {
           userId,
           action: 'CREATE',
           entityType: this.entityType,
-          entityId: result.id,
-          organizationId,
+          entityId: result.id
         },
       });
     });
@@ -163,8 +162,7 @@ export abstract class BaseRepository<T, C, U> {
           userId,
           action: 'UPDATE',
           entityType: this.entityType,
-          entityId: id,
-          organizationId,
+          entityId: id
         },
       });
     });
@@ -205,8 +203,7 @@ export abstract class BaseRepository<T, C, U> {
           userId,
           action: 'DELETE',
           entityType: this.entityType,
-          entityId: id,
-          organizationId,
+          entityId: id
         },
       });
     });

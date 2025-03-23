@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useProjects, Project } from '@/app/contexts/ProjectContext';
+import { useQueryClient } from '@tanstack/react-query';
+import { Project } from '@/app/contexts/ProjectContext';
 import { useAuth } from '@/app/contexts/AuthContext';
-import { useCriteria } from '@/app/contexts/CriteriaContext';
-import { useDepartments } from '@/app/contexts/DepartmentContext';
+import { useProjectDetails, ProjectWithDetails } from '@/src/hooks/useProjectDetails';
+import { useCriteriaQuery } from '@/src/hooks/useCriteriaQuery';
 import { ProjectRadarChart } from '@/src/components/project-selection/ProjectRadarChart';
 import { 
   PlusCircleIcon, 
@@ -13,28 +14,12 @@ import {
   TrashIcon 
 } from '@heroicons/react/24/outline';
 import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
+import { LoadingWrapper } from '@/components/ui/LoadingWrapper';
+import { SkeletonCard } from '@/components/ui/skeleton';
 
 interface ProjectInformationProps {
-  projectId?: string;
+  projectId: string;
 }
-
-// API function to delete a project
-const deleteProject = async (projectId: string): Promise<boolean> => {
-  try {
-    const response = await fetch(`/api/projects/${projectId}`, {
-      method: 'DELETE',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to delete project');
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Error deleting project:', error);
-    return false;
-  }
-};
 
 // Tag color variants based on string hash
 const TAG_COLORS = [
@@ -60,114 +45,69 @@ const getTagColor = (tag: string): string => {
 };
 
 export const ProjectInformation = ({ projectId }: ProjectInformationProps) => {
-  const { selectedProject, projects, setSelectedProject, refreshProjects } = useProjects();
-  const { user } = useAuth();
-  const { criteria } = useCriteria();
-  const { departments } = useDepartments();
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { criteria } = useCriteriaQuery();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
-  // Function to get department name from department ID
-  const getDepartmentName = (departmentId: string): string => {
-    if (!departmentId) return 'Unknown Department';
-    
-    const department = departments.find(dept => dept.id === departmentId);
-    return department ? department.name : 'Unknown Department';
-  };
-  
-  // Refresh projects data when component mounts or user changes
+  // Use our optimized hook to fetch project details
+  const { 
+    data: project,
+    isLoading,
+    error,
+    refetch
+  } = useProjectDetails(projectId);
+
+  // Prefetch next and previous projects when available
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      await refreshProjects();
-      setIsLoading(false);
+    const prefetchProjects = async () => {
+      try {
+        // This could be enhanced with logic to prefetch next/prev projects
+        // based on the current project's position in a list
+      } catch (error) {
+        console.error('Error prefetching projects:', error);
+      }
     };
     
-    fetchData();
-  }, [refreshProjects, user]);
-  
-  useEffect(() => {
-    // If projectId is provided, find the project by ID
-    if (projectId) {
-      const project = projects.find(p => p.id === projectId);
-      if (project) {
-        setSelectedProject(project);
-        setCurrentProject(project);
-      } else {
-        // If project ID is invalid, redirect to selection page
-        router.push('/selection');
-      }
-    } 
-    // If no projectId but selectedProject exists in context, use that
-    else if (selectedProject) {
-      setCurrentProject(selectedProject);
-    } 
-    // If neither projectId nor selectedProject, redirect to selection
-    else {
-      router.push('/selection');
-    }
-  }, [projectId, selectedProject, projects, setSelectedProject, router]);
-  
-  const handleChangeProject = (direction: 'next' | 'prev') => {
-    const currentIndex = projects.findIndex(p => p.id === currentProject?.id);
-    if (currentIndex === -1) return;
-    
-    let newIndex;
-    if (direction === 'next') {
-      newIndex = (currentIndex + 1) % projects.length;
-    } else {
-      newIndex = (currentIndex - 1 + projects.length) % projects.length;
-    }
-    
-    const nextProject = projects[newIndex];
-    setSelectedProject(nextProject);
-    setCurrentProject(nextProject);
-    
-    // Update URL to reflect the new project ID
-    router.push(`/details/${nextProject.id}`);
-  };
+    prefetchProjects();
+  }, [projectId]);
 
+  // Handle navigation to create/edit project
   const handleCreateProject = () => {
     router.push('/projects/new');
   };
   
   const handleEditProject = () => {
-    if (currentProject) {
-      router.push(`/projects/new?projectId=${currentProject.id}`);
-    }
+    router.push(`/projects/new?projectId=${projectId}`);
   };
   
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  
+  // Delete project handler
   const handleDeleteClick = () => {
     setIsDeleteDialogOpen(true);
   };
   
   const handleDeleteConfirm = async () => {
-    if (!currentProject) return;
-    
     try {
-      const success = await deleteProject(currentProject.id);
-      
-      if (success) {
-        // Find the next project to navigate to
-        const currentIndex = projects.findIndex(p => p.id === currentProject.id);
-        
-        // Refresh the projects list
-        await refreshProjects();
-        
-        if (projects.length > 1) {
-          // Calculate next index, avoiding the deleted project
-          const nextIndex = (currentIndex + 1) % projects.length;
-          // If we're deleting the last project, go to the first one
-          const nextProject = projects[nextIndex === currentIndex ? 0 : nextIndex];
-          router.push(`/details/${nextProject.id}`);
-        } else {
-          // No other projects exist, go back to selection
-          router.push('/selection');
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: 'DELETE',
+        headers: {
+          'x-organization-id': user?.organizationId || '',
+          'x-user-id': user?.id || '',
+          'x-user-role': user?.role || '',
         }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete project');
       }
+      
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['project-details'] });
+      
+      // Navigate to projects selection page
+      router.push('/selection');
     } catch (error) {
       console.error('Error during project deletion:', error);
     } finally {
@@ -176,18 +116,23 @@ export const ProjectInformation = ({ projectId }: ProjectInformationProps) => {
   };
 
   // Format number with thousand separator
-  const formatNumber = (value?: number): string => {
-    if (value === undefined) return '-';
+  const formatNumber = (value?: number | null): string => {
+    if (value === undefined || value === null) return '-';
     return value.toLocaleString();
   };
 
-  if (isLoading || !currentProject) {
+  // If there's an error, show an error message
+  if (error) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading project data...</p>
-        </div>
+      <div className="p-4 bg-red-50 text-red-800 rounded-md">
+        <h3 className="text-lg font-medium">Error loading project</h3>
+        <p>{(error as Error).message || 'Unknown error occurred'}</p>
+        <button 
+          className="mt-2 px-4 py-2 bg-red-100 hover:bg-red-200 rounded-md"
+          onClick={() => refetch()}
+        >
+          Try Again
+        </button>
       </div>
     );
   }
@@ -207,6 +152,7 @@ export const ProjectInformation = ({ projectId }: ProjectInformationProps) => {
           <button
             className="btn btn-primary flex items-center"
             onClick={handleEditProject}
+            disabled={isLoading}
           >
             <PencilSquareIcon className="w-5 h-5 mr-1" />
             Edit
@@ -214,184 +160,172 @@ export const ProjectInformation = ({ projectId }: ProjectInformationProps) => {
           <button
             className="btn btn-danger flex items-center"
             onClick={handleDeleteClick}
+            disabled={isLoading}
           >
             <TrashIcon className="w-5 h-5 mr-1" />
             Delete
           </button>
-          <div className="flex space-x-2">
-            <button
-              className="btn btn-secondary"
-              onClick={() => handleChangeProject('prev')}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-1">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-              </svg>
-              Previous
-            </button>
-            <button
-              className="btn btn-secondary"
-              onClick={() => handleChangeProject('next')}
-            >
-              Next
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 ml-1">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
-            </button>
-          </div>
         </div>
       </div>
       
-      {/* Project overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <div className="card h-full">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">{currentProject.name}</h2>
-                <p className="text-sm text-gray-600">
-                  {currentProject.departmentId 
-                    ? getDepartmentName(currentProject.departmentId) 
-                    : (typeof currentProject.department === 'string' && !currentProject.department.match(/^[0-9a-f]{8}-[0-9a-f]{4}/i) 
-                      ? currentProject.department 
-                      : getDepartmentName(currentProject.department || ''))}
-                </p>
-              </div>
+      <LoadingWrapper
+        isLoading={isLoading}
+        skeleton={
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <SkeletonCard className="h-64"/>
             </div>
-            
-            <p className="text-gray-700 mb-6">{currentProject.description}</p>
-            
-            <div className="grid grid-cols-2 gap-x-6 gap-y-4 mb-6">
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Start Date</h3>
-                <p className="text-base font-medium text-gray-900">
-                  {new Date(currentProject.startDate).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}
-                </p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">End Date</h3>
-                <p className="text-base font-medium text-gray-900">
-                  {new Date(currentProject.endDate).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}
-                </p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Budget</h3>
-                <p className="text-base font-medium text-gray-900">
-                  ${formatNumber(currentProject.budget)}
-                </p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Resources</h3>
-                <p className="text-base font-medium text-gray-900">
-                  {formatNumber(currentProject.resources)} mandays
-                </p>
-              </div>
-            </div>
-            
             <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Tags</h3>
-              <div className="flex flex-wrap gap-2">
-                {currentProject.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTagColor(tag)}`}
-                  >
-                    {tag}
-                  </span>
-                ))}
+              <SkeletonCard className="h-64"/>
+            </div>
+          </div>
+        }
+      >
+        {project && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <div className="card h-full">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">{project.name}</h2>
+                    <p className="text-sm text-gray-600">
+                      {project.department?.name || 'Unknown Department'}
+                    </p>
+                  </div>
+                </div>
+                
+                <p className="text-gray-700 mb-6">{project.description}</p>
+                
+                <div className="grid grid-cols-2 gap-x-6 gap-y-4 mb-6">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Start Date</h3>
+                    <p className="text-base font-medium text-gray-900">
+                      {new Date(project.startDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">End Date</h3>
+                    <p className="text-base font-medium text-gray-900">
+                      {new Date(project.endDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Budget</h3>
+                    <p className="text-base font-medium text-gray-900">
+                      ${formatNumber(project.budget)}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Resources</h3>
+                    <p className="text-base font-medium text-gray-900">
+                      {formatNumber(project.resources)} mandays
+                    </p>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {project.tags.map((tag: string) => (
+                      <span
+                        key={tag}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTagColor(tag)}`}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="card">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Criteria Analysis</h3>
+              <ProjectRadarChart 
+                project={project as unknown as Project} 
+                criteria={criteria}
+              />
+              
+              <div className="mt-6 space-y-4">
+                {Object.keys(project.criteria).length > 0 ? (
+                  Object.entries(project.criteria).map(([key, value]) => {
+                    // Find the criterion in the context
+                    const criterionFromContext = criteria.find((c: { key: string }) => c.key === key);
+                    
+                    // Use context data or default to basic info
+                    const criterion = {
+                      label: criterionFromContext?.label || key,
+                      isInverse: criterionFromContext?.isInverse || false,
+                      min: criterionFromContext?.scale?.min !== undefined ? Number(criterionFromContext.scale.min) : 1,
+                      max: criterionFromContext?.scale?.max !== undefined ? Number(criterionFromContext.scale.max) : 10
+                    };
+                    
+                    // Determine color based on score and criterion properties
+                    const getColorClass = (score: number, isInverse: boolean, min: number, max: number) => {
+                      // Calculate threshold points as percentages of the range
+                      const range = max - min;
+                      const lowThreshold = min + range * 0.3;
+                      const midThreshold = min + range * 0.7;
+                      
+                      if (isInverse) {
+                        return score <= lowThreshold ? 'bg-green-500' : 
+                              score <= midThreshold ? 'bg-yellow-500' : 'bg-red-500';
+                      } else {
+                        return score >= midThreshold ? 'bg-green-500' :
+                              score >= lowThreshold ? 'bg-blue-500' : 'bg-red-500';
+                      }
+                    };
+                    
+                    // Calculate width percentage based on the criterion's scale
+                    const getWidthPercentage = (value: number, min: number, max: number) => {
+                      const percentage = ((value - min) / (max - min)) * 100;
+                      return Math.max(0, Math.min(100, percentage)); // Clamp between 0-100
+                    };
+                    
+                    return (
+                      <div key={key}>
+                        <div className="flex justify-between items-center mb-1">
+                          <h4 className="text-sm font-medium text-gray-700">
+                            {criterion.label}
+                            {criterion.isInverse && <span className="ml-1 text-xs text-gray-500">(Lower is better)</span>}
+                          </h4>
+                          <span className="text-sm font-medium text-gray-900">{value}/{criterion.max}</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className={`${getColorClass(value, criterion.isInverse, criterion.min, criterion.max)} h-2 rounded-full`}
+                            style={{ width: `${getWidthPercentage(value, criterion.min, criterion.max)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-6 text-gray-500">
+                    <p>No criteria scores available for this project</p>
+                    <p className="text-sm mt-1">Add criteria scores in the database to see analysis here</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
-        
-        <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Criteria Analysis</h3>
-          {/* Add debug info before rendering, but not inside JSX */}
-          <div className="hidden">
-            {(() => {
-              console.log('Current project in ProjectInformation:', currentProject);
-              console.log('Criteria data being passed to RadarChart:', currentProject.criteria);
-              return null;
-            })()}
-          </div>
-          <ProjectRadarChart project={currentProject} />
-          
-          <div className="mt-6 space-y-4">
-            {Object.keys(currentProject.criteria).length > 0 ? (
-              Object.entries(currentProject.criteria).map(([key, value]) => {
-                // Find the criterion in the context
-                const criterionFromContext = criteria.find(c => c.key === key);
-                
-                // Use context data or default to basic info
-                const criterion = {
-                  label: criterionFromContext?.label || key,
-                  isInverse: criterionFromContext?.isInverse || false,
-                  min: criterionFromContext?.scale?.min !== undefined ? Number(criterionFromContext.scale.min) : 1,
-                  max: criterionFromContext?.scale?.max !== undefined ? Number(criterionFromContext.scale.max) : 10
-                };
-                
-                // Determine color based on score and whether criterion is inverse
-                const getColorClass = (score: number, isInverse: boolean, min: number, max: number) => {
-                  // Calculate threshold points as percentages of the range
-                  const range = max - min;
-                  const lowThreshold = min + range * 0.3;
-                  const midThreshold = min + range * 0.7;
-                  
-                  if (isInverse) {
-                    return score <= lowThreshold ? 'bg-green-500' : 
-                          score <= midThreshold ? 'bg-yellow-500' : 'bg-red-500';
-                  } else {
-                    return score >= midThreshold ? 'bg-green-500' :
-                          score >= lowThreshold ? 'bg-blue-500' : 'bg-red-500';
-                  }
-                };
-                
-                // Calculate width percentage based on the criterion's scale
-                const getWidthPercentage = (value: number, min: number, max: number) => {
-                  const percentage = ((value - min) / (max - min)) * 100;
-                  return Math.max(0, Math.min(100, percentage)); // Clamp between 0-100
-                };
-                
-                return (
-                  <div key={key}>
-                    <div className="flex justify-between items-center mb-1">
-                      <h4 className="text-sm font-medium text-gray-700">
-                        {criterion.label}
-                        {criterion.isInverse && <span className="ml-1 text-xs text-gray-500">(Lower is better)</span>}
-                      </h4>
-                      <span className="text-sm font-medium text-gray-900">{value}/{criterion.max}</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`${getColorClass(value, criterion.isInverse, criterion.min, criterion.max)} h-2 rounded-full`}
-                        style={{ width: `${getWidthPercentage(value, criterion.min, criterion.max)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-6 text-gray-500">
-                <p>No criteria scores available for this project</p>
-                <p className="text-sm mt-1">Add criteria scores in the database to see analysis here</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+        )}
+      </LoadingWrapper>
+      
       {/* Delete confirmation dialog */}
       <ConfirmationDialog
         isOpen={isDeleteDialogOpen}
         onCancel={() => setIsDeleteDialogOpen(false)}
         onConfirm={handleDeleteConfirm}
-        message={`Are you sure you want to delete "${currentProject?.name}"? This action cannot be undone.`}
+        message={`Are you sure you want to delete "${project?.name}"? This action cannot be undone.`}
       />
     </div>
   );

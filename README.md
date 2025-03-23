@@ -4,6 +4,7 @@ PrimePM is a project management application built with React and Next.js, design
 
 ## Features
 
+- **Optimized Performance**: Fixed context update issues to eliminate render loops and improve app performance
 - **Dashboard**: Overview of project metrics, risk assessments, and top projects
 - **Project Selection**: Matrix view, table view, and card view for selecting projects based on criteria
 - **Project Details**: Detailed view of a specific project with timeline and criteria analysis

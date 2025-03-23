@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { useCriteria } from '@/app/contexts/CriteriaContext';
 import { useAuth } from '@/app/contexts/AuthContext';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Update the Project interface to match expected database schema
 export interface Project {
@@ -51,7 +52,6 @@ export interface FilterSettings {
   searchTerm: string;
 }
 
-
 const defaultFilterSettings: FilterSettings = {
   department: [],
   minScore: 0,
@@ -64,10 +64,7 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const { criteria } = useCriteria();
   const { user, organization } = useAuth();
-  
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const queryClient = useQueryClient();
   
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [weightSettings, setWeightSettings] = useState<Record<string, number>>({});
@@ -78,41 +75,32 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const transformScoresToCriteria = (projectScores: any[]): Record<string, number> => {
     const criteriaMap: Record<string, number> = {};
     
-    console.log('transformScoresToCriteria - Raw projectScores:', projectScores);
-    
     if (!projectScores || !Array.isArray(projectScores) || projectScores.length === 0) {
-      console.log('transformScoresToCriteria - projectScores is empty or invalid');
       return criteriaMap;
     }
     
     // Extract criteria data from projectScores
-    // This expects the format from Prisma with nested criterion objects
     projectScores.forEach(score => {
       if (score.criterion && score.criterion.key && typeof score.score === 'number') {
         criteriaMap[score.criterion.key] = score.score;
-        console.log(`Found score with criterion.key: ${score.criterion.key} = ${score.score}`);
       }
     });
     
-    console.log('Extracted criteria from scores:', criteriaMap);
-    
-    console.log('Final transformed criteriaMap:', criteriaMap);
     return criteriaMap;
   };
 
-  // Function to fetch projects from API with role-based access control
-  const fetchProjects = useCallback(async () => {
-    // Only fetch if we have organization context
-    if (!organization || !user) {
-      setLoading(false);
-      setProjects([]);
-      setFilteredProjects([]);
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      setError(null);
+  // Use React Query for fetching projects
+  const { 
+    data: projects = [], 
+    isLoading: loading, 
+    error: queryError,
+    refetch 
+  } = useQuery({
+    queryKey: ['projects', organization?.id, user?.id],
+    queryFn: async () => {
+      if (!organization || !user) {
+        return [];
+      }
       
       // Include RLS headers for proper data filtering
       const headers: HeadersInit = {
@@ -129,7 +117,6 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       // Use live data API
       const apiEndpoint = '/api/projects';
       
-      console.log(`Fetching projects from database API with role ${user.role}`);
       const response = await fetch(apiEndpoint, { headers });
       
       if (!response.ok) {
@@ -138,11 +125,8 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       
       const data = await response.json();
       
-      console.log('Raw API data from fetchProjects:', data);
-      console.log('First project structure (example):', data.length > 0 ? data[0] : 'No projects found');
-      
       // Transform data if needed
-      const transformedData = data.map((project: any) => {
+      return data.map((project: any) => {
         // Determine which source to use for criteria data
         let criteriaSource = null;
         
@@ -154,8 +138,6 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
           criteriaSource = 'scores';
         }
         
-        console.log(`Project ${project.id} criteria source:`, criteriaSource);
-        
         let transformedCriteria;
         if (criteriaSource === 'projectScores') {
           transformedCriteria = transformScoresToCriteria(project.projectScores);
@@ -164,73 +146,47 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         } else if (criteriaSource === 'criteria') {
           transformedCriteria = project.criteria;
         } else {
-          // Default case - look for various possible sources
           transformedCriteria = project.projectScores ? transformScoresToCriteria(project.projectScores) :
-                              project.scores ? transformScoresToCriteria(project.scores) :
-                              project.criteria ? project.criteria : {};
-          
-          // Last resort - try to find any other possible criteria-like fields
-          if (Object.keys(transformedCriteria).length === 0) {
-            Object.entries(project).forEach(([key, value]) => {
-              if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-                const potentialCriteria = Object.entries(value)
-                  .filter(([k, v]) => typeof v === 'number')
-                  .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {});
-                
-                if (Object.keys(potentialCriteria).length > 0) {
-                  console.log(`Found potential criteria in project.${key}:`, potentialCriteria);
-                  transformedCriteria = potentialCriteria;
-                }
-              }
-            });
-          }
+                               project.scores ? transformScoresToCriteria(project.scores) :
+                               project.criteria ? project.criteria : {};
         }
         
         // No fallback test data - strict use of database data only
-        const transformedProject = {
+        return {
           ...project,
-          // Transform any data that doesn't match expected structure
           startDate: project.startDate,
           endDate: project.endDate,
           criteria: transformedCriteria
         };
-        
-        // Debug individual project transformation
-        console.log(`Project ${project.id} original criteria:`, project.criteria);
-        console.log(`Project ${project.id} transformed criteria:`, transformedProject.criteria);
-        
-        return transformedProject;
       });
-      
-      console.log('Transformed project data:', transformedData);
-      
-      setProjects(transformedData);
-      setFilteredProjects(transformedData);
-    } catch (err) {
-      console.error('Error fetching projects:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      // Set empty arrays on error
-      setProjects([]);
-      setFilteredProjects([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [organization, user]);
-
-  // Fetch projects when organization changes (RLS context changes)
+    },
+    enabled: !!organization && !!user,
+    staleTime: 60 * 1000, // 1 minute
+  });
+  
+  // Update filtered projects when projects change
   useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects, organization?.id, user?.id]);
+    if (projects && projects.length > 0) {
+      setFilteredProjects(projects);
+    }
+  }, [projects]);
   
   // Initialize weight settings when criteria change
   useEffect(() => {
-    const newWeightSettings: Record<string, number> = {};
-    criteria.forEach(criterion => {
-      // Keep existing weights if they exist, otherwise set to 1
-      newWeightSettings[criterion.key] = weightSettings[criterion.key] || 1;
+    setWeightSettings(prevWeights => {
+      const newWeightSettings: Record<string, number> = {};
+      criteria.forEach(criterion => {
+        newWeightSettings[criterion.key] = prevWeights[criterion.key] || 1;
+      });
+
+      // Only update if there are actual differences to avoid infinite loop
+      const hasChanges = Object.keys(newWeightSettings).some(key => 
+        newWeightSettings[key] !== prevWeights[key] || 
+        !Object.hasOwn(prevWeights, key)
+      );
+      return hasChanges ? newWeightSettings : prevWeights;
     });
-    setWeightSettings(newWeightSettings);
-  }, [criteria]);
+  }, [criteria]); // Only depend on criteria changes
 
   const updateWeightSettings = (newSettings: Record<string, number>) => {
     setWeightSettings(prev => ({
@@ -246,19 +202,15 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
-  // Calculate overall score function - no longer using static data
+  // Calculate overall score function
   const calculateOverallScore = (
     project: Project, 
     weights: Record<string, number> = {}, 
     inverseCriteria: string[] = []
   ): number => {
-    // Get criteria keys that exist in the project
     const criteriaKeys = Object.keys(project.criteria);
-    
-    // Filter weights to only include criteria that exist in the project
     const filteredWeights: Record<string, number> = {};
     
-    // Default weight of 1 for all criteria if not specified
     criteriaKeys.forEach(key => {
       filteredWeights[key] = weights[key] || 1;
     });
@@ -269,14 +221,12 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     
     let weightedSum = 0;
     
-    // Calculate weighted sum, handling inverse criteria
     criteriaKeys.forEach(key => {
       let value = project.criteria[key];
       const weight = filteredWeights[key] || 0;
       
-      // For inverse criteria, invert the scale (10 - value + 1)
       if (inverseCriteria.includes(key)) {
-        value = 11 - value; // Invert scale: 1->10, 2->9, 3->8, etc.
+        value = 11 - value;
       }
       
       weightedSum += value * weight;
@@ -286,7 +236,6 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const getProjectScore = (project: Project): number => {
-    // Get inverse criteria keys
     const inverseCriteria = criteria
       .filter(criterion => criterion.isInverse)
       .map(criterion => criterion.key);
@@ -294,60 +243,13 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     return calculateOverallScore(project, weightSettings, inverseCriteria);
   };
 
-  // Function to fetch a specific project with RLS
-  const fetchProjectById = useCallback(async (projectId: string): Promise<Project | null> => {
-    if (!organization || !user) return null;
-    
-    try {
-      const headers: HeadersInit = {
-        'x-organization-id': organization.id,
-        'x-user-id': user.id,
-        'x-user-role': user.role,
-      };
-      
-      if (user.role === 'projectManager' && user.departmentId) {
-        headers['x-department-id'] = user.departmentId;
-      }
-      
-      // Use live data API with includeScores parameter
-      const apiBase = '/api/projects';
-      
-      const response = await fetch(`${apiBase}/${projectId}?includeScores=true`, { headers });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch project');
-      }
-      
-      const data = await response.json();
-      console.log(`fetchProjectById - Raw project data:`, data);
-      
-      // Determine which source to use for criteria
-      let criteriaData;
-      if (data.projectScores && Array.isArray(data.projectScores) && data.projectScores.length > 0) {
-        criteriaData = transformScoresToCriteria(data.projectScores);
-      } else if (data.scores && Array.isArray(data.scores) && data.scores.length > 0) {
-        criteriaData = transformScoresToCriteria(data.scores);
-      } else if (data.criteria && Object.keys(data.criteria).length > 0) {
-        criteriaData = data.criteria;
-      } else {
-        criteriaData = {};
-      }
-      
-      console.log(`fetchProjectById - Transformed criteria:`, criteriaData);
-      
-      // No fallback test data - strict use of database data only
-      console.log(`fetchProjectById - Project ${projectId} final criteria:`, criteriaData);
-      
-      // Transform data
-      return {
-        ...data,
-        criteria: criteriaData
-      };
-    } catch (err) {
-      console.error(`Error fetching project ${projectId}:`, err);
-      return null;
-    }
-  }, [organization, user]);
+  // Convert React Query error to string for context
+  const error = queryError ? (queryError as Error).message : null;
+
+  // Function to refresh projects data
+  const refreshProjects = async () => {
+    await refetch();
+  };
 
   return (
     <ProjectContext.Provider
@@ -362,7 +264,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         filterSettings,
         updateFilterSettings,
         getProjectScore,
-        refreshProjects: fetchProjects,
+        refreshProjects,
         loading,
         error
       }}

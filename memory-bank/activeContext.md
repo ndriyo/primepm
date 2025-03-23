@@ -7,6 +7,10 @@
 - Implementing project entry and self-assessment for Project Managers/Sponsors
 
 ## Recent Changes
+- Fixed infinite update loop issues in context providers:
+  - Eliminated the "Maximum update depth exceeded" error in ProjectContext
+  - Optimized context update mechanisms for better performance
+  - Implemented deep comparison before state updates to prevent unnecessary renders
 - Established Next.js application structure with TypeScript
 - Created initial dashboard components (MetricsSummary, RiskQuadrantChart, StatusChart, TopProjects)
 - Implemented project selection components

@@ -39,6 +39,8 @@ export interface Project {
   endDate: string;
   status: string;
   department?: { id: string; name: string };
+  departmentName?: string;
+  departmentId?: string;
   tags: string[];
   criteria: Record<string, number>;
 }

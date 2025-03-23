@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ProjectRepository } from "@/src/repositories/ProjectRepository";
 import { CriteriaRepository } from "@/src/repositories/CriteriaRepository";
+import { DepartmentRepository } from "@/src/repositories/DepartmentRepository";
 
 const projectRepo = new ProjectRepository();
 const criteriaRepo = new CriteriaRepository();
+const departmentRepo = new DepartmentRepository();
 
 /**
  * Helper function to get the active criteria version ID for an organization
@@ -126,6 +128,31 @@ export async function GET(request: NextRequest) {
         projects = projects.filter(project => 
           statuses.includes(project.status)
         );
+      }
+    }
+    
+    // If we have projects with department IDs, add department names
+    if (projects && projects.length > 0) {
+      // Get all department IDs from projects
+      const departmentIds = projects
+        .filter(p => p.departmentId)
+        .map(p => p.departmentId as string);
+      
+      if (departmentIds.length > 0) {
+        // Fetch department data
+        const departments = await departmentRepo.findByOrganization(organizationId);
+        
+        // Create lookup map of department ID to name
+        const departmentMap = departments.reduce((map, dept) => {
+          map[dept.id] = dept.name;
+          return map;
+        }, {} as Record<string, string>);
+        
+        // Add department name to each project
+        projects = projects.map(project => ({
+          ...project,
+          departmentName: project.departmentId ? departmentMap[project.departmentId] : null
+        }));
       }
     }
     

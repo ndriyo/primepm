@@ -135,7 +135,75 @@ export function FilterPanel() {
           )}
         </div>
       </div>
-      
+
+      {/* Status Filter - Combobox */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-700 mb-2">Status</h3>
+        <div className="relative">
+          <div className="border border-gray-300 rounded-md shadow-sm p-1">
+            {/* Selected statuses display */}
+            <div className="flex flex-wrap gap-1 mb-1">
+              {filters.status.map(status => (
+                <span key={status} className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                  {status}
+                  <button
+                    type="button"
+                    className="ml-1 inline-flex items-center justify-center h-4 w-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-600 focus:outline-none"
+                    onClick={() => handleStatusChange(status, false)}
+                  >
+                    <span className="sr-only">Remove</span>
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              ))}
+            </div>
+            
+            {/* Status select button */}
+            <button
+              type="button"
+              className="inline-flex justify-between w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+              onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+            >
+              <span>Select status</span>
+              <svg className={`h-5 w-5 transform ${statusDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+          
+          {/* Status dropdown */}
+          {statusDropdownOpen && (
+            <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm">
+              {statusOptions.map(status => (
+                <div
+                  key={status}
+                  onClick={() => {
+                    handleStatusChange(status, !filters.status.includes(status));
+                    // Don't close dropdown when selecting to allow multiple selections
+                  }}
+                  className={`cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-gray-100 ${
+                    filters.status.includes(status) ? 'bg-blue-50' : ''
+                  }`}
+                >
+                  <span className={`block truncate capitalize ${filters.status.includes(status) ? 'font-semibold' : 'font-normal'}`}>
+                    {status}
+                  </span>
+                  {filters.status.includes(status) && (
+                    <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+            
       {/* Budget Range Filter */}
       <div>
         <h3 className="text-sm font-medium text-gray-700 mb-2">Budget Range</h3>
@@ -230,74 +298,6 @@ export function FilterPanel() {
               onChange={(e) => handleDateRangeChange(filters.dateRange.start, e.target.value || null)}
             />
           </div>
-        </div>
-      </div>
-      
-      {/* Status Filter - Combobox */}
-      <div>
-        <h3 className="text-sm font-medium text-gray-700 mb-2">Status</h3>
-        <div className="relative">
-          <div className="border border-gray-300 rounded-md shadow-sm p-1">
-            {/* Selected statuses display */}
-            <div className="flex flex-wrap gap-1 mb-1">
-              {filters.status.map(status => (
-                <span key={status} className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                  {status}
-                  <button
-                    type="button"
-                    className="ml-1 inline-flex items-center justify-center h-4 w-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-600 focus:outline-none"
-                    onClick={() => handleStatusChange(status, false)}
-                  >
-                    <span className="sr-only">Remove</span>
-                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </span>
-              ))}
-            </div>
-            
-            {/* Status select button */}
-            <button
-              type="button"
-              className="inline-flex justify-between w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
-              onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
-            >
-              <span>Select status</span>
-              <svg className={`h-5 w-5 transform ${statusDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
-          
-          {/* Status dropdown */}
-          {statusDropdownOpen && (
-            <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm">
-              {statusOptions.map(status => (
-                <div
-                  key={status}
-                  onClick={() => {
-                    handleStatusChange(status, !filters.status.includes(status));
-                    // Don't close dropdown when selecting to allow multiple selections
-                  }}
-                  className={`cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-gray-100 ${
-                    filters.status.includes(status) ? 'bg-blue-50' : ''
-                  }`}
-                >
-                  <span className={`block truncate capitalize ${filters.status.includes(status) ? 'font-semibold' : 'font-normal'}`}>
-                    {status}
-                  </span>
-                  {filters.status.includes(status) && (
-                    <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
       

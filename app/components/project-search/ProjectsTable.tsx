@@ -48,7 +48,7 @@ export function ProjectsTable() {
                     <div className="text-sm text-gray-500 truncate max-w-xs">{project.description}</div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {project.department ? project.department.name : '-'}
+                    {project.departmentName || '-'}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                     {formatCurrency(project.budget)}

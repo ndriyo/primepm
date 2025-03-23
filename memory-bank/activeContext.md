@@ -7,6 +7,12 @@
 - Implementing project entry and self-assessment for Project Managers/Sponsors
 
 ## Recent Changes
+- Fixed bug where department data was not showing in ProjectsTable:
+  - Modified API route to include departmentName in project data
+  - Updated Project type to include departmentName property
+  - Updated ProjectsTable component to use departmentName instead of department.name
+  - Implemented efficient department lookup using a map to avoid multiple database queries
+
 - Added Excel import functionality for batch project creation:
   - Implemented file upload with drag-and-drop support
   - Created dynamic template generation based on active criteria version

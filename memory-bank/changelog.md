@@ -13,6 +13,8 @@ This file documents the changes made to the PrimePM application.
   - Implemented role-based validation for imported projects
   - Added support for both new project creation and existing project updates
   - Generated sample JSON file for testing import functionality
+### Fixed
+- Fixed department name in search result
 
 
 ## 2025-03-23

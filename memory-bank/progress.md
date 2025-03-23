@@ -1,6 +1,11 @@
 # Project Progress Tracker
 
 ## What Works
+- Fixed department data display in ProjectsTable:
+  - Department names now correctly show in the projects table
+  - Implemented efficient department lookup in the API
+  - Added proper TypeScript support for the new data structure
+
 - Excel import feature:
   - Download Excel template with dynamic criteria structure
   - Upload and validation of Excel files with project data

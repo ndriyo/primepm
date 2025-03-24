@@ -1,6 +1,6 @@
 'use client';
 
-import { MetricsSummary } from '@/src/components/dashboard/MetricsSummary';
+import { BentoMetrics } from '@/src/components/dashboard/BentoMetrics';
 import { ScoreQuadrantChart } from '@/src/components/dashboard/ScoreQuadrantChart';
 import { StatusChart } from '@/src/components/dashboard/StatusChart';
 import { TopProjects } from '@/src/components/dashboard/TopProjects';
@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 
 export const Dashboard = () => {
   const router = useRouter();
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -25,7 +26,7 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      <MetricsSummary />
+      <BentoMetrics />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <StatusChart />

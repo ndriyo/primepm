@@ -2,6 +2,35 @@
 
 This file documents the changes made to the PrimePM application.
 
+## 2025-03-25
+### Added
+- New animated UI components:
+  - AnimatedGradient component with SVG circle-based animations
+  - BentoCard component with framer-motion animations
+  - Utility functions for class name merging (cn) and element dimension tracking (useDimensions)
+
+### Changed
+- Dashboard metrics visualization:
+  - Replaced MetricsSummary with new BentoMetrics component
+  - Maintained the same grid layout while enhancing visuals
+  - Removed toggle between classic and bento views in favor of the new design
+  - Simplified MetricsSummary component to use standard CSS gradients instead of SVG animations
+
+### Enhanced
+- Visual presentation of dashboard metrics:
+  - Added animated SVG circle-based gradient backgrounds
+  - Implemented staggered reveal animations for content
+  - Added percentage calculations for approved and pending projects
+  - Improved support for both light and dark modes
+  - Created compact card design that aligns with the original layout
+  - Added subtle backdrop blur effects for improved text readability
+
+### Removed
+- Unused components:
+  - AnimatedGradientCard component (replaced by BentoCard)
+  - AnimatedGradientIcon component (no longer needed)
+  - AnimatedGradientDemo component (demo/example component)
+
 ## 2025-03-24
 ### Enhanced
 - Dashboard functionality with role-based visualizations:

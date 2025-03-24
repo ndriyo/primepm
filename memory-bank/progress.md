@@ -2,7 +2,8 @@
 
 ## What Works
 - Enhanced dashboard functionality with role-based visualizations:
-  - MetricsSummary now shows total projects, approved projects, pending projects, total budget, and total mandays
+  - Replaced MetricsSummary with new Bento-style metrics view with animated gradient backgrounds
+  - BentoMetrics component shows total projects, approved projects, pending projects, total budget, and total mandays with animated SVG circle-based backgrounds
   - StatusChart uses treemap visualization for better budget distribution representation
   - ScoreQuadrantChart replaces RiskQuadrantChart, showing budget vs score relationship
   - TopProjects shows global ranking relative to all projects in the portfolio
@@ -79,6 +80,17 @@
 - Custom UI components:
   - Confirmation dialogs with improved UX
   - Warning notifications for incomplete weights
+  - AnimatedGradient component with SVG circle-based animations:
+    - Configurable colors, speed, and blur intensity
+    - Multiple animation effects using CSS variables
+    - Responsive sizing based on container dimensions
+    - Support for both light and dark modes
+  - BentoCard component with framer-motion animations:
+    - Compact design that aligns with the original metrics layout
+    - Staggered reveal animations for content
+    - Configurable delay for sequential appearance
+    - Backdrop blur for improved text readability
+    - Responsive sizing for different screen sizes
 
 - Project entry and self-assessment:
   - Multi-step form with progress tracking

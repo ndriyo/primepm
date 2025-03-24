@@ -7,6 +7,24 @@
 - Implementing project entry and self-assessment for Project Managers/Sponsors
 
 ## Recent Changes
+- Enhanced dashboard with new Bento-style metrics view:
+  - Created reusable AnimatedGradient component with SVG circle-based animations
+  - Implemented BentoCard component with framer-motion animations
+  - Replaced MetricsSummary with BentoMetrics component in the dashboard
+  - Maintained the same grid layout as the original MetricsSummary
+  - Added percentage calculations for approved and pending projects
+  - Implemented staggered animations for a polished user experience
+  - Added support for both light and dark modes
+  - Made cards more compact to align with the original design
+  - Simplified MetricsSummary component to use standard CSS gradients
+  - Removed unused AnimatedGradientCard, AnimatedGradientIcon, and AnimatedGradientDemo components
+
+- Enhanced dashboard visualizations:
+  - Implemented multiple animation effects in BentoCard component
+  - Improved visual appeal with semi-transparent backgrounds for better contrast
+  - Optimized text readability with appropriate contrast on gradient backgrounds
+  - Added subtle backdrop blur effects for depth and visual hierarchy
+
 - Enhanced dashboard functionality with role-based visualizations:
   - Updated MetricsSummary to show total projects, approved projects, pending projects, total budget, and total mandays
   - Replaced StatusChart pie chart with treemap visualization for better budget distribution representation

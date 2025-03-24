@@ -3,6 +3,17 @@
 This file documents the changes made to the PrimePM application.
 
 ## 2025-03-24
+### Enhanced
+- Dashboard functionality with role-based visualizations:
+  - Updated MetricsSummary component to show total projects, approved projects, pending projects, total budget, and total mandays
+  - Replaced StatusChart pie chart with treemap visualization for better budget distribution representation
+  - Created ScoreQuadrantChart to replace RiskQuadrantChart, showing budget vs score relationship
+  - Enhanced TopProjects component to show global ranking relative to all projects in the portfolio
+  - Implemented role-based filtering (PM sees department data, PMO sees organization-wide data)
+  - Added formatted budget values (K, M, B) for better readability
+  - Used database scores with fallback to calculated scores for consistency
+  - Added tooltips with detailed information on hover for all visualizations
+
 ### Added
 - Excel Import Feature
   - Added ability to import projects from Excel files

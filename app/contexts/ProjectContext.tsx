@@ -115,8 +115,8 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         headers['x-department-id'] = user.departmentId;
       }
       
-      // Use live data API
-      const apiEndpoint = '/api/projects';
+      // Use dashboard API endpoint for real data with budget information
+      const apiEndpoint = '/api/projects/dashboard';
       
       const response = await fetch(apiEndpoint, { headers });
       
@@ -152,12 +152,20 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
                                project.criteria ? project.criteria : {};
         }
         
+        // Ensure budget is a number (or default to 0)
+        const budget = typeof project.budget === 'number' ? project.budget : 0;
+        
+        // Ensure resources is a number (or default to 0)
+        const resources = typeof project.resources === 'number' ? project.resources : 0;
+        
         // No fallback test data - strict use of database data only
         return {
           ...project,
           startDate: project.startDate,
           endDate: project.endDate,
-          criteria: transformedCriteria
+          criteria: transformedCriteria,
+          budget,
+          resources
         };
       });
     },

@@ -7,6 +7,15 @@
 - Implementing project entry and self-assessment for Project Managers/Sponsors
 
 ## Recent Changes
+- Enhanced dashboard functionality with role-based visualizations:
+  - Updated MetricsSummary to show total projects, approved projects, pending projects, total budget, and total mandays
+  - Replaced StatusChart pie chart with treemap visualization for better budget distribution representation
+  - Created ScoreQuadrantChart to replace RiskQuadrantChart, showing budget vs score relationship
+  - Enhanced TopProjects component to show global ranking relative to all projects in the portfolio
+  - Implemented role-based filtering (PM sees department data, PMO sees organization-wide data)
+  - Added formatted budget values (K, M, B) for better readability
+  - Used database scores with fallback to calculated scores for consistency
+
 - Fixed bug where department data was not showing in ProjectsTable:
   - Modified API route to include departmentName in project data
   - Updated Project type to include departmentName property

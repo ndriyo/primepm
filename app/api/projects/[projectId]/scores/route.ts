@@ -67,12 +67,16 @@ export async function POST(
       data.userId
     );
     
-    // Calculate overall score after update
+    // Calculate overall score after update and update the project record
     const overallScore = await projectRepo.calculateOverallScore(projectId, data.versionId);
+    
+    // Get the updated project with the new score
+    const updatedProject = await projectRepo.findById(projectId);
     
     return NextResponse.json({
       score: result,
-      overallScore: overallScore
+      overallScore: overallScore,
+      projectScore: updatedProject ? updatedProject.score : overallScore
     }, { status: 201 });
   } catch (error) {
     console.error(`Error updating project score:`, error);

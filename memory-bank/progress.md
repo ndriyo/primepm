@@ -1,6 +1,16 @@
 # Project Progress Tracker
 
 ## What Works
+- Enhanced dashboard functionality with role-based visualizations:
+  - MetricsSummary now shows total projects, approved projects, pending projects, total budget, and total mandays
+  - StatusChart uses treemap visualization for better budget distribution representation
+  - ScoreQuadrantChart replaces RiskQuadrantChart, showing budget vs score relationship
+  - TopProjects shows global ranking relative to all projects in the portfolio
+  - Role-based filtering (PM sees department data, PMO sees organization-wide data)
+  - Formatted budget values (K, M, B) for better readability
+  - Database scores with fallback to calculated scores for consistency
+  - Tooltips with detailed information on hover for all visualizations
+
 - Fixed department data display in ProjectsTable:
   - Department names now correctly show in the projects table
   - Implemented efficient department lookup in the API
@@ -14,6 +24,7 @@
   - Support for both new projects and updates to existing projects
   - Import interface with progress indicators and detailed validation results
   - Single-page workflow with modular component architecture
+
 - Enhanced project search and filtering system:
   - Advanced filtering by multiple criteria (department, budget range, resources, dates, status, tags)
   - Improved search functionality across name, description, and tags fields
@@ -22,61 +33,69 @@
   - Pagination with page numbers for easier navigation through large result sets
   - URL parameter synchronization for shareable search results
   - Server-side filtering with optimized API endpoints
+
 - Improved navigation flow between project views:
   - Cancel button on project details page for quick return to search
   - Edit button navigation with proper state preservation
   - Consistent button placement across project views
   - Visual clarity with appropriate icons for actions
+
 - React Context providers with optimized rendering:
   - Fixed infinite update loop bugs in ProjectContext and CriteriaContext
   - Enhanced state updates with deep comparison to prevent unnecessary renders
   - Improved weight settings initialization to avoid "Maximum update depth exceeded" errors
   - Implemented proper dependency management in useEffect hooks
+
 - Basic application structure and routing
-- Dashboard UI with placeholder components:
-  - Metrics summary cards
-  - Status distribution chart
-  - Risk quadrant visualization
-  - Top projects listing
+
 - Project data model with sample projects
 - Project selection table view
 - Navigation between main application sections
+
 - Responsive layout with improved UX:
   - Collapsible sidebar with toggle functionality
   - Proper content resizing when sidebar is collapsed
   - Persistent sidebar state across page navigation
   - Mobile-friendly navigation with fixed header
   - CSS Grid and Flexbox layout for better space utilization
+
 - Loading experience with skeleton placeholders:
   - Skeleton components for cards, tables, text, and charts
   - Pulse animation effect for visual feedback
   - Component-specific skeleton placeholders matching actual content structure
   - Loading wrappers for easy integration with React Query
+
 - Criteria management interface with versioning:
   - Create, edit, and delete criteria versions
   - Set active version for project scoring
   - Add, edit, and delete criteria with detailed properties
   - Define scale and rubric for each criterion
+
 - AHP wizard for criteria weighting:
   - Pairwise comparisons between criteria
   - Automatic weight calculation based on AHP algorithm
   - Progress tracking and navigation
+
 - Custom UI components:
   - Confirmation dialogs with improved UX
   - Warning notifications for incomplete weights
+
 - Project entry and self-assessment:
   - Multi-step form with progress tracking
   - Basic information entry (name, description, department, budget, duration, resources, tags) with proper formatting
   - Self-assessment using card-based option selection with descriptions for each score
   - Project review and submission workflow with formatted values
   - Cancel button for easy navigation back to project list
+
 - Project information display:
   - Clean presentation of project details
   - Resources display with thousand separator formatting
   - Criteria analysis with visual indicators
+
 - Deployment configuration:
   - Netlify deployment setup with netlify.toml
   - Next.js build output configuration
+
 - Database schema and persistence layer:
   - Prisma ORM schema defined for all entities
   - SQL migration scripts for database setup with PostgreSQL
@@ -85,18 +104,21 @@
   - Entity relationships and type definitions
   - Multi-tenant data isolation with RLS
   - Role-based access control
+
 - Frontend connected to database repositories:
   - API routes for entities (projects, criteria, versions)
   - React Query hooks for data fetching and caching
   - Adapter pattern to convert between repository and UI models
   - Loading and error states in components
   - Type-safe API calls with proper error handling
+
 - Mock authentication system for development:
   - AuthContext provider with sample users and organizations
   - Automatic auth header injection for API requests
   - Developer UI for switching between users and organizations
   - Integration with database RLS for proper data isolation
   - Repository-level RLS support via Prisma client extensions
+
 - TypeScript compliance throughout the application:
   - Proper handling of nullable fields in repository interfaces
   - Consistent type casting patterns for database results

@@ -251,6 +251,28 @@ export const ProjectInformation = ({ projectId }: ProjectInformationProps) => {
             
             <div className="card">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Criteria Analysis</h3>
+              
+              {/* Overall Score */}
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-sm font-medium text-gray-700">Overall Score</h4>
+                  <span className={`text-lg font-bold ${
+                    (project.score || 0) >= 7 ? 'text-green-600' : 
+                    (project.score || 0) >= 4 ? 'text-yellow-600' : 'text-red-600'
+                  }`}>
+                    {project.score?.toFixed(2) || 'N/A'}
+                  </span>
+                </div>
+                {project.score && (
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full"
+                      style={{ width: `${(project.score / 10) * 100}%` }}
+                    ></div>
+                  </div>
+                )}
+              </div>
+              
               <ProjectRadarChart 
                 project={project as unknown as Project} 
                 criteria={criteria}

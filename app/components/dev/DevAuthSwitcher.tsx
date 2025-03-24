@@ -24,9 +24,9 @@ export default function DevAuthSwitcher() {
   };
   
   // Only show in development
-  if (process.env.NODE_ENV === 'production') {
-    return null;
-  }
+  // if (process.env.NODE_ENV === 'production') {
+  //   return null;
+  // }
   
   return (
     <div className="fixed bottom-4 right-4 z-50">

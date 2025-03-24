@@ -58,17 +58,17 @@ export async function GET(request: NextRequest) {
     
     let projects;
     
-    // Apply role-based access control
+    // Apply role-based access control using the enhanced repository methods
     if (userRole === 'projectManager' && departmentId) {
       // Project Managers can only see projects in their department
       console.log(`Project Manager access: filtering by department ${departmentId}`);
-      projects = await projectRepo.findByDepartment(departmentId);
+      projects = await projectRepo.findByDepartment(departmentId, userId || undefined, userRole || undefined);
       
     } else {
       // PMO, Management, Committee, Admin see all projects in organization
       console.log(`${userRole} access: all organizational projects`);
       
-      projects = await projectRepo.findByOrganization(organizationId);
+      projects = await projectRepo.findByOrganization(organizationId, userId || undefined, userRole || undefined, departmentId || undefined);
     }
     
     // Apply filters to the projects
@@ -183,6 +183,8 @@ export async function POST(request: NextRequest) {
     // Get auth information from headers
     const userId = request.headers.get("x-user-id");
     const organizationId = request.headers.get("x-organization-id");
+    const userRole = request.headers.get("x-user-role");
+    const departmentId = request.headers.get("x-department-id");
     
     if (!userId || !organizationId) {
       return NextResponse.json(
@@ -209,7 +211,12 @@ export async function POST(request: NextRequest) {
     };
 
     // Create the project
-    const project = await projectRepo.create(projectData, projectData.createdById);
+    const project = await projectRepo.create(
+      projectData, 
+      projectData.createdById, 
+      userRole || undefined, 
+      departmentId || undefined
+    );
     
     // If there are criteria scores to add, handle them separately
     if (data.criteriaScores && Array.isArray(data.criteriaScores)) {
@@ -225,14 +232,22 @@ export async function POST(request: NextRequest) {
             activeVersionId,
             scoreData.score,
             scoreData.comment || null,
-            userId
+            userId,
+            userRole || undefined,
+            departmentId || undefined
           );
         }
         
         console.log(`Added ${data.criteriaScores.length} criteria scores for new project ${project.id}`);
         
         // Calculate and update the overall score
-        const overallScore = await projectRepo.calculateOverallScore(project.id, activeVersionId);
+        const overallScore = await projectRepo.calculateOverallScore(
+          project.id, 
+          activeVersionId, 
+          userId || undefined, 
+          userRole || undefined, 
+          departmentId || undefined
+        );
         console.log(`Calculated initial project score: ${overallScore}`);
         
         // Get the updated project with the score

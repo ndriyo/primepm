@@ -3,6 +3,7 @@
 import { Sidebar } from '@/components/layout/Sidebar';
 import { useSidebar } from '@/app/contexts/SidebarContext';
 import { useEffect } from 'react';
+import Image from 'next/image';
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -31,10 +32,13 @@ export const PageLayout = ({ children }: PageLayoutProps) => {
       {/* Header - hidden on mobile, visible on desktop */}
       <header className="hidden lg:flex bg-white shadow-sm py-0 px-6 items-center">
         <div className="flex items-center">
-          <img
+          <Image
             src="https://zwweamxsxemiefdlkgzn.supabase.co/storage/v1/object/public/asset/logo_transparent.png"
             alt="PrimePM Logo"
+            width={96}
+            height={96}
             className="h-24 w-auto mr-3"
+            priority
           />
         </div>
       </header>

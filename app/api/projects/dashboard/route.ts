@@ -35,10 +35,19 @@ export async function GET(
     let projects;
     if (userRole === 'projectManager' && departmentId) {
       // Project Manager sees only their department's projects
-      projects = await projectRepo.findByDepartment(departmentId);
+      projects = await projectRepo.findByDepartment(
+        departmentId, 
+        userId || undefined, 
+        userRole || undefined
+      );
     } else {
       // PMO/Executive sees all projects in the organization
-      projects = await projectRepo.findByOrganization(organizationId);
+      projects = await projectRepo.findByOrganization(
+        organizationId, 
+        userId || undefined, 
+        userRole || undefined, 
+        departmentId || undefined
+      );
     }
     
     // Fetch departments to add department names to projects

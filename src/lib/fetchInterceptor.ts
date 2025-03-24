@@ -13,6 +13,11 @@ export function addAuthHeaders(options: RequestInit = {}, user: MockUser | null)
     (newOptions.headers as Record<string, string>)['x-user-id'] = user.id;
     (newOptions.headers as Record<string, string>)['x-user-role'] = user.role;
     (newOptions.headers as Record<string, string>)['x-organization-id'] = user.organizationId;
+    
+    // Add department ID if available
+    if (user.departmentId) {
+      (newOptions.headers as Record<string, string>)['x-department-id'] = user.departmentId;
+    }
   }
   
   return newOptions;

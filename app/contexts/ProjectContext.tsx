@@ -97,7 +97,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     error: queryError,
     refetch 
   } = useQuery({
-    queryKey: ['projects', organization?.id, user?.id],
+    queryKey: ['projects', organization?.id, user?.id, user?.role, user?.departmentId],
     queryFn: async () => {
       if (!organization || !user) {
         return [];
@@ -257,6 +257,10 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
 
   // Function to refresh projects data
   const refreshProjects = async () => {
+    // Invalidate all project-related queries
+    queryClient.invalidateQueries({ queryKey: ['projects'] });
+    
+    // Refetch the data
     await refetch();
   };
 

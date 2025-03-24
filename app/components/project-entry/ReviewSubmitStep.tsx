@@ -53,6 +53,8 @@ export default function ReviewSubmitStep({
       endDate: endDate.toISOString()
     } as Project;
     
+    // This is a preview calculation - the actual score will be calculated by the backend
+    // using the weights from the active criteria version
     return calculateOverallScore(tempProject, {}, inverseCriteria);
   };
   
@@ -146,7 +148,7 @@ export default function ReviewSubmitStep({
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-semibold">Overall Score</h4>
             <span className={`text-lg font-bold ${getScoreColor(getOverallScore())}`}>
-              {getOverallScore().toFixed(2)} / 10
+              {getOverallScore().toFixed(2)}
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2.5">

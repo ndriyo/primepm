@@ -147,6 +147,16 @@ export async function PATCH(
         }
         
         console.log(`Updated ${criteriaScores.length} criteria scores for project ${projectId}`);
+        
+        // Recalculate and update the overall score
+        const overallScore = await projectRepo.calculateOverallScore(projectId, activeVersionId);
+        console.log(`Recalculated project score: ${overallScore}`);
+        
+        // Get the updated project with the new score
+        const refreshedProject = await projectRepo.findById(projectId);
+        if (refreshedProject) {
+          updatedProject.score = refreshedProject.score;
+        }
       } catch (scoreError) {
         console.error(`Error updating criteria scores:`, scoreError);
         // Continue with the response rather than failing the entire request

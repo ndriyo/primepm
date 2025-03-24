@@ -1,6 +1,7 @@
 import prisma, { getPrismaWithRLS } from '../lib/prisma';
 import { Prisma } from '@prisma/client';
 import { BaseRepository } from './BaseRepository';
+import { CriteriaRepository } from './CriteriaRepository';
 
 // Temporary Project type definition until Prisma client is generated
 export interface Project {
@@ -15,6 +16,7 @@ export interface Project {
   budget?: number | null;
   resources: number;
   tags: string[];
+  score?: number | null;
   createdAt: Date | null;
   updatedAt: Date | null;
   createdById: string;
@@ -50,6 +52,7 @@ export interface ProjectUpdateInput {
   budget?: number;
   resources?: number;
   tags?: string[];
+  score?: number | null;
   updatedById: string;
 }
 
@@ -440,7 +443,7 @@ export class ProjectRepository extends BaseRepository<
   /**
    * Calculate project's overall score
    */
-  async calculateOverallScore(projectId: string, versionId: string): Promise<number> {
+  async calculateOverallScore(projectId: string, versionId?: string): Promise<number> {
     // Get the project to get its organization
     const project = await this.findById(projectId);
     
@@ -449,6 +452,18 @@ export class ProjectRepository extends BaseRepository<
     }
     
     const prismaWithRLS = this.getPrismaWithContext(project.organizationId);
+    
+    // If versionId is not provided, find the active version
+    if (!versionId) {
+      const criteriaRepo = new CriteriaRepository();
+      const activeVersion = await criteriaRepo.findActiveVersion(project.organizationId);
+      
+      if (!activeVersion) {
+        throw new Error(`No active criteria version found for organization ${project.organizationId}`);
+      }
+      
+      versionId = activeVersion.id;
+    }
     
     // Get project scores and criteria with RLS context
     const scores = await prismaWithRLS.projectCriteriaScore.findMany({
@@ -465,25 +480,64 @@ export class ProjectRepository extends BaseRepository<
       return 0;
     }
 
+    // Get all criteria for this version to ensure we have the correct weights
+    const criteria = await prismaWithRLS.criterion.findMany({
+      where: {
+        versionId
+      }
+    });
+
+    // Create a map of criterion ID to weight
+    const weightMap = criteria.reduce((map, criterion) => {
+      map[criterion.id] = criterion.weight || 1;
+      return map;
+    }, {} as Record<string, number>);
+
     // Calculate weighted sum
     let weightedSum = 0;
     let totalWeight = 0;
 
     for (const score of scores) {
       const { criterion } = score;
-      const weight = criterion.weight || 1;
-      let value = score.score;
-
-      // For inverse criteria, invert the scale (10 - value + 1)
+      // Use weight from the weight map to ensure we're using the latest weights
+      const weight = weightMap[criterion.id] || 1;
+      
+      // Get the scale max (default to 10 if not specified)
+      const scaleMax = criterion.scale && typeof criterion.scale === 'object' && 'max' in criterion.scale 
+        ? Number(criterion.scale.max) 
+        : 10;
+      
+      // Normalize the value based on the scale (0-1 range)
+      const normalizedValue = score.score / scaleMax;
+      
+      // Apply the appropriate value based on whether it's an inverse criterion
+      let value;
       if (criterion.isInverse) {
-        value = 11 - value;
+        value = 1 - normalizedValue; // Invert for inverse criteria
+      } else {
+        value = normalizedValue;
       }
 
       weightedSum += value * weight;
       totalWeight += weight;
     }
 
-    // Return the normalized score
-    return totalWeight > 0 ? parseFloat((weightedSum / totalWeight).toFixed(2)) : 0;
+    // Calculate the normalized score and scale back to 0-10 range
+    const calculatedScore = totalWeight > 0 
+      ? parseFloat(((weightedSum / totalWeight) * 10).toFixed(2)) 
+      : 0;
+    
+    // Update the project with the calculated score
+    try {
+      // Use the raw SQL query to update the score
+      await prismaWithRLS.$executeRaw`UPDATE projects SET score = ${calculatedScore} WHERE id = ${projectId}::uuid`;
+      
+      console.log(`Updated project ${projectId} score to ${calculatedScore}`);
+    } catch (error) {
+      console.error(`Error updating project score:`, error);
+      // Continue with the return value even if the update fails
+    }
+
+    return calculatedScore;
   }
 }

@@ -18,6 +18,7 @@ export interface Project {
   resources: number;
   tags: string[];
   criteria: Record<string, number>;
+  score?: number; // Overall project score
   team?: string[];
   department?: string;
   status: string; // Added status field to match database schema

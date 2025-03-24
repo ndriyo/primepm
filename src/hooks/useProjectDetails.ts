@@ -11,6 +11,7 @@ export interface ProjectWithDetails extends Project {
     [key: string]: any;
   };
   criteria: Record<string, number>;
+  score?: number; // Overall project score
 }
 
 export function useProjectDetails(projectId: string | undefined) {

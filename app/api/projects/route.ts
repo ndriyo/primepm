@@ -230,6 +230,16 @@ export async function POST(request: NextRequest) {
         }
         
         console.log(`Added ${data.criteriaScores.length} criteria scores for new project ${project.id}`);
+        
+        // Calculate and update the overall score
+        const overallScore = await projectRepo.calculateOverallScore(project.id, activeVersionId);
+        console.log(`Calculated initial project score: ${overallScore}`);
+        
+        // Get the updated project with the score
+        const updatedProject = await projectRepo.findById(project.id);
+        if (updatedProject) {
+          project.score = updatedProject.score;
+        }
       } catch (scoreError) {
         console.error(`Error adding criteria scores:`, scoreError);
         // Continue with the response rather than failing the entire request

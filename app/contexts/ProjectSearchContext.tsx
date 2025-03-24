@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useState, useContext, useEffect, ReactNode, useMemo } from 'react';
+import { createContext, useState, useContext, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/app/contexts/AuthContext';
@@ -195,7 +195,7 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
   };
   
   // Fetch projects with the current filters
-  const fetchProjects = async (filters: FilterState, page: number, pageSize: number) => {
+  const fetchProjects = useCallback(async (filters: FilterState, page: number, pageSize: number) => {
     setIsLoading(true);
     
     try {
@@ -228,14 +228,14 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [queryClient, user]);
   
   // Debounced version of fetchProjects to avoid too many API calls
   const debouncedFetchProjects = useMemo(
     () => debounce((filters: FilterState, page: number, pageSize: number) => {
       fetchProjects(filters, page, pageSize);
     }, 300),
-    [user, queryClient]
+    [fetchProjects]
   );
   
   // Fetch projects when filters or pagination changes
@@ -379,7 +379,7 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
     // Removed criteriaScores from active filters
     
     return filterItems;
-  }, [filters, departments, criteria]);
+  }, [filters, departments]);
   
   // Remove a single filter
   const removeFilter = (key: string) => {

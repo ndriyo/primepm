@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import Image from 'next/image';
 import {
   ChartPieIcon,
   ViewColumnsIcon,
@@ -59,10 +60,13 @@ export const Sidebar = () => {
           )}
         </button>
         <div className="ml-4 flex items-center">
-          <img
+          <Image
             src="https://zwweamxsxemiefdlkgzn.supabase.co/storage/v1/object/public/asset/logo_transparent.png"
             alt="PrimePM Logo"
-            className="h-8 mr-2"
+            width={32}
+            height={32}
+            className="h-8 w-auto mr-2"
+            priority
           />
         </div>
       </div>

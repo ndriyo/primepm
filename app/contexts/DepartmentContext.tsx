@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { Department } from '@/src/repositories';
 
@@ -19,7 +19,7 @@ export function DepartmentProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const { user, organization } = useAuth();
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     if (!organization || !user) return;
     
     setLoading(true);
@@ -46,14 +46,14 @@ export function DepartmentProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [organization, user]);
 
   // Load departments when the context is initialized
   useEffect(() => {
     if (organization && user) {
       fetchDepartments();
     }
-  }, [organization, user]);
+  }, [organization, user, fetchDepartments]);
 
   // Function to manually refresh departments
   const refreshDepartments = async () => {

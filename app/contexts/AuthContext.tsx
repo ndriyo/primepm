@@ -125,37 +125,87 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   // Auto-login on development
   useEffect(() => {
-    // Default to first user if none selected
-    if (!user && MOCK_USERS.length > 0) {
-      const defaultUser = MOCK_USERS[0];
-      setUser(defaultUser);
+    // Check if there's a stored user ID in localStorage
+    const storedUserId = localStorage.getItem('lastSelectedUserId');
+    
+    if (!user) {
+      let selectedUser;
       
-      // Set organization based on user
-      const userOrg = MOCK_ORGANIZATIONS.find(org => org.id === defaultUser.organizationId);
-      if (userOrg) setOrganization(userOrg);
+      if (storedUserId) {
+        // Try to find the stored user
+        selectedUser = MOCK_USERS.find(u => u.id === storedUserId);
+      }
+      
+      // If no stored user or stored user not found, default to first user
+      if (!selectedUser && MOCK_USERS.length > 0) {
+        selectedUser = MOCK_USERS[0];
+      }
+      
+      if (selectedUser) {
+        setUser(selectedUser);
+        
+        // Check if there's a stored org ID
+        const storedOrgId = localStorage.getItem('lastSelectedOrgId');
+        let selectedOrg;
+        
+        if (storedOrgId) {
+          // Try to find the stored org
+          selectedOrg = MOCK_ORGANIZATIONS.find(org => org.id === storedOrgId);
+          
+          // Only use the stored org if it matches the user's org
+          if (selectedOrg && selectedOrg.id !== selectedUser.organizationId) {
+            selectedOrg = null;
+          }
+        }
+        
+        // If no valid stored org, use the user's org
+        if (!selectedOrg) {
+          selectedOrg = MOCK_ORGANIZATIONS.find(org => org.id === selectedUser.organizationId);
+        }
+        
+        if (selectedOrg) {
+          setOrganization(selectedOrg);
+        }
+      }
     }
   }, [user]);
   
   const login = (userId: string) => {
     const selectedUser = MOCK_USERS.find(u => u.id === userId);
     if (selectedUser) {
+      // Store the user ID in localStorage
+      localStorage.setItem('lastSelectedUserId', userId);
+      
       setUser(selectedUser);
       
       // Set organization based on selected user
       const userOrg = MOCK_ORGANIZATIONS.find(org => org.id === selectedUser.organizationId);
-      if (userOrg) setOrganization(userOrg);
+      if (userOrg) {
+        // Store the org ID in localStorage
+        localStorage.setItem('lastSelectedOrgId', userOrg.id);
+        
+        setOrganization(userOrg);
+      }
     }
   };
   
   const switchOrganization = (orgId: string) => {
     const selectedOrg = MOCK_ORGANIZATIONS.find(org => org.id === orgId);
     if (selectedOrg) {
+      // Store the org ID in localStorage
+      localStorage.setItem('lastSelectedOrgId', orgId);
+      
       setOrganization(selectedOrg);
       
       // If current user isn't in this org, switch to a user who is
       if (user && user.organizationId !== orgId) {
         const orgUser = MOCK_USERS.find(u => u.organizationId === orgId);
-        if (orgUser) setUser(orgUser);
+        if (orgUser) {
+          // Store the user ID in localStorage
+          localStorage.setItem('lastSelectedUserId', orgUser.id);
+          
+          setUser(orgUser);
+        }
       }
     }
   };

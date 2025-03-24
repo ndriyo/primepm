@@ -28,6 +28,9 @@ export async function GET(
     
     // Get auth information from headers
     const organizationId = request.headers.get("x-organization-id");
+    const userId = request.headers.get("x-user-id");
+    const userRole = request.headers.get("x-user-role");
+    const departmentId = request.headers.get("x-department-id");
     
     if (!organizationId) {
       return NextResponse.json(
@@ -42,9 +45,19 @@ export async function GET(
     let project;
     
     if (includeScores === "true") {
-      project = await projectRepo.findWithScores(projectId);
+      project = await projectRepo.findWithScores(
+        projectId, 
+        userId || undefined, 
+        userRole || undefined, 
+        departmentId || undefined
+      );
     } else if (includeCommitteeScores === "true") {
-      project = await projectRepo.findWithCommitteeScores(projectId);
+      project = await projectRepo.findWithCommitteeScores(
+        projectId, 
+        userId || undefined, 
+        userRole || undefined, 
+        departmentId || undefined
+      );
     } else {
       project = await projectRepo.findById(projectId);
     }
@@ -60,6 +73,14 @@ export async function GET(
     if (project.organizationId !== organizationId) {
       return NextResponse.json(
         { error: "Unauthorized to access this project" },
+        { status: 403 }
+      );
+    }
+    
+    // Additional check for PM role - can only access projects from their department
+    if (userRole === 'projectManager' && departmentId && project.departmentId !== departmentId) {
+      return NextResponse.json(
+        { error: "Project Managers can only access projects from their department" },
         { status: 403 }
       );
     }
@@ -85,6 +106,8 @@ export async function PATCH(
     // Get auth information from headers
     const userId = request.headers.get("x-user-id");
     const organizationId = request.headers.get("x-organization-id");
+    const userRole = request.headers.get("x-user-role");
+    const departmentId = request.headers.get("x-department-id");
     
     if (!userId || !organizationId) {
       return NextResponse.json(
@@ -125,7 +148,9 @@ export async function PATCH(
     const updatedProject = await projectRepo.update(
       projectId,
       projectData,
-      projectData.updatedById
+      projectData.updatedById,
+      userRole || undefined,
+      departmentId || undefined
     );
     
     // If there are criteria scores to update, handle them separately
@@ -142,14 +167,22 @@ export async function PATCH(
             activeVersionId,
             scoreData.score,
             scoreData.comment || null, // Use comment from the form if available
-            userId
+            userId,
+            userRole || undefined,
+            departmentId || undefined
           );
         }
         
         console.log(`Updated ${criteriaScores.length} criteria scores for project ${projectId}`);
         
         // Recalculate and update the overall score
-        const overallScore = await projectRepo.calculateOverallScore(projectId, activeVersionId);
+        const overallScore = await projectRepo.calculateOverallScore(
+          projectId, 
+          activeVersionId,
+          userId || undefined,
+          userRole || undefined,
+          departmentId || undefined
+        );
         console.log(`Recalculated project score: ${overallScore}`);
         
         // Get the updated project with the new score
@@ -185,6 +218,8 @@ export async function DELETE(
     // Get auth information from headers
     const userId = request.headers.get("x-user-id");
     const organizationId = request.headers.get("x-organization-id");
+    const userRole = request.headers.get("x-user-role");
+    const departmentId = request.headers.get("x-department-id");
     
     if (!userId || !organizationId) {
       return NextResponse.json(
@@ -206,6 +241,14 @@ export async function DELETE(
     if (existingProject.organizationId !== organizationId) {
       return NextResponse.json(
         { error: "Unauthorized to access this project" },
+        { status: 403 }
+      );
+    }
+    
+    // Additional check for PM role - can only access projects from their department
+    if (userRole === 'projectManager' && departmentId && existingProject.departmentId !== departmentId) {
+      return NextResponse.json(
+        { error: "Project Managers can only access projects from their department" },
         { status: 403 }
       );
     }

@@ -39,6 +39,9 @@ interface ProjectSearchContextType {
   handleCreateProject: () => void;
   handleImportProjects: () => void;
   
+  // Data refresh
+  refreshData: () => void;
+  
   // Formatting utilities
   formatCurrency: (amount: number | undefined | null) => string;
   formatDate: (dateString: string | undefined | null) => string;
@@ -124,10 +127,14 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const response = await fetchWithAuth('/api/departments', {}, user);
-        if (response.ok) {
-          const data = await response.json();
-          setDepartments(data);
+        if (user) {
+          const response = await fetchWithAuth('/api/departments', {}, user);
+          if (response.ok) {
+            const data = await response.json();
+            setDepartments(data);
+          } else {
+            console.error('Failed to fetch departments:', response.status);
+          }
         }
       } catch (error) {
         console.error('Error fetching departments:', error);
@@ -195,36 +202,49 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
   };
   
   // Fetch projects with the current filters
-  const fetchProjects = useCallback(async (filters: FilterState, page: number, pageSize: number) => {
+  const fetchProjects = useCallback(async (filters: FilterState, page: number, pageSize: number, skipCache = false) => {
     setIsLoading(true);
     
     try {
+      if (!user) {
+        setProjects([]);
+        setResultsCount(0);
+        return;
+      }
+      
       const params = getQueryParams(filters, page, pageSize);
       const url = `/api/projects?${params.toString()}`;
       
-      // Check cache first if available
-      const cachedData = queryClient.getQueryData(['projects', params.toString()]);
-      if (cachedData) {
-        setProjects(cachedData as Project[]);
-        setResultsCount((cachedData as Project[]).length);
-        setIsLoading(false);
-        return;
+      // Check cache first if available and not skipping cache
+      if (!skipCache) {
+        const cachedData = queryClient.getQueryData(['projects', params.toString(), user.id]);
+        if (cachedData) {
+          setProjects(cachedData as Project[]);
+          setResultsCount((cachedData as Project[]).length);
+          setIsLoading(false);
+          return;
+        }
       }
       
       const response = await fetchWithAuth(url, {}, user);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch projects');
+        console.error('Failed to fetch projects:', response.status);
+        setProjects([]);
+        setResultsCount(0);
+        return;
       }
       
       const data = await response.json();
       setProjects(data.projects || data);
       setResultsCount(data.total || data.length);
       
-      // Cache the results
-      queryClient.setQueryData(['projects', params.toString()], data.projects || data);
+      // Cache the results with user ID in the key to ensure proper cache invalidation
+      queryClient.setQueryData(['projects', params.toString(), user.id], data.projects || data);
     } catch (error) {
       console.error('Error fetching projects:', error);
+      setProjects([]);
+      setResultsCount(0);
     } finally {
       setIsLoading(false);
     }
@@ -240,17 +260,19 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
   
   // Fetch projects when filters or pagination changes
   useEffect(() => {
-    debouncedFetchProjects(filters, page, pageSize);
-    
-    // Update URL with current filters
-    const params = getQueryParams(filters, page, pageSize);
-    const url = `${window.location.pathname}?${params.toString()}`;
-    window.history.replaceState({}, '', url);
+    if (user) {
+      debouncedFetchProjects(filters, page, pageSize);
+      
+      // Update URL with current filters
+      const params = getQueryParams(filters, page, pageSize);
+      const url = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState({}, '', url);
+    }
     
     return () => {
       debouncedFetchProjects.cancel();
     };
-  }, [filters, page, pageSize, debouncedFetchProjects]);
+  }, [filters, page, pageSize, debouncedFetchProjects, user]);
   
   // Handler functions
   
@@ -455,6 +477,39 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
     return `${month} ${day} '${year}`;
   };
 
+  // Function to refresh data by forcing a refetch
+  const refreshData = useCallback(() => {
+    // Clear all project-related cache
+    queryClient.invalidateQueries({ queryKey: ['projects'] });
+    
+    // Force a fresh fetch
+    fetchProjects(filters, page, pageSize, true);
+    
+    // Also refresh departments
+    const fetchDepartments = async () => {
+      try {
+        if (user) {
+          const response = await fetchWithAuth('/api/departments', {}, user);
+          if (response.ok) {
+            const data = await response.json();
+            setDepartments(data);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching departments:', error);
+      }
+    };
+    
+    fetchDepartments();
+  }, [fetchProjects, filters, page, pageSize, queryClient, user]);
+  
+  // Add effect to refresh data when user changes
+  useEffect(() => {
+    if (user) {
+      refreshData();
+    }
+  }, [user, refreshData]);
+
   const contextValue = {
     // State
     isFilterPanelOpen,
@@ -484,6 +539,9 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
     handleSelectProject,
     handleCreateProject,
     handleImportProjects,
+    
+    // Data refresh
+    refreshData,
     
     // Formatting utilities
     formatCurrency,

@@ -46,8 +46,8 @@ export abstract class BaseRepository<T, C, U> {
   /**
    * Gets a RLS-enabled Prisma client for the current organization
    */
-  protected getPrismaWithContext(organizationId?: string, userId?: string) {
-    return getPrismaWithRLS(organizationId, userId);
+  protected getPrismaWithContext(organizationId?: string, userId?: string, userRole?: string, departmentId?: string) {
+    return getPrismaWithRLS(organizationId, userId, userRole, departmentId);
   }
 
   /**

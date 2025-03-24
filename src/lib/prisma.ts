@@ -16,13 +16,13 @@ export const prisma =
   });
 
 // Function to create a prisma client with RLS context
-export function getPrismaWithRLS(organizationId?: string, userId?: string) {
+export function getPrismaWithRLS(organizationId?: string, userId?: string, userRole?: string, departmentId?: string) {
   // If no organization ID is provided, return the base client
   if (!organizationId) {
     return prisma;
   }
   
-  // Create an extended client that sets RLS via PG session variables
+  // Create an extended client that implements RLS filtering
   return prisma.$extends({
     query: {
       $allOperations(params: { 
@@ -31,13 +31,51 @@ export function getPrismaWithRLS(organizationId?: string, userId?: string) {
         model?: string | undefined; 
         operation: string;
       }) {
-        const { args, query } = params;
-        // Don't attempt to add RLS headers to the query directly
-        // Instead, we'll need to set up proper PostgreSQL RLS policies
-        // and have the database enforce security
+        const { args, query, model, operation } = params;
         
-        // For now, we're just going to do a standard query without RLS until the
-        // proper PostgreSQL policies are set up
+        // Only apply RLS to specific models and operations
+        if (model && ['project', 'Project'].includes(model)) {
+          // Clone the args to avoid mutating the original
+          const newArgs = { ...args };
+          
+          // If where clause doesn't exist, create it
+          if (!newArgs.where) {
+            newArgs.where = {};
+          }
+          
+          // Always filter by organization
+          if (organizationId) {
+            newArgs.where.organizationId = organizationId;
+          }
+          
+          // For Project Managers, filter by department
+          if (userRole === 'projectManager' && departmentId && operation.includes('find')) {
+            newArgs.where.departmentId = departmentId;
+          }
+          
+          // Execute the query with the modified args
+          return query(newArgs);
+        }
+        
+        // For other models, just ensure organization filtering
+        if (model && args && args.where && organizationId) {
+          const newArgs = { ...args };
+          if (!newArgs.where) {
+            newArgs.where = {};
+          }
+          
+          // Only add organizationId if the model has this field
+          const hasOrgField = ['organization', 'department', 'user', 'project', 'criteriaVersion', 'portfolioSelection']
+            .some(name => model.toLowerCase().includes(name.toLowerCase()));
+            
+          if (hasOrgField && !newArgs.where.organizationId) {
+            newArgs.where.organizationId = organizationId;
+          }
+          
+          return query(newArgs);
+        }
+        
+        // Default case - pass through
         return query(args);
       },
     },

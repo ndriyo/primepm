@@ -68,13 +68,20 @@ export class ProjectRepository extends BaseRepository<
   }
 
   /**
+   * Gets a RLS-enabled Prisma client for the current context
+   */
+  protected getPrismaWithContext(organizationId?: string, userId?: string, userRole?: string, departmentId?: string) {
+    return getPrismaWithRLS(organizationId, userId, userRole, departmentId);
+  }
+
+  /**
    * Find projects by organization ID
    */
-  async findByOrganization(organizationId: string): Promise<Project[]> {
-    const prismaWithRLS = this.getPrismaWithContext(organizationId);
+  async findByOrganization(organizationId: string, userId?: string, userRole?: string, departmentId?: string): Promise<Project[]> {
+    const prismaWithRLS = this.getPrismaWithContext(organizationId, userId, userRole, departmentId);
     
+    // The where clause will be automatically modified by RLS based on role
     const projects = await prismaWithRLS.project.findMany({
-      where: { organizationId },
       orderBy: { createdAt: 'desc' },
       include: {
         projectScores: {
@@ -91,7 +98,7 @@ export class ProjectRepository extends BaseRepository<
   /**
    * Find projects by department ID
    */
-  async findByDepartment(departmentId: string): Promise<Project[]> {
+  async findByDepartment(departmentId: string, userId?: string, userRole?: string): Promise<Project[]> {
     // For departmentId queries, we need to first find a project with this department
     // to get its organizationId for proper RLS context
     const sampleProject = await prisma.project.findFirst({
@@ -103,7 +110,12 @@ export class ProjectRepository extends BaseRepository<
       return [];
     }
     
-    const prismaWithRLS = this.getPrismaWithContext(sampleProject.organizationId);
+    const prismaWithRLS = this.getPrismaWithContext(
+      sampleProject.organizationId, 
+      userId, 
+      userRole, 
+      departmentId
+    );
     
     const projects = await prismaWithRLS.project.findMany({
       where: { departmentId },
@@ -123,12 +135,11 @@ export class ProjectRepository extends BaseRepository<
   /**
    * Find projects by status
    */
-  async findByStatus(organizationId: string, status: string): Promise<Project[]> {
-    const prismaWithRLS = this.getPrismaWithContext(organizationId);
+  async findByStatus(organizationId: string, status: string, userId?: string, userRole?: string, departmentId?: string): Promise<Project[]> {
+    const prismaWithRLS = this.getPrismaWithContext(organizationId, userId, userRole, departmentId);
     
     const projects = await prismaWithRLS.project.findMany({
       where: { 
-        organizationId,
         status
       },
       orderBy: { createdAt: 'desc' },
@@ -147,7 +158,7 @@ export class ProjectRepository extends BaseRepository<
   /**
    * Find projects with their criteria scores
    */
-  async findWithScores(projectId: string): Promise<Project & { scores: any[] }> {
+  async findWithScores(projectId: string, userId?: string, userRole?: string, departmentId?: string): Promise<Project & { scores: any[] }> {
     // First get the basic project to get its organizationId
     const project = await this.findById(projectId);
     
@@ -155,7 +166,7 @@ export class ProjectRepository extends BaseRepository<
       throw new Error(`Project with ID ${projectId} not found`);
     }
     
-    const prismaWithRLS = this.getPrismaWithContext(project.organizationId);
+    const prismaWithRLS = this.getPrismaWithContext(project.organizationId, userId, userRole, departmentId);
     
     const projectWithScores = await prismaWithRLS.project.findUnique({
       where: { id: projectId },
@@ -181,7 +192,7 @@ export class ProjectRepository extends BaseRepository<
   /**
    * Find projects with committee scores
    */
-  async findWithCommitteeScores(projectId: string): Promise<Project & { committeeScores: any[] }> {
+  async findWithCommitteeScores(projectId: string, userId?: string, userRole?: string, departmentId?: string): Promise<Project & { committeeScores: any[] }> {
     // First get the basic project to get its organizationId
     const project = await this.findById(projectId);
     
@@ -189,7 +200,7 @@ export class ProjectRepository extends BaseRepository<
       throw new Error(`Project with ID ${projectId} not found`);
     }
     
-    const prismaWithRLS = this.getPrismaWithContext(project.organizationId);
+    const prismaWithRLS = this.getPrismaWithContext(project.organizationId, userId, userRole, departmentId);
     
     const projectWithScores = await prismaWithRLS.project.findUnique({
       where: { id: projectId },
@@ -220,7 +231,7 @@ export class ProjectRepository extends BaseRepository<
    * Create a project with proper relations
    * Note: We override the base create method to handle relations
    */
-  async create(data: ProjectCreateInput, userId: string): Promise<Project> {
+  async create(data: ProjectCreateInput, userId: string, userRole?: string, departmentId?: string): Promise<Project> {
     // Prepare the data for Prisma
     const createData: any = {
       name: data.name,
@@ -250,7 +261,7 @@ export class ProjectRepository extends BaseRepository<
     };
 
     // Get RLS-enabled client
-    const prismaWithRLS = this.getPrismaWithContext(data.organizationId, userId);
+    const prismaWithRLS = this.getPrismaWithContext(data.organizationId, userId, userRole, departmentId);
 
     // Create the project
     const result = await prismaWithRLS.project.create({
@@ -274,7 +285,7 @@ export class ProjectRepository extends BaseRepository<
    * Update a project with proper relations
    * Note: We override the base update method to handle relations
    */
-  async update(id: string, data: ProjectUpdateInput, userId: string): Promise<Project> {
+  async update(id: string, data: ProjectUpdateInput, userId: string, userRole?: string, departmentId?: string): Promise<Project> {
     // Get the existing project to get its organization
     const existingProject = await this.findById(id);
     
@@ -307,7 +318,7 @@ export class ProjectRepository extends BaseRepository<
 
     // Use organization from existing project if not changing it
     const organizationId = data.organizationId || existingProject.organizationId;
-    const prismaWithRLS = this.getPrismaWithContext(organizationId, userId);
+    const prismaWithRLS = this.getPrismaWithContext(organizationId, userId, userRole, departmentId);
 
     // Update the project
     const result = await prismaWithRLS.project.update({
@@ -343,7 +354,9 @@ export class ProjectRepository extends BaseRepository<
     versionId: string,
     score: number, 
     comment: string | null,
-    userId: string
+    userId: string,
+    userRole?: string,
+    departmentId?: string
   ): Promise<any> {
     // Get the project to get its organization
     const project = await this.findById(projectId);
@@ -352,7 +365,7 @@ export class ProjectRepository extends BaseRepository<
       throw new Error(`Project with ID ${projectId} not found`);
     }
     
-    const prismaWithRLS = this.getPrismaWithContext(project.organizationId, userId);
+    const prismaWithRLS = this.getPrismaWithContext(project.organizationId, userId, userRole, departmentId);
     
     // First check if we're dealing with a key or an ID
     let criterionId = criterionKeyOrId;
@@ -443,7 +456,7 @@ export class ProjectRepository extends BaseRepository<
   /**
    * Calculate project's overall score
    */
-  async calculateOverallScore(projectId: string, versionId?: string): Promise<number> {
+  async calculateOverallScore(projectId: string, versionId?: string, userId?: string, userRole?: string, departmentId?: string): Promise<number> {
     // Get the project to get its organization
     const project = await this.findById(projectId);
     
@@ -451,7 +464,7 @@ export class ProjectRepository extends BaseRepository<
       throw new Error(`Project with ID ${projectId} not found`);
     }
     
-    const prismaWithRLS = this.getPrismaWithContext(project.organizationId);
+    const prismaWithRLS = this.getPrismaWithContext(project.organizationId, userId, userRole, departmentId);
     
     // If versionId is not provided, find the active version
     if (!versionId) {

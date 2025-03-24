@@ -3,24 +3,51 @@
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useProjects } from '@/app/contexts/ProjectContext';
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function DevAuthSwitcher() {
   const { user, users, organizations, login, switchOrganization } = useAuth();
   const { refreshProjects, setSelectedProject } = useProjects();
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   
-  // Custom login handler that also refreshes projects
+  // Function to invalidate all queries and refresh data
+  const refreshAllData = () => {
+    // Invalidate all queries to ensure fresh data
+    queryClient.removeQueries();
+    
+    // Refresh projects data from ProjectContext
+    refreshProjects();
+    
+    // Force a hard reload of the page to ensure all contexts are refreshed
+    // This is the most reliable way to ensure all data is refreshed
+    window.location.href = window.location.href;
+  };
+  
+  // Custom login handler that also refreshes all data
   const handleLogin = (userId: string) => {
+    // Store the user ID in localStorage to persist through reload
+    localStorage.setItem('lastSelectedUserId', userId);
+    
+    // Login and clear selected project
     login(userId);
-    setSelectedProject(null); // Clear selected project
-    refreshProjects();        // Refresh projects data
+    setSelectedProject(null);
+    
+    // Refresh all data
+    refreshAllData();
   };
   
   // Custom organization switch handler
   const handleOrgSwitch = (orgId: string) => {
+    // Store the org ID in localStorage to persist through reload
+    localStorage.setItem('lastSelectedOrgId', orgId);
+    
+    // Switch organization and clear selected project
     switchOrganization(orgId);
-    setSelectedProject(null); // Clear selected project
-    refreshProjects();        // Refresh projects data
+    setSelectedProject(null);
+    
+    // Refresh all data
+    refreshAllData();
   };
   
   // Only show in development

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ProjectRepository } from "@/src/repositories/ProjectRepository";
+import { ProjectRepository } from "@/app/_repositories/ProjectRepository";
 
 const projectRepo = new ProjectRepository();
 

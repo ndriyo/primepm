@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PortfolioRepository } from '@/src/repositories/PortfolioRepository';
+import { PortfolioRepository } from '@/app/_repositories/PortfolioRepository';
 
 export async function GET(
   request: NextRequest,

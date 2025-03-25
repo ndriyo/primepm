@@ -21,19 +21,19 @@ Total : 88 files,  17721 codes, 771 comments, 1337 blanks, all 19829 lines
 | [app/api/projects/\[projectId\]/route.ts](/app/api/projects/%5BprojectId%5D/route.ts) | TypeScript | 133 | 11 | 27 | 171 |
 | [app/api/projects/\[projectId\]/scores/route.ts](/app/api/projects/%5BprojectId%5D/scores/route.ts) | TypeScript | 66 | 5 | 12 | 83 |
 | [app/api/projects/route.ts](/app/api/projects/route.ts) | TypeScript | 68 | 8 | 17 | 93 |
-| [app/components/dashboard/Dashboard.tsx](/app/components/dashboard/Dashboard.tsx) | TypeScript JSX | 39 | 0 | 6 | 45 |
-| [app/components/dev/DevAuthSwitcher.tsx](/app/components/dev/DevAuthSwitcher.tsx) | TypeScript JSX | 77 | 1 | 9 | 87 |
-| [app/components/project-details/ProjectDetails.tsx](/app/components/project-details/ProjectDetails.tsx) | TypeScript JSX | 274 | 7 | 28 | 309 |
-| [app/components/project-details/ProjectInformation.tsx](/app/components/project-details/ProjectInformation.tsx) | TypeScript JSX | 234 | 7 | 24 | 265 |
-| [app/components/project-entry/ProjectEntryForm.tsx](/app/components/project-entry/ProjectEntryForm.tsx) | TypeScript JSX | 269 | 22 | 41 | 332 |
-| [app/components/project-entry/ProjectInfoStep.tsx](/app/components/project-entry/ProjectInfoStep.tsx) | TypeScript JSX | 214 | 14 | 20 | 248 |
-| [app/components/project-entry/ReviewSubmitStep.tsx](/app/components/project-entry/ReviewSubmitStep.tsx) | TypeScript JSX | 170 | 9 | 23 | 202 |
-| [app/components/project-entry/SelfAssessmentStep.tsx](/app/components/project-entry/SelfAssessmentStep.tsx) | TypeScript JSX | 157 | 12 | 17 | 186 |
-| [app/components/project-selection/ProjectSelection.tsx](/app/components/project-selection/ProjectSelection.tsx) | TypeScript JSX | 121 | 7 | 16 | 144 |
-| [app/components/reports/Reports.tsx](/app/components/reports/Reports.tsx) | TypeScript JSX | 257 | 10 | 24 | 291 |
-| [app/contexts/AuthContext.tsx](/app/contexts/AuthContext.tsx) | TypeScript JSX | 114 | 9 | 17 | 140 |
-| [app/contexts/CriteriaContext.tsx](/app/contexts/CriteriaContext.tsx) | TypeScript JSX | 329 | 48 | 69 | 446 |
-| [app/contexts/ProjectContext.tsx](/app/contexts/ProjectContext.tsx) | TypeScript JSX | 88 | 4 | 16 | 108 |
+| [app/_components/dashboard/Dashboard.tsx](/app/_components/dashboard/Dashboard.tsx) | TypeScript JSX | 39 | 0 | 6 | 45 |
+| [app/_components/dev/DevAuthSwitcher.tsx](/app/_components/dev/DevAuthSwitcher.tsx) | TypeScript JSX | 77 | 1 | 9 | 87 |
+| [app/_components/project-details/ProjectDetails.tsx](/app/_components/project-details/ProjectDetails.tsx) | TypeScript JSX | 274 | 7 | 28 | 309 |
+| [app/_components/project-details/ProjectInformation.tsx](/app/_components/project-details/ProjectInformation.tsx) | TypeScript JSX | 234 | 7 | 24 | 265 |
+| [app/_components/project-entry/ProjectEntryForm.tsx](/app/_components/project-entry/ProjectEntryForm.tsx) | TypeScript JSX | 269 | 22 | 41 | 332 |
+| [app/_components/project-entry/ProjectInfoStep.tsx](/app/_components/project-entry/ProjectInfoStep.tsx) | TypeScript JSX | 214 | 14 | 20 | 248 |
+| [app/_components/project-entry/ReviewSubmitStep.tsx](/app/_components/project-entry/ReviewSubmitStep.tsx) | TypeScript JSX | 170 | 9 | 23 | 202 |
+| [app/_components/project-entry/SelfAssessmentStep.tsx](/app/_components/project-entry/SelfAssessmentStep.tsx) | TypeScript JSX | 157 | 12 | 17 | 186 |
+| [app/_components/project-selection/ProjectSelection.tsx](/app/_components/project-selection/ProjectSelection.tsx) | TypeScript JSX | 121 | 7 | 16 | 144 |
+| [app/_components/reports/Reports.tsx](/app/_components/reports/Reports.tsx) | TypeScript JSX | 257 | 10 | 24 | 291 |
+| [app/_contexts/AuthContext.tsx](/app/_contexts/AuthContext.tsx) | TypeScript JSX | 114 | 9 | 17 | 140 |
+| [app/_contexts/CriteriaContext.tsx](/app/_contexts/CriteriaContext.tsx) | TypeScript JSX | 329 | 48 | 69 | 446 |
+| [app/_contexts/ProjectContext.tsx](/app/_contexts/ProjectContext.tsx) | TypeScript JSX | 88 | 4 | 16 | 108 |
 | [app/criteria/page.tsx](/app/criteria/page.tsx) | TypeScript JSX | 17 | 0 | 4 | 21 |
 | [app/details/\[projectId\]/page.tsx](/app/details/%5BprojectId%5D/page.tsx) | TypeScript JSX | 13 | 0 | 4 | 17 |
 | [app/details/page.tsx](/app/details/page.tsx) | TypeScript JSX | 24 | 4 | 5 | 33 |

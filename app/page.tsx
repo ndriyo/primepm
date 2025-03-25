@@ -1,7 +1,7 @@
 'use client';
 
-import { PageLayout } from '@/components/layout/PageLayout';
-import { Dashboard } from '@/app/components/dashboard/Dashboard';
+import { PageLayout } from '@/app/_components/layout/PageLayout';
+import { Dashboard } from '@/app/_components/dashboard/Dashboard';
 
 export default function HomePage() {
   return (

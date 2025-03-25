@@ -1,5 +1,5 @@
-import { calculatePreviewScore } from '@/src/lib/scoreCalculator';
-import { Criterion } from '@/app/contexts/CriteriaContext';
+import { calculatePreviewScore } from '@/app/_lib/scoreCalculator';
+import { Criterion } from '@/app/_contexts/CriteriaContext';
 
 export interface Project {
   id: string;

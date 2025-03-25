@@ -43,13 +43,13 @@ Total : 93 files,  10020 codes, 694 comments, 1051 blanks, all 11765 lines
 | app/api/projects/[projectId] | 2 | 199 | 16 | 39 | 254 |
 | app/api/projects/[projectId] (Files) | 1 | 133 | 11 | 27 | 171 |
 | app/api/projects/[projectId]/scores | 1 | 66 | 5 | 12 | 83 |
-| app/components | 10 | 1,812 | 89 | 208 | 2,109 |
-| app/components/dashboard | 1 | 39 | 0 | 6 | 45 |
-| app/components/dev | 1 | 77 | 1 | 9 | 87 |
-| app/components/project-details | 2 | 508 | 14 | 52 | 574 |
-| app/components/project-entry | 4 | 810 | 57 | 101 | 968 |
-| app/components/project-selection | 1 | 121 | 7 | 16 | 144 |
-| app/components/reports | 1 | 257 | 10 | 24 | 291 |
+| app/_components | 10 | 1,812 | 89 | 208 | 2,109 |
+| app/_components/dashboard | 1 | 39 | 0 | 6 | 45 |
+| app/_components/dev | 1 | 77 | 1 | 9 | 87 |
+| app/_components/project-details | 2 | 508 | 14 | 52 | 574 |
+| app/_components/project-entry | 4 | 810 | 57 | 101 | 968 |
+| app/_components/project-selection | 1 | 121 | 7 | 16 | 144 |
+| app/_components/reports | 1 | 257 | 10 | 24 | 291 |
 | app/contexts | 3 | 531 | 61 | 102 | 694 |
 | app/criteria | 1 | 17 | 0 | 4 | 21 |
 | app/details | 2 | 37 | 4 | 9 | 50 |

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CriteriaRepository } from "@/src/repositories/CriteriaRepository";
-import prisma from "@/src/lib/prisma";
+import { CriteriaRepository } from "@/app/_repositories/CriteriaRepository";
+import prisma from "@/app/_lib/prisma";
 
 const criteriaRepo = new CriteriaRepository();
 

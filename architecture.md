@@ -78,9 +78,9 @@ When debugging an issue, here's the progression of files to check:
 
 ### For Page/UI Issues:
 1. Start with the specific **page file** (e.g., `app/details/[projectId]/page.tsx`)
-2. Check the **main component** used by that page (e.g., `app/components/project-details/ProjectDetails.tsx`)
+2. Check the **main component** used by that page (e.g., `app/_components/project-details/ProjectDetails.tsx`)
 3. Check sub-components (e.g., `ProjectInformation.tsx`)
-4. Check context providers if state-related (`app/contexts/ProjectContext.tsx`)
+4. Check context providers if state-related (`app/_contexts/ProjectContext.tsx`)
 
 ### For Data/Backend Issues:
 1. Check the relevant **API route handler** (e.g., `app/api/projects/[projectId]/route.ts`)
@@ -92,26 +92,26 @@ When debugging an issue, here's the progression of files to check:
 
 **Project Details Page** (`/details/[projectId]`):
 - Page file: `app/details/[projectId]/page.tsx`
-- Main component: `app/components/project-details/ProjectDetails.tsx`
-- Sub-component: `app/components/project-details/ProjectInformation.tsx`
+- Main component: `app/_components/project-details/ProjectDetails.tsx`
+- Sub-component: `app/_components/project-details/ProjectInformation.tsx`
 - API route: `app/api/projects/[projectId]/route.ts`
 - Data hook: `src/hooks/useProjects.ts`
 
 **Project Selection Page** (`/selection`):
 - Page file: `app/selection/page.tsx`
-- Main component: `app/components/project-selection/ProjectSelection.tsx`
+- Main component: `app/_components/project-selection/ProjectSelection.tsx`
 - API routes: `app/api/projects/route.ts` and `app/api/criteria/versions/route.ts`
 - Data hooks: `src/hooks/useProjects.ts` and `src/hooks/useCriteria.ts`
 
 **Project Entry Page** (`/projects/new`):
 - Page file: `app/projects/new/page.tsx`
-- Main component: `app/components/project-entry/ProjectEntryForm.tsx`
+- Main component: `app/_components/project-entry/ProjectEntryForm.tsx`
 - API route: `app/api/projects/route.ts` (POST method)
 - Data hooks: `src/hooks/useProjects.ts`
 
 **Reports Page** (`/reports`):
 - Page file: `app/reports/page.tsx`
-- Main component: `app/components/reports/Reports.tsx`
+- Main component: `app/_components/reports/Reports.tsx`
 - API routes: Various, likely including project and portfolio endpoints
 - Data hooks: Multiple, depending on report types
 

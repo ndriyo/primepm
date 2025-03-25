@@ -1,7 +1,7 @@
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
-import { Project } from '@/app/contexts/ProjectContext';
+import { Project } from '@/app/_contexts/ProjectContext';
 import { useEffect, useState, useMemo } from 'react';
-import { Criterion } from '@/src/hooks/useCriteriaQuery';
+import { Criterion } from '@/app/_hooks/useCriteriaQuery';
 
 interface ProjectRadarChartProps {
   project: Project;

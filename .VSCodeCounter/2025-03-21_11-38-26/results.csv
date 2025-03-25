@@ -9,19 +9,19 @@
 "/Users/ndriyo/Documents/Code/primepm/app/api/projects/[projectId]/route.ts", "TypeScript", 133, 0, 0, 0, 0, 0, 0, 0, 0, 11, 27, 171
 "/Users/ndriyo/Documents/Code/primepm/app/api/projects/[projectId]/scores/route.ts", "TypeScript", 66, 0, 0, 0, 0, 0, 0, 0, 0, 5, 12, 83
 "/Users/ndriyo/Documents/Code/primepm/app/api/projects/route.ts", "TypeScript", 68, 0, 0, 0, 0, 0, 0, 0, 0, 8, 17, 93
-"/Users/ndriyo/Documents/Code/primepm/app/components/dashboard/Dashboard.tsx", "TypeScript JSX", 0, 39, 0, 0, 0, 0, 0, 0, 0, 0, 6, 45
-"/Users/ndriyo/Documents/Code/primepm/app/components/dev/DevAuthSwitcher.tsx", "TypeScript JSX", 0, 77, 0, 0, 0, 0, 0, 0, 0, 1, 9, 87
-"/Users/ndriyo/Documents/Code/primepm/app/components/project-details/ProjectDetails.tsx", "TypeScript JSX", 0, 274, 0, 0, 0, 0, 0, 0, 0, 7, 28, 309
-"/Users/ndriyo/Documents/Code/primepm/app/components/project-details/ProjectInformation.tsx", "TypeScript JSX", 0, 234, 0, 0, 0, 0, 0, 0, 0, 7, 24, 265
-"/Users/ndriyo/Documents/Code/primepm/app/components/project-entry/ProjectEntryForm.tsx", "TypeScript JSX", 0, 269, 0, 0, 0, 0, 0, 0, 0, 22, 41, 332
-"/Users/ndriyo/Documents/Code/primepm/app/components/project-entry/ProjectInfoStep.tsx", "TypeScript JSX", 0, 214, 0, 0, 0, 0, 0, 0, 0, 14, 20, 248
-"/Users/ndriyo/Documents/Code/primepm/app/components/project-entry/ReviewSubmitStep.tsx", "TypeScript JSX", 0, 170, 0, 0, 0, 0, 0, 0, 0, 9, 23, 202
-"/Users/ndriyo/Documents/Code/primepm/app/components/project-entry/SelfAssessmentStep.tsx", "TypeScript JSX", 0, 157, 0, 0, 0, 0, 0, 0, 0, 12, 17, 186
-"/Users/ndriyo/Documents/Code/primepm/app/components/project-selection/ProjectSelection.tsx", "TypeScript JSX", 0, 121, 0, 0, 0, 0, 0, 0, 0, 7, 16, 144
-"/Users/ndriyo/Documents/Code/primepm/app/components/reports/Reports.tsx", "TypeScript JSX", 0, 257, 0, 0, 0, 0, 0, 0, 0, 10, 24, 291
-"/Users/ndriyo/Documents/Code/primepm/app/contexts/AuthContext.tsx", "TypeScript JSX", 0, 114, 0, 0, 0, 0, 0, 0, 0, 9, 17, 140
-"/Users/ndriyo/Documents/Code/primepm/app/contexts/CriteriaContext.tsx", "TypeScript JSX", 0, 329, 0, 0, 0, 0, 0, 0, 0, 48, 69, 446
-"/Users/ndriyo/Documents/Code/primepm/app/contexts/ProjectContext.tsx", "TypeScript JSX", 0, 88, 0, 0, 0, 0, 0, 0, 0, 4, 16, 108
+"/Users/ndriyo/Documents/Code/primepm/app/_components/dashboard/Dashboard.tsx", "TypeScript JSX", 0, 39, 0, 0, 0, 0, 0, 0, 0, 0, 6, 45
+"/Users/ndriyo/Documents/Code/primepm/app/_components/dev/DevAuthSwitcher.tsx", "TypeScript JSX", 0, 77, 0, 0, 0, 0, 0, 0, 0, 1, 9, 87
+"/Users/ndriyo/Documents/Code/primepm/app/_components/project-details/ProjectDetails.tsx", "TypeScript JSX", 0, 274, 0, 0, 0, 0, 0, 0, 0, 7, 28, 309
+"/Users/ndriyo/Documents/Code/primepm/app/_components/project-details/ProjectInformation.tsx", "TypeScript JSX", 0, 234, 0, 0, 0, 0, 0, 0, 0, 7, 24, 265
+"/Users/ndriyo/Documents/Code/primepm/app/_components/project-entry/ProjectEntryForm.tsx", "TypeScript JSX", 0, 269, 0, 0, 0, 0, 0, 0, 0, 22, 41, 332
+"/Users/ndriyo/Documents/Code/primepm/app/_components/project-entry/ProjectInfoStep.tsx", "TypeScript JSX", 0, 214, 0, 0, 0, 0, 0, 0, 0, 14, 20, 248
+"/Users/ndriyo/Documents/Code/primepm/app/_components/project-entry/ReviewSubmitStep.tsx", "TypeScript JSX", 0, 170, 0, 0, 0, 0, 0, 0, 0, 9, 23, 202
+"/Users/ndriyo/Documents/Code/primepm/app/_components/project-entry/SelfAssessmentStep.tsx", "TypeScript JSX", 0, 157, 0, 0, 0, 0, 0, 0, 0, 12, 17, 186
+"/Users/ndriyo/Documents/Code/primepm/app/_components/project-selection/ProjectSelection.tsx", "TypeScript JSX", 0, 121, 0, 0, 0, 0, 0, 0, 0, 7, 16, 144
+"/Users/ndriyo/Documents/Code/primepm/app/_components/reports/Reports.tsx", "TypeScript JSX", 0, 257, 0, 0, 0, 0, 0, 0, 0, 10, 24, 291
+"/Users/ndriyo/Documents/Code/primepm/app/_contexts/AuthContext.tsx", "TypeScript JSX", 0, 114, 0, 0, 0, 0, 0, 0, 0, 9, 17, 140
+"/Users/ndriyo/Documents/Code/primepm/app/_contexts/CriteriaContext.tsx", "TypeScript JSX", 0, 329, 0, 0, 0, 0, 0, 0, 0, 48, 69, 446
+"/Users/ndriyo/Documents/Code/primepm/app/_contexts/ProjectContext.tsx", "TypeScript JSX", 0, 88, 0, 0, 0, 0, 0, 0, 0, 4, 16, 108
 "/Users/ndriyo/Documents/Code/primepm/app/criteria/page.tsx", "TypeScript JSX", 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 4, 21
 "/Users/ndriyo/Documents/Code/primepm/app/details/[projectId]/page.tsx", "TypeScript JSX", 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 4, 17
 "/Users/ndriyo/Documents/Code/primepm/app/details/page.tsx", "TypeScript JSX", 0, 24, 0, 0, 0, 0, 0, 0, 0, 4, 5, 33

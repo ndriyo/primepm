@@ -1,7 +1,7 @@
 'use client';
 
-import { PageLayout } from '@/components/layout/PageLayout';
-import { ProjectInformation } from '@/app/components/project-details/ProjectInformation';
+import { PageLayout } from '@/app/_components/layout/PageLayout';
+import { ProjectInformation } from '@/app/details/[projectId]/components/ProjectInformation';
 import { useParams } from 'next/navigation';
 
 export default function ProjectInformationPage() {

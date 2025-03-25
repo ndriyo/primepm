@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
-import DevAuthSwitcher from './components/dev/DevAuthSwitcher';
-import { SidebarProvider } from './contexts/SidebarContext';
+import DevAuthSwitcher from './_components/dev/DevAuthSwitcher';
+import { SidebarProvider } from './_contexts/SidebarContext';
 
 const inter = Inter({ subsets: ['latin'] });
 

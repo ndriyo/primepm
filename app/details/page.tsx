@@ -1,8 +1,8 @@
 'use client';
 
-import { PageLayout } from '@/components/layout/PageLayout';
-import { ProjectSearchProvider } from '@/app/contexts/ProjectSearchContext';
-import { ProjectSearchPage } from '@/app/components/project-search/ProjectSearchPage';
+import { PageLayout } from '@/app/_components/layout/PageLayout';
+import { ProjectSearchProvider } from '@/app/_contexts/ProjectSearchContext';
+import { ProjectSearchPage } from '@/app/details/components/ProjectSearchPage';
 import { Suspense } from 'react';
 
 export default function ProjectDetailsPage() {

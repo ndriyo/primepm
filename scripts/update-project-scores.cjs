@@ -1,6 +1,9 @@
 // Script to update all existing projects with calculated scores
 // Run this script after applying the migration to add the score field
 
+// Import the score calculator library
+const { calculateOverallScore } = require('./scoreCalculator.cjs');
+
 // Try to load environment variables from .env file
 try {
   require('dotenv').config();
@@ -69,7 +72,7 @@ async function updateProjectScores() {
         criteriaMap[criterion.id] = {
           weight: criterion.weight || 1,
           isInverse: criterion.isInverse || false,
-          scale: criterion.scale || { min: 1, max: 10 }
+          scale: criterion.scale || { min: 1, max: 5 }
         };
       }
       
@@ -97,46 +100,44 @@ async function updateProjectScores() {
           continue;
         }
         
-        // Calculate weighted sum
-        let weightedSum = 0;
-        let totalWeight = 0;
-        
-        for (const score of scores) {
+        // Convert scores to the format expected by the score calculator
+        const criteriaScores = scores.map(score => {
           const { criterion } = score;
           const criterionInfo = criteriaMap[criterion.id] || { 
             weight: 1, 
             isInverse: false, 
-            scale: { min: 1, max: 10 } 
+            scale: { min: 1, max: 5 } 
           };
           
-          // Use weight from the criteria map to ensure we're using the latest weights
-          const weight = criterionInfo.weight;
+          // Get scale information
+          const scaleMin = criterionInfo.scale && 
+                          typeof criterionInfo.scale === 'object' && 
+                          criterionInfo.scale.min ? 
+                          Number(criterionInfo.scale.min) : 0;
           
-          // Get the scale max (default to 10 if not specified)
           const scaleMax = criterionInfo.scale && 
                           typeof criterionInfo.scale === 'object' && 
                           criterionInfo.scale.max ? 
-                          Number(criterionInfo.scale.max) : 10;
+                          Number(criterionInfo.scale.max) : 5;
           
-          // Normalize the value based on the scale (0-1 range)
-          const normalizedValue = score.score / scaleMax;
-          
-          // Apply the appropriate value based on whether it's an inverse criterion
-          let value;
-          if (criterionInfo.isInverse) {
-            value = 1 - normalizedValue; // Invert for inverse criteria
-          } else {
-            value = normalizedValue;
-          }
-          
-          weightedSum += value * weight;
-          totalWeight += weight;
-        }
+          return {
+            criterionId: criterion.id,
+            criterionKey: criterion.key,
+            score: score.score,
+            weight: criterionInfo.weight,
+            isInverse: criterionInfo.isInverse,
+            scaleMax,
+            scaleMin
+          };
+        });
         
-        // Calculate the normalized score and scale back to 0-10 range
-        const calculatedScore = totalWeight > 0 
-          ? parseFloat(((weightedSum / totalWeight) * 10).toFixed(2)) 
-          : 0;
+        // Use the centralized score calculator
+        const calculatedScore = calculateOverallScore(criteriaScores, {
+          normalizeOutput: true,
+          outputScaleMax: 5,
+          outputScaleMin: 0,
+          decimalPlaces: 2
+        });
         
         // Update the project with the calculated score
         try {

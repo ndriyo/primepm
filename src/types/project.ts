@@ -43,6 +43,7 @@ export interface Project {
   departmentId?: string;
   tags: string[];
   criteria: Record<string, number>;
+  score?: number; // Project score from database
 }
 
 export interface FilterItem {

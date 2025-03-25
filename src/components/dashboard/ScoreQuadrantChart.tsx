@@ -130,7 +130,7 @@ export const ScoreQuadrantChart = () => {
                 type="number" 
                 dataKey="score" 
                 name="Score" 
-                domain={[0, 10]}
+                domain={[0, 5]}
                 label={{ value: 'Score', angle: -90, position: 'insideLeft' }}
               />
               <ZAxis range={[60, 60]} />

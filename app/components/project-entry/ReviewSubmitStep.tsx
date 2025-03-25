@@ -2,7 +2,7 @@
 
 import { Project } from '@/src/data/projects';
 import { Criterion } from '@/app/contexts/CriteriaContext';
-import { calculateOverallScore } from '@/src/data/projects';
+import { calculatePreviewScore } from '@/src/lib/scoreCalculator';
 import { useDepartments } from '@/app/contexts/DepartmentContext';
 
 interface ProjectFormData extends Partial<Project> {
@@ -38,24 +38,19 @@ export default function ReviewSubmitStep({
     .filter(criterion => criterion.isInverse)
     .map(criterion => criterion.key);
     
-  // Calculate overall score for display
+  // Calculate overall score for display using the centralized score calculator
   const getOverallScore = (): number => {
     if (!formData.criteria || Object.keys(formData.criteria).length === 0) {
       return 0;
     }
     
-    // Convert to a full Project to use the calculation function
-    const tempProject = {
-      ...formData,
-      id: 'temp',
-      status: 'planning',
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString()
-    } as Project;
-    
-    // This is a preview calculation - the actual score will be calculated by the backend
-    // using the weights from the active criteria version
-    return calculateOverallScore(tempProject, {}, inverseCriteria);
+    // Use the centralized score calculator for preview
+    // This ensures consistency between preview and stored scores
+    return calculatePreviewScore(
+      formData.criteria,
+      criteria,
+      { normalizeOutput: true, outputScaleMax: 10, outputScaleMin: 0 }
+    );
   };
   
   // Get score color based on overall score

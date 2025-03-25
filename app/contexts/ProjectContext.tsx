@@ -4,6 +4,7 @@ import { createContext, useContext, useState, ReactNode, useEffect, useCallback 
 import { useCriteria } from '@/app/contexts/CriteriaContext';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { calculatePreviewScore } from '@/src/lib/scoreCalculator';
 
 // Update the Project interface to match expected database schema
 export interface Project {
@@ -211,45 +212,19 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
-  // Calculate overall score function
-  const calculateOverallScore = (
-    project: Project, 
-    weights: Record<string, number> = {}, 
-    inverseCriteria: string[] = []
-  ): number => {
-    const criteriaKeys = Object.keys(project.criteria);
-    const filteredWeights: Record<string, number> = {};
-    
-    criteriaKeys.forEach(key => {
-      filteredWeights[key] = weights[key] || 1;
-    });
-    
-    const totalWeight = Object.values(filteredWeights).reduce((sum, weight) => sum + weight, 0);
-    
-    if (totalWeight === 0) return 0;
-    
-    let weightedSum = 0;
-    
-    criteriaKeys.forEach(key => {
-      let value = project.criteria[key];
-      const weight = filteredWeights[key] || 0;
-      
-      if (inverseCriteria.includes(key)) {
-        value = 11 - value;
-      }
-      
-      weightedSum += value * weight;
-    });
-    
-    return parseFloat((weightedSum / totalWeight).toFixed(2));
-  };
-  
+  // Get project score using the centralized score calculator
   const getProjectScore = (project: Project): number => {
-    const inverseCriteria = criteria
-      .filter(criterion => criterion.isInverse)
-      .map(criterion => criterion.key);
-
-    return calculateOverallScore(project, weightSettings, inverseCriteria);
+    // If the project already has a score from the database, use it
+    if (project.score !== null && project.score !== undefined) {
+      return project.score;
+    }
+    
+    // Otherwise, calculate a preview score using the centralized calculator
+    return calculatePreviewScore(
+      project.criteria,
+      criteria,
+      { normalizeOutput: true, outputScaleMax: 10, outputScaleMin: 0 }
+    );
   };
 
   // Convert React Query error to string for context
@@ -295,41 +270,32 @@ export const useProjects = (): ProjectContextType => {
   return context;
 };
 
+/**
+ * @deprecated Use the scoreCalculator library instead
+ * This function is kept for backward compatibility but redirects to the centralized calculator
+ */
 export const calculateOverallScore = (
   project: Project, 
   weights: Record<string, number> = {},
   inverseCriteria: string[] = []
 ) => {
-  // Get all criteria keys that exist in the project
-  const criteriaKeys = Object.keys(project.criteria);
+  console.warn(
+    'Warning: Using deprecated calculateOverallScore from ProjectContext. ' +
+    'Please use the scoreCalculator library instead.'
+  );
   
-  // Filter weights to only include criteria that exist in the project
-  const filteredWeights: Record<string, number> = {};
+  // Create mock criteria array for the calculator
+  const mockCriteria = Object.keys(project.criteria).map(key => ({
+    id: key,
+    key,
+    label: key,
+    description: `Criterion for ${key}`,
+    isInverse: inverseCriteria.includes(key),
+    isDefault: false,
+    weight: weights[key] || 1,
+    scale: { min: 0, max: 10 }
+  }));
   
-  // Default weight of 1 for all criteria if not specified
-  criteriaKeys.forEach(key => {
-    filteredWeights[key] = weights[key] || 1;
-  });
-  
-  const totalWeight = Object.values(filteredWeights).reduce((sum, weight) => sum + weight, 0);
-  
-  if (totalWeight === 0) return 0;
-  
-  let weightedSum = 0;
-  
-  // Calculate weighted sum, handling inverse criteria
-  criteriaKeys.forEach(key => {
-    let value = project.criteria[key];
-    const weight = filteredWeights[key] || 0;
-    
-    // For inverse criteria, invert the scale (10 - value + 1)
-    // This makes lower values score higher
-    if (inverseCriteria.includes(key)) {
-      value = 5 - value; // Invert scale: 1->10, 2->9, 3->8, etc.
-    }
-    
-    weightedSum += value * weight;
-  });
-  
-  return parseFloat((weightedSum / totalWeight).toFixed(2));
+  // Use the centralized calculator
+  return calculatePreviewScore(project.criteria, mockCriteria);
 };

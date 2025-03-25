@@ -2,6 +2,7 @@ import prisma, { getPrismaWithRLS } from '../lib/prisma';
 import { Prisma } from '@prisma/client';
 import { BaseRepository } from './BaseRepository';
 import { CriteriaRepository } from './CriteriaRepository';
+import { calculateOverallScore as calculateScore, CriteriaScore } from '../lib/scoreCalculator';
 
 // Temporary Project type definition until Prisma client is generated
 export interface Project {
@@ -454,7 +455,7 @@ export class ProjectRepository extends BaseRepository<
   }
 
   /**
-   * Calculate project's overall score
+   * Calculate project's overall score using the centralized score calculator
    */
   async calculateOverallScore(projectId: string, versionId?: string, userId?: string, userRole?: string, departmentId?: string): Promise<number> {
     // Get the project to get its organization
@@ -493,52 +494,37 @@ export class ProjectRepository extends BaseRepository<
       return 0;
     }
 
-    // Get all criteria for this version to ensure we have the correct weights
-    const criteria = await prismaWithRLS.criterion.findMany({
-      where: {
-        versionId
-      }
-    });
-
-    // Create a map of criterion ID to weight
-    const weightMap = criteria.reduce((map, criterion) => {
-      map[criterion.id] = criterion.weight || 1;
-      return map;
-    }, {} as Record<string, number>);
-
-    // Calculate weighted sum
-    let weightedSum = 0;
-    let totalWeight = 0;
-
-    for (const score of scores) {
+    // Convert scores to the format expected by the score calculator
+    const criteriaScores: CriteriaScore[] = scores.map(score => {
       const { criterion } = score;
-      // Use weight from the weight map to ensure we're using the latest weights
-      const weight = weightMap[criterion.id] || 1;
       
-      // Get the scale max (default to 10 if not specified)
+      // Get scale information
+      const scaleMin = criterion.scale && typeof criterion.scale === 'object' && 'min' in criterion.scale 
+        ? Number(criterion.scale.min) 
+        : 0;
+      
       const scaleMax = criterion.scale && typeof criterion.scale === 'object' && 'max' in criterion.scale 
         ? Number(criterion.scale.max) 
         : 10;
       
-      // Normalize the value based on the scale (0-1 range)
-      const normalizedValue = score.score / scaleMax;
-      
-      // Apply the appropriate value based on whether it's an inverse criterion
-      let value;
-      if (criterion.isInverse) {
-        value = 1 - normalizedValue; // Invert for inverse criteria
-      } else {
-        value = normalizedValue;
-      }
+      return {
+        criterionId: criterion.id,
+        criterionKey: criterion.key,
+        score: score.score,
+        weight: criterion.weight || 1,
+        isInverse: criterion.isInverse || false,
+        scaleMax,
+        scaleMin
+      };
+    });
 
-      weightedSum += value * weight;
-      totalWeight += weight;
-    }
-
-    // Calculate the normalized score and scale back to 0-10 range
-    const calculatedScore = totalWeight > 0 
-      ? parseFloat(((weightedSum / totalWeight) * 10).toFixed(2)) 
-      : 0;
+    // Use the centralized score calculator
+    const calculatedScore = calculateScore(criteriaScores, {
+      normalizeOutput: true,
+      outputScaleMax: 10,
+      outputScaleMin: 0,
+      decimalPlaces: 2
+    });
     
     // Update the project with the calculated score
     try {

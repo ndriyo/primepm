@@ -1,3 +1,6 @@
+import { calculatePreviewScore } from '@/src/lib/scoreCalculator';
+import { Criterion } from '@/app/contexts/CriteriaContext';
+
 export interface Project {
   id: string;
   name: string;
@@ -11,6 +14,7 @@ export interface Project {
   resources: number;
   tags: string[];
   budget?: number; // Project budget in currency units
+  score?: number; // Project score (should come from database)
 }
 
 export const projects: Project[] = [
@@ -246,44 +250,34 @@ export const projects: Project[] = [
 
 // Helper functions for working with project data
 
+/**
+ * @deprecated Use the scoreCalculator library instead
+ * This function is kept for backward compatibility but redirects to the centralized calculator
+ */
 export const calculateOverallScore = (
   project: Project, 
   weights: Record<string, number> = {},
   inverseCriteria: string[] = []
 ) => {
-  // Get all criteria keys that exist in the project
-  const criteriaKeys = Object.keys(project.criteria);
+  console.warn(
+    'Warning: Using deprecated calculateOverallScore from src/data/projects.ts. ' +
+    'Please use the scoreCalculator library instead.'
+  );
   
-  // Filter weights to only include criteria that exist in the project
-  const filteredWeights: Record<string, number> = {};
+  // Create mock criteria array for the calculator
+  const mockCriteria: Criterion[] = Object.keys(project.criteria).map(key => ({
+    id: key,
+    key,
+    label: key,
+    description: `Criterion for ${key}`,
+    isInverse: inverseCriteria.includes(key),
+    isDefault: false,
+    weight: weights[key] || 1,
+    scale: { min: 0, max: 10 }
+  }));
   
-  // Default weight of 1 for all criteria if not specified
-  criteriaKeys.forEach(key => {
-    filteredWeights[key] = weights[key] || 1;
-  });
-  
-  const totalWeight = Object.values(filteredWeights).reduce((sum, weight) => sum + weight, 0);
-  
-  if (totalWeight === 0) return 0;
-  
-  let weightedSum = 0;
-  
-  // Calculate weighted sum, handling inverse criteria
-  criteriaKeys.forEach(key => {
-    let value = project.criteria[key];
-    const weight = filteredWeights[key] || 0;
-    
-    // For inverse criteria, invert the scale (10 - value + 1)
-    // This makes lower values score higher
-    if (inverseCriteria.includes(key)) {
-      value = 6 - value; // Invert scale: 1->10, 2->9, 3->8, etc.
-    }
-    
-    weightedSum += value * weight;
-  });
-  
-//  return parseFloat((weightedSum / totalWeight).toFixed(2));
-  return weightedSum;
+  // Use the centralized calculator
+  return calculatePreviewScore(project.criteria, mockCriteria);
 };
 
 export const getProjectsByStatus = (status: Project['status']) => {
@@ -295,12 +289,36 @@ export const getTopProjects = (
   weights: Record<string, number> = {},
   inverseCriteria: string[] = []
 ) => {
+  // Create mock criteria array for the calculator
+  const mockCriteria: Criterion[] = [];
+  
+  // For each unique criterion key across all projects
+  const allKeys = new Set<string>();
+  projects.forEach(project => {
+    Object.keys(project.criteria).forEach(key => allKeys.add(key));
+  });
+  
+  // Create mock criteria
+  allKeys.forEach(key => {
+    mockCriteria.push({
+      id: key,
+      key,
+      label: key,
+      description: `Criterion for ${key}`,
+      isInverse: inverseCriteria.includes(key),
+      isDefault: false,
+      weight: weights[key] || 1,
+      scale: { min: 0, max: 10 }
+    });
+  });
+  
   return [...projects]
     .map(project => ({
       ...project,
-      score: calculateOverallScore(project, weights, inverseCriteria)
+      // Use the centralized calculator for consistency
+      score: calculatePreviewScore(project.criteria, mockCriteria)
     }))
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => (b.score || 0) - (a.score || 0))
     .slice(0, count);
 };
 

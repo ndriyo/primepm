@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PageLayout } from '@/components/layout/PageLayout';
-import { CriteriaVersionManagement } from '@/src/components/project-selection/CriteriaVersionManagement';
-import { LoadingWrapper } from '@/components/ui/LoadingWrapper';
-import { SkeletonCriteriaVersion } from '@/components/ui/skeleton';
-import { useCriteria } from '@/src/hooks/useCriteria';
-import { useAuth } from '@/app/contexts/AuthContext';
+import { PageLayout } from '@/app/_components/layout/PageLayout';
+import { CriteriaVersionManagement } from '@/app/criteria/components/CriteriaVersionManagement';
+import { LoadingWrapper } from '@/app/_components/ui/LoadingWrapper';
+import { SkeletonCriteriaVersion } from '@/app/_components/ui/skeleton';
+import { useCriteria } from '@/app/_hooks/useCriteria';
+import { useAuth } from '@/app/_contexts/AuthContext';
 
 export default function CriteriaPage() {
   const { organization } = useAuth();

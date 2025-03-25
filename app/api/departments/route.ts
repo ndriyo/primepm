@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DepartmentRepository } from "@/src/repositories";
+import { DepartmentRepository } from "@/app/_repositories";
 
 const departmentRepo = new DepartmentRepository();
 

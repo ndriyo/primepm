@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PageLayout } from '@/components/layout/PageLayout';
-import ProjectEntryForm from '@/app/components/project-entry/ProjectEntryForm';
-import { LoadingWrapper } from '@/components/ui/LoadingWrapper';
-import { SkeletonProjectForm } from '@/components/ui/skeleton';
+import { PageLayout } from '@/app/_components/layout/PageLayout';
+import ProjectEntryForm from '@/app/projects/new/components/ProjectEntryForm';
+import { LoadingWrapper } from '@/app/_components/ui/LoadingWrapper';
+import { SkeletonProjectForm } from '@/app/_components/ui/skeleton';
 
 export default function NewProjectPage() {
   const [isLoading, setIsLoading] = useState(true);

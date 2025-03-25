@@ -1,7 +1,7 @@
 'use client';
 
-import { PageLayout } from '@/components/layout/PageLayout';
-import { ProjectSelection } from '@/app/components/project-selection/ProjectSelection';
+import { PageLayout } from '@/app/_components/layout/PageLayout';
+import { ProjectSelection } from '@/app/selection/components/ProjectSelection';
 
 export default function ProjectSelectionPage() {
   return (

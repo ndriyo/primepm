@@ -1,8 +1,6 @@
-'use client';
-
 import { useState } from 'react';
-import { PageLayout } from '@/components/layout/PageLayout';
-import { ProjectImportPage } from '@/app/components/project-import/ProjectImportPage';
+import { PageLayout } from '@/app/_components/layout/PageLayout';
+import { ProjectImportPage } from '@/app/projects/import/components/ProjectImportPage';
 
 export default function ImportProjectsPage() {
   return (

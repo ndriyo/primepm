@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CriteriaRepository } from "@/src/repositories/CriteriaRepository";
+import { CriteriaRepository } from "@/app/_repositories/CriteriaRepository";
 
 const criteriaRepo = new CriteriaRepository();
 

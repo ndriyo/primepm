@@ -10,7 +10,7 @@
 ## File Structure Conventions
 - Page components in app/[route]/page.tsx
 - Shared components in components/ directory
-- Feature-specific components in app/components/[feature]/ or src/components/[feature]/
+- Feature-specific components in app/_components/[feature]/ or src/components/[feature]/
 - Data models and utilities in src/data/
 
 ## Naming Conventions

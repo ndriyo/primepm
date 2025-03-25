@@ -1,7 +1,7 @@
 'use client';
 
-import { PageLayout } from '@/components/layout/PageLayout';
-import { Reports } from '@/app/components/reports/Reports';
+import { PageLayout } from '@/app/_components/layout/PageLayout';
+import { Reports } from '@/app/reports/components/Reports';
 
 export default function ReportsPage() {
   return (

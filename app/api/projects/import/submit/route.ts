@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ProjectRepository } from '@/src/repositories/ProjectRepository';
-import { DepartmentRepository } from '@/src/repositories/DepartmentRepository';
-import { CriteriaRepository } from '@/src/repositories/CriteriaRepository';
+import { ProjectRepository } from '@/app/_repositories/ProjectRepository';
+import { DepartmentRepository } from '@/app/_repositories/DepartmentRepository';
+import { CriteriaRepository } from '@/app/_repositories/CriteriaRepository';
 
 // Initialize repositories
 const projectRepo = new ProjectRepository();

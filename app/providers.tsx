@@ -1,9 +1,9 @@
 'use client';
 
-import { CriteriaProvider } from '@/app/contexts/CriteriaContext';
-import { ProjectProvider } from '@/app/contexts/ProjectContext';
-import { AuthProvider } from '@/app/contexts/AuthContext';
-import { DepartmentProvider } from '@/app/contexts/DepartmentContext';
+import { CriteriaProvider } from '@/app/_contexts/CriteriaContext';
+import { ProjectProvider } from '@/app/_contexts/ProjectContext';
+import { AuthProvider } from '@/app/_contexts/AuthContext';
+import { DepartmentProvider } from '@/app/_contexts/DepartmentContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useState } from 'react';

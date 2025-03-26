@@ -9,7 +9,6 @@
   - TopProjects shows global ranking relative to all projects in the portfolio
   - Role-based filtering (PM sees department data, PMO sees organization-wide data)
   - Formatted budget values (K, M, B) for better readability
-  - Database scores with fallback to calculated scores for consistency
   - Tooltips with detailed information on hover for all visualizations
 
 - Fixed department data display in ProjectsTable:
@@ -139,14 +138,13 @@
   - Suspense boundaries for components using useSearchParams()
 
 ## In Progress
-- Full authentication system implementation with NextAuth
 - Committee review interface
+- Portfolio simulation based on constraints
+- Full authentication system implementation with NextAuth
 
 ## Next Steps
 - User role management UI
 - Multi-tenant UI customization
-- Portfolio simulation based on constraints
-- Data export functionality
 
 ## Known Issues
 - Mock authentication is for development only - needs real implementation

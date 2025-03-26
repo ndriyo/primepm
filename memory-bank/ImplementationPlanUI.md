@@ -379,7 +379,7 @@ Criteria:
 - Shows at side of scoring interface on desktop, collapsible on mobile
 
 ### 4. Confirmation Dialog
-
+```
 +-------------------------------------------+
 |              Submit Scores                |
 +-------------------------------------------+
@@ -390,7 +390,7 @@ Criteria:
 +-------------------------------------------+
 |             [Cancel]  [Submit]            |
 +-------------------------------------------+
-
+```
 
 #### Component Details
 

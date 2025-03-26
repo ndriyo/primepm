@@ -4,8 +4,7 @@ This document details the user workflows and process flows for the PrimePM syste
 
 ## General User Workflows
 
-### User Workflows (user_workflows.png)
-![User Workflows](user_workflows.png)
+### User Workflows
 
 ```mermaid
 flowchart TD
@@ -82,7 +81,7 @@ flowchart TD
 
 ## Portfolio Selection Process
 
-### Portfolio Selection Lifecycle (portfolio_lifecycle.png)
+### Portfolio Selection Lifecycle
 
 ```mermaid
 flowchart TD

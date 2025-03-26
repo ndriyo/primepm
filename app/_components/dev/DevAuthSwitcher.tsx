@@ -50,10 +50,8 @@ export default function DevAuthSwitcher() {
     refreshAllData();
   };
   
-  // Only show in development
-  // if (process.env.NODE_ENV === 'production') {
-  //   return null;
-  // }
+  // This component is only included in development builds
+  // No need for runtime environment check
   
   return (
     <div className="fixed bottom-4 right-4 z-50">

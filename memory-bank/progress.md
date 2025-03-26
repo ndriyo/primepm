@@ -9,7 +9,6 @@
   - TopProjects shows global ranking relative to all projects in the portfolio
   - Role-based filtering (PM sees department data, PMO sees organization-wide data)
   - Formatted budget values (K, M, B) for better readability
-  - Database scores with fallback to calculated scores for consistency
   - Tooltips with detailed information on hover for all visualizations
 
 - Fixed department data display in ProjectsTable:
@@ -138,18 +137,30 @@
   - Fixed Prisma client extension parameter typing in $allOperations
   - Suspense boundaries for components using useSearchParams()
 
+- Committee review interface (initial implementation):
+  - API routes for committee sessions, projects, scores, and progress
+  - CommitteeContext provider for state management
+  - Authentication integration with existing user roles
+  - Project scoring workflow with proper data validation
+  - Progress tracking for committee members
+
 ## In Progress
+- Committee review interface (continued development):
+  - Frontend components for committee dashboard
+  - Project list view with filtering and sorting
+  - Scoring interface with card-based selection
+  - Progress visualization for committee members
+  - Score submission and review workflow
+- Portfolio simulation based on constraints
 - Full authentication system implementation with NextAuth
-- Committee review interface
 
 ## Next Steps
 - User role management UI
 - Multi-tenant UI customization
-- Portfolio simulation based on constraints
-- Data export functionality
 
 ## Known Issues
 - Mock authentication is for development only - needs real implementation
 - Project selection algorithm not fully implemented
 - Form data is not persisted if user navigates away
 - Criteria weights need to be recalculated when criteria are added or removed
+- Committee API routes need proper error handling for edge cases

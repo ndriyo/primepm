@@ -41,10 +41,8 @@ export function useCriteriaQuery() {
   
   // Get active version ID from the versions query
   const activeVersionId = versionsQuery.data?.find((v: any) => v.isActive)?.id;
-  // If we don't have active version, try using a default fallback 
-  // This matches CriteriaContext which uses a default version if no active found
-  const defaultVersionId = "88888888-8888-8888-8888-888888888888"; // Common ID in the logs
-  const effectiveVersionId = activeVersionId || defaultVersionId;
+  // Only use the active version ID, no default fallback
+  const effectiveVersionId = activeVersionId;
   
   // Fetch criteria for the active version
   const criteriaQuery = useQuery({
@@ -78,7 +76,7 @@ export function useCriteriaQuery() {
         scale: criterion.scale || { min: 1, max: 5 }
       }));
     },
-    enabled: !!user && (!!activeVersionId || !!defaultVersionId),
+    enabled: !!user && !!activeVersionId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2 // Add retry capability for better reliability
   });

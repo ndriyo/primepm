@@ -14,7 +14,8 @@ import {
   PlusCircleIcon,
   XMarkIcon,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  UserGroupIcon
 } from '@heroicons/react/24/outline';
 import { useSidebar } from '@/app/_contexts/SidebarContext';
 
@@ -26,8 +27,8 @@ interface NavItem {
 
 const navigation: NavItem[] = [
   { name: 'Dashboard', path: '/', icon: HomeIcon },
-  { name: 'Project Selection', path: '/selection', icon: ViewColumnsIcon },
   { name: 'Project Information', path: '/details', icon: DocumentTextIcon },
+  { name: 'Committee', path: '/committee', icon: UserGroupIcon },
   { name: 'Criteria Management', path: '/criteria', icon: AdjustmentsHorizontalIcon },
   { name: 'Reports', path: '/reports', icon: ChartPieIcon },
 ];

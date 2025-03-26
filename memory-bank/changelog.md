@@ -11,6 +11,12 @@ This file documents the changes made to the PrimePM application.
   - Integrated with existing authentication system
   - Implemented project scoring workflow with validation
   - Added progress tracking for committee members
+- Custom 404 page (not-found.tsx) with proper Suspense boundary
+- DevAuthSwitcher component to the root layout:
+  - Provides a convenient UI for switching between users and organizations during development
+  - Fixed in the bottom-right corner of the screen
+  - Includes user role information and organization selection
+  - Properly placed inside Providers to access AuthProvider context
 
 ### Changed
 - Updated database schema with committee-related tables:
@@ -18,6 +24,25 @@ This file documents the changes made to the PrimePM application.
   - Enhanced CommitteeScore model with status field
   - Added relationships between projects, sessions, and scores
   - Created migration script for database updates
+
+### Fixed
+- Resolved issue with committee API endpoints being called on unrelated pages:
+  - Moved CommitteeProvider from root layout to committee-specific layout
+  - Created a dedicated layout.tsx in the committee directory
+  - Removed redundant CommitteeProvider from committee/project/[projectId]/page.tsx
+  - This prevents unnecessary API calls when navigating to non-committee pages
+- Fixed Next.js build error related to useSearchParams() and Suspense boundaries:
+  - Created a custom not-found.tsx page with proper Suspense boundary
+  - Added Suspense boundaries around components using useSearchParams() in:
+    - Root layout.tsx for ProjectSearchProvider
+    - Committee layout.tsx for CommitteeProvider
+    - Projects/new/page.tsx for ProjectEntryForm
+  - This resolves the "useSearchParams() should be wrapped in a suspense boundary" error
+- Fixed issue with criteria API endpoints being called with hardcoded default IDs:
+  - Removed hardcoded default version ID (88888888-8888-8888-8888-888888888888) from CriteriaContext
+  - Updated useCriteriaQuery hook to only use actual version IDs from the database
+  - Replaced defaultCriteria with dynamically generated sample criteria when needed
+  - This prevents unnecessary API calls to non-existent criteria versions
 
 ## 2025-03-25
 ### Added

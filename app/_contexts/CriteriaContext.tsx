@@ -81,24 +81,15 @@ interface CriteriaContextType {
   refreshCriteria: () => Promise<void>;
 }
 
-// Default criteria
-const defaultCriteria: Criterion[] = [
-  { id: 'c1', key: 'revenue', label: 'Revenue Impact', description: 'Potential revenue generation or savings', isInverse: false, isDefault: true },
-  { id: 'c2', key: 'policyImpact', label: 'Policy Impact', description: 'Impact on organizational policies and strategies', isInverse: false, isDefault: true },
-  { id: 'c3', key: 'budget', label: 'Budget', description: 'Required financial investment', isInverse: true, isDefault: true },
-  { id: 'c4', key: 'resources', label: 'Resources', description: 'Required human and other resources', isInverse: true, isDefault: true },
-  { id: 'c5', key: 'complexity', label: 'Complexity', description: 'Technical and implementation complexity', isInverse: true, isDefault: true },
+// Sample criteria structure for type checking and documentation
+// These are not used as defaults anymore - we only use data from the database
+const sampleCriteria: Criterion[] = [
+  { id: '', key: 'revenue', label: 'Revenue Impact', description: 'Potential revenue generation or savings', isInverse: false, isDefault: true },
+  { id: '', key: 'policyImpact', label: 'Policy Impact', description: 'Impact on organizational policies and strategies', isInverse: false, isDefault: true },
+  { id: '', key: 'budget', label: 'Budget', description: 'Required financial investment', isInverse: true, isDefault: true },
+  { id: '', key: 'resources', label: 'Resources', description: 'Required human and other resources', isInverse: true, isDefault: true },
+  { id: '', key: 'complexity', label: 'Complexity', description: 'Technical and implementation complexity', isInverse: true, isDefault: true },
 ];
-
-// Default version
-const defaultVersion: CriteriaVersion = {
-  id: '88888888-8888-8888-8888-888888888888', // Using the ID seen in logs
-  name: 'Default Version',
-  description: 'Default criteria version',
-  isActive: true,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-};
 
 const CriteriaContext = createContext<CriteriaContextType | undefined>(undefined);
 
@@ -106,11 +97,9 @@ export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
   const { user, organization } = useAuth();
   const queryClient = useQueryClient();
   
-  const [criteria, setCriteria] = useState<Criterion[]>(defaultCriteria);
-  const [versions, setVersions] = useState<CriteriaVersion[]>([defaultVersion]);
-  const [criteriaByVersion, setCriteriaByVersion] = useState<Record<string, Criterion[]>>({
-    [defaultVersion.id]: [...defaultCriteria]
-  });
+  const [criteria, setCriteria] = useState<Criterion[]>([]);
+  const [versions, setVersions] = useState<CriteriaVersion[]>([]);
+  const [criteriaByVersion, setCriteriaByVersion] = useState<Record<string, Criterion[]>>({});
 
   // Helper functions
   const generateId = (prefix: string = 'c'): string => {
@@ -127,7 +116,7 @@ export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
     queryKey: ['criteria-versions', organization?.id],
     queryFn: async () => {
       if (!organization || !user) {
-        return [defaultVersion];
+        return [];
       }
       
       // Include RLS headers for proper data filtering
@@ -184,7 +173,7 @@ export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
     queryKey: ['criteria', activeVersion?.id],
     queryFn: async () => {
       if (!organization || !user || !activeVersion) {
-        return defaultCriteria;
+        return [];
       }
       
       const headers: HeadersInit = {
@@ -251,7 +240,11 @@ export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
 
   // Legacy functions for backward compatibility
   const getDefaultCriteria = (): Criterion[] => {
-    return defaultCriteria;
+    // Return a copy of the sample criteria with generated IDs
+    return sampleCriteria.map(criterion => ({
+      ...criterion,
+      id: generateId(),
+    }));
   };
 
   const addCriterion = (criterion: Omit<Criterion, 'id' | 'isDefault'>) => {
@@ -306,6 +299,7 @@ export const CriteriaProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resetToDefaultCriteria = () => {
+    const defaultCriteria = getDefaultCriteria();
     setCriteria(defaultCriteria);
     
     // Reset active version if it exists

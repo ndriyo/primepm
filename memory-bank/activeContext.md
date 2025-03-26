@@ -8,6 +8,32 @@
 - Implementing project entry and self-assessment for Project Managers/Sponsors
 
 ## Recent Changes
+- Fixed issue with committee API endpoints being called on unrelated pages:
+  - Moved CommitteeProvider from root layout to committee-specific layout
+  - Created a dedicated layout.tsx in the committee directory
+  - Removed redundant CommitteeProvider from committee/project/[projectId]/page.tsx
+  - This prevents unnecessary API calls when navigating to non-committee pages
+
+- Fixed Next.js build error related to useSearchParams() and Suspense boundaries:
+  - Created a custom not-found.tsx page with proper Suspense boundary
+  - Added Suspense boundaries around components using useSearchParams() in:
+    - Root layout.tsx for ProjectSearchProvider
+    - Committee layout.tsx for CommitteeProvider
+    - Projects/new/page.tsx for ProjectEntryForm
+  - This resolves the "useSearchParams() should be wrapped in a suspense boundary" error
+
+- Added DevAuthSwitcher component to the application:
+  - Imported and added DevAuthSwitcher to the root layout.tsx inside the Providers component
+  - Removed environment checks to avoid TypeScript errors
+  - Fixed issue with AuthProvider context access
+  - This provides a convenient way to switch between users and organizations during development
+
+- Fixed issue with criteria API endpoints being called with hardcoded default IDs:
+  - Removed hardcoded default version ID (88888888-8888-8888-8888-888888888888) from CriteriaContext
+  - Updated useCriteriaQuery hook to only use actual version IDs from the database
+  - Replaced defaultCriteria with dynamically generated sample criteria when needed
+  - This prevents unnecessary API calls to non-existent criteria versions
+
 - Implemented initial Committee Review interface:
   - Created CommitteeContext provider for state management
   - Implemented API routes for committee sessions, projects, scores, and progress

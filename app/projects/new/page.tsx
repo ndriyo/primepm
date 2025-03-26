@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { PageLayout } from '@/app/_components/layout/PageLayout';
 import ProjectEntryForm from '@/app/projects/new/components/ProjectEntryForm';
 import { LoadingWrapper } from '@/app/_components/ui/LoadingWrapper';
@@ -23,12 +23,14 @@ export default function NewProjectPage() {
   return (
     <PageLayout>
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow p-6">
-        <LoadingWrapper
-          isLoading={isLoading}
-          skeleton={<SkeletonProjectForm />}
-        >
-          <ProjectEntryForm />
-        </LoadingWrapper>
+        <Suspense fallback={<SkeletonProjectForm />}>
+          <LoadingWrapper
+            isLoading={isLoading}
+            skeleton={<SkeletonProjectForm />}
+          >
+            <ProjectEntryForm />
+          </LoadingWrapper>
+        </Suspense>
       </div>
     </PageLayout>
   );

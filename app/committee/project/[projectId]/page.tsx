@@ -2,7 +2,7 @@
 
 import React, { Suspense, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { CommitteeProvider, useCommittee } from '@/app/_contexts/CommitteeContext';
+import { useCommittee } from '@/app/_contexts/CommitteeContext';
 import { PageLayout } from '@/app/_components/layout/PageLayout';
 import { ProjectScoring } from '@/app/committee/_components/ProjectScoring';
 import { LoadingWrapper } from '@/app/_components/ui/LoadingWrapper';
@@ -103,15 +103,13 @@ const ProjectScoringWrapper: React.FC = () => {
  * ProjectPage Component
  * 
  * This is the main entry point for the project scoring page.
- * It provides the CommitteeProvider context and renders the ProjectScoringWrapper.
+ * The CommitteeProvider is now provided by the committee layout.
  */
 export default function ProjectPage() {
   return (
     <PageLayout>
       <Suspense fallback={<LoadingWrapper isLoading={true} skeleton={<SkeletonProjectForm />}><div /></LoadingWrapper>}>
-        <CommitteeProvider>
-          <ProjectScoringWrapper />
-        </CommitteeProvider>
+        <ProjectScoringWrapper />
       </Suspense>
     </PageLayout>
   );

@@ -2,6 +2,23 @@
 
 This file documents the changes made to the PrimePM application.
 
+## 2025-03-26
+### Added
+- Committee review interface (initial implementation):
+  - Created CommitteeContext provider for state management
+  - Implemented API routes for committee sessions, projects, scores, and progress
+  - Added CommitteeRepository for database operations
+  - Integrated with existing authentication system
+  - Implemented project scoring workflow with validation
+  - Added progress tracking for committee members
+
+### Changed
+- Updated database schema with committee-related tables:
+  - Added CommitteeReviewSession model
+  - Enhanced CommitteeScore model with status field
+  - Added relationships between projects, sessions, and scores
+  - Created migration script for database updates
+
 ## 2025-03-25
 ### Added
 - New animated UI components:

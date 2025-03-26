@@ -1,12 +1,22 @@
 # Active Development Context
 
 ## Current Focus
-- Implementing the core project selection and portfolio prioritization features
+- Implementing the Committee Review interface for portfolio selection process
+- Enhancing the project selection and portfolio prioritization features
 - Building out the dashboard and project selection interfaces
 - Setting up the basic application structure with Next.js
 - Implementing project entry and self-assessment for Project Managers/Sponsors
 
 ## Recent Changes
+- Implemented initial Committee Review interface:
+  - Created CommitteeContext provider for state management
+  - Implemented API routes for committee sessions, projects, scores, and progress
+  - Added CommitteeRepository for database operations
+  - Integrated with existing authentication system
+  - Implemented project scoring workflow with validation
+  - Added progress tracking for committee members
+  - Updated database schema with committee-related tables
+
 - Enhanced dashboard with new Bento-style metrics view:
   - Created reusable AnimatedGradient component with SVG circle-based animations
   - Implemented BentoCard component with framer-motion animations
@@ -105,8 +115,16 @@
 - Using React Query for server state management
 - Implementing the Repository pattern for data access with standardized CRUD operations
 - Using adapter pattern to bridge backend and frontend models
+- Implementing card-based scoring interfaces for both self-assessment and committee review
 
 ## Recent Progress
+- Implemented initial Committee Review interface:
+  - Created API routes for committee sessions, projects, scores, and progress
+  - Developed CommitteeRepository for database operations
+  - Added CommitteeContext provider for state management
+  - Integrated with existing authentication system
+  - Implemented project scoring workflow with validation
+  - Added progress tracking for committee members
 - Implemented a mock authentication system for development purposes:
   - Created AuthContext with mock users and organizations
   - Added authentication headers to API requests
@@ -132,9 +150,14 @@
   - Added missing Suspense boundaries around components using `useSearchParams()` hook to prevent CSR bailout errors
 
 ## Next Steps
-- Complete the real authentication implementation with NextAuth
-- Implement committee review interface for submitted projects
+- Complete the Committee Review interface frontend components:
+  - Implement CommitteeDashboard component
+  - Create ProjectList component for committee members
+  - Develop ProjectScoring interface with card-based selection
+  - Implement ScoringProgress component for tracking
+  - Create ConfirmationDialog for score submission
 - Implement portfolio simulation based on constraints
+- Complete the real authentication implementation with NextAuth
 - Further enhance multi-tenant functionality
 - Add data visualization for project comparisons
 - Implement additional batch operations for multiple projects

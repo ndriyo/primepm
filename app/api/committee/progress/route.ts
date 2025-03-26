@@ -33,12 +33,12 @@ export async function GET(
     
     // Get scoring progress
     const progress = await repository.getScoringProgress(
-      userId,
+      userId || 'anonymous',
       sessionId,
-      userId,
+      userId || 'anonymous',
       userRole,
-      departmentId,
-      organizationId
+      departmentId || undefined,
+      organizationId || undefined
     );
     
     return NextResponse.json(progress);

@@ -137,8 +137,20 @@
   - Fixed Prisma client extension parameter typing in $allOperations
   - Suspense boundaries for components using useSearchParams()
 
+- Committee review interface (initial implementation):
+  - API routes for committee sessions, projects, scores, and progress
+  - CommitteeContext provider for state management
+  - Authentication integration with existing user roles
+  - Project scoring workflow with proper data validation
+  - Progress tracking for committee members
+
 ## In Progress
-- Committee review interface
+- Committee review interface (continued development):
+  - Frontend components for committee dashboard
+  - Project list view with filtering and sorting
+  - Scoring interface with card-based selection
+  - Progress visualization for committee members
+  - Score submission and review workflow
 - Portfolio simulation based on constraints
 - Full authentication system implementation with NextAuth
 
@@ -151,3 +163,4 @@
 - Project selection algorithm not fully implemented
 - Form data is not persisted if user navigates away
 - Criteria weights need to be recalculated when criteria are added or removed
+- Committee API routes need proper error handling for edge cases

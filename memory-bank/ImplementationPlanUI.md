@@ -346,23 +346,20 @@ This document outlines the detailed UI design plan for the Committee Review inte
 - Confirmation dialog before final submission
 
 ### 3. Scoring Progress Tracker
+# Scoring Progress Tracker
 
-```mermaid
-graph TD
-    subgraph "Scoring Progress Tracker"
-        subgraph "Progress Bar"
-            Bar["Overall Progress: 75%"]
-        end
-        
-        subgraph "Criterion List"
-            C1["✓ Strategic Alignment"]
-            C2["✓ Financial Impact"]
-            C3["✓ Technical Feasibility"]
-            C4["⟳ Resource Availability"]
-            C5["○ Risk Assessment"]
-        end
-    end
-```
+----------------------------
+|  Overall Progress: 75%   |
+|  [██████████░░░░░░░░░░]   |
+----------------------------
+
+Criteria:
+[✓] Strategic Alignment  
+[✓] Financial Impact  
+[✓] Technical Feasibility  
+[⟳] Resource Availability  
+[○] Risk Assessment  
+
 
 #### Component Details
 
@@ -382,16 +379,17 @@ graph TD
 
 ### 4. Confirmation Dialog
 
-```mermaid
-graph TD
-    subgraph "Confirmation Dialog"
-        Title["Submit Scores"]
-        Message["You've completed scoring for 'Enterprise Data Warehouse'.
-        Once submitted, scores cannot be changed."]
-        
-        Actions["Cancel | Submit"]
-    end
-```
++-------------------------------------------+
+|              Submit Scores                |
++-------------------------------------------+
+| You've completed scoring for              |
+| 'Enterprise Data Warehouse'.              |
+|                                           |
+| Once submitted, scores cannot be changed. |
++-------------------------------------------+
+|             [Cancel]  [Submit]            |
++-------------------------------------------+
+
 
 #### Component Details
 

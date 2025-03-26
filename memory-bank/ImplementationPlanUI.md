@@ -360,7 +360,7 @@ Criteria:
 [✓] Technical Feasibility  
 [⟳] Resource Availability  
 [○] Risk Assessment  
-
+```
 
 #### Component Details
 

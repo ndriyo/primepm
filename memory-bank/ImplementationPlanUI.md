@@ -346,6 +346,7 @@ This document outlines the detailed UI design plan for the Committee Review inte
 - Confirmation dialog before final submission
 
 ### 3. Scoring Progress Tracker
+```
 # Scoring Progress Tracker
 
 ----------------------------

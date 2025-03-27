@@ -30,12 +30,18 @@ const MOCK_DEPARTMENTS: MockDepartment[] = [
   { id: '55555555-5555-5555-5555-555555555555', name: 'Operations', organizationId: '11111111-1111-1111-1111-111111111111' },
   { id: '66666666-6666-6666-6666-666666666666', name: 'Engineering', organizationId: '22222222-2222-2222-2222-222222222222' },
   { id: '77777777-7777-7777-7777-777777777777', name: 'Product', organizationId: '22222222-2222-2222-2222-222222222222' },
+  { id: '441877f5-5cd0-451d-a40c-d5c99b7ba7bc', name: 'Information Technology', organizationId: 'a132be75-295a-4db7-a146-fa19631cfee7'},
+  { id: '5821f483-77ff-4e77-8098-3f8d95fe3f3f', name: 'Marketing and Communications', organizationId: 'a132be75-295a-4db7-a146-fa19631cfee7'},
+  { id: 'df6b227b-b142-474f-8129-0ee90c3da200', name: 'Business Operations', organizationId: 'a132be75-295a-4db7-a146-fa19631cfee7'},
+  { id: 'c8b62fc6-11a9-461d-aab4-ce17e21c51a5', name: 'Infrastructure Department', organizationId: 'a132be75-295a-4db7-a146-fa19631cfee7'},
+  { id: 'e3d9f9f1-a5a8-4af9-87a6-2fe881fcadb6', name: 'Research & Development', organizationId: 'a132be75-295a-4db7-a146-fa19631cfee7'}  
 ];
 
 // Sample mock data
 const MOCK_ORGANIZATIONS: MockOrganization[] = [
   { id: '11111111-1111-1111-1111-111111111111', name: 'Acme Corporation' },
   { id: '22222222-2222-2222-2222-222222222222', name: 'TechInnovate' },
+  { id: 'a132be75-295a-4db7-a146-fa19631cfee7', name: 'PrimePM' },
   // Add more as needed
 ];
 
@@ -102,6 +108,22 @@ const MOCK_USERS: MockUser[] = [
     email: 'product@techinnovate.com',
     organizationId: '22222222-2222-2222-2222-222222222222',
     departmentId: '77777777-7777-7777-7777-777777777777',
+    role: 'projectManager'
+  },
+  {
+    id: '2f734529-4c00-451a-8274-7df4d1d2c982',
+    name: 'Mohammad Ichsan - PMO',
+    email: 'mohammad.ichsan@binus.ac.id',
+    organizationId: 'a132be75-295a-4db7-a146-fa19631cfee7',
+    departmentId: 'df6b227b-b142-474f-8129-0ee90c3da200',
+    role: 'pmo'
+  },
+  {
+    id: '1cf8ed7a-fe1c-458d-ae81-d8b77b53a155',
+    name: 'Athar Januar - PM',
+    email: 'athar.januar@gmail.com',
+    organizationId: 'a132be75-295a-4db7-a146-fa19631cfee7',
+    departmentId: '441877f5-5cd0-451d-a40c-d5c99b7ba7bc',
     role: 'projectManager'
   }
 ];

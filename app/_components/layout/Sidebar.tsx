@@ -58,7 +58,7 @@ export const Sidebar = () => {
           <Image
             src="https://zwweamxsxemiefdlkgzn.supabase.co/storage/v1/object/public/asset/logo_transparent.png"
             alt="PrimePM Logo"
-            width={32}
+            width={128}
             height={32}
             className="h-8 w-auto mr-2"
             priority

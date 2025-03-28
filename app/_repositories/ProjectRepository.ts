@@ -322,10 +322,12 @@ export class ProjectRepository extends BaseRepository<
     const prismaWithRLS = this.getPrismaWithContext(organizationId, userId, userRole, departmentId);
 
     // Update the project
+    const updateStartTime = Date.now();
     const result = await prismaWithRLS.project.update({
       where: { id },
       data: updateData
     });
+    console.log(`Project update to database in ${Date.now() - updateStartTime}ms`);
 
     // Create audit log entry
     await prismaWithRLS.auditLog.create({

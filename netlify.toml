@@ -5,5 +5,10 @@
 [build.environment]
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
 
+[functions]
+  node_bundler = "esbuild"
+  # Increase timeout from default 10s to 30s
+  timeout = 30
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"

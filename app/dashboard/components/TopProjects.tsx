@@ -1,16 +1,24 @@
+'use client';
+
 import { useProjects, Project } from '@/app/_contexts/ProjectContext';
 import { useAuth } from '@/app/_contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { LoadingWrapper } from '@/app/_components/ui/LoadingWrapper';
 import { SkeletonTable } from '@/app/_components/ui/skeleton';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export const TopProjects = () => {
-  const { projects, weightSettings, setSelectedProject, getProjectScore, loading } = useProjects();
+  const { projects, weightSettings, setSelectedProject, getProjectScore, loading: projectsLoading } = useProjects();
   const { user } = useAuth();
   const router = useRouter();
   const [page, setPage] = useState(1);
   const projectsPerPage = 10;
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Set isMounted to true after initial render
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   
   // Filter projects based on user role
   const filteredProjects = user?.role === 'projectManager' && user?.departmentId
@@ -64,10 +72,10 @@ export const TopProjects = () => {
   return (
     <div className="card overflow-hidden">
       <h3 className="text-lg font-medium text-gray-900 mb-4">Projects Ranked by Score</h3>
-      <LoadingWrapper
-        isLoading={loading}
-        skeleton={<SkeletonTable rows={10} columns={4} className="mt-4" showHeader={true} />}
-      >
+      {/* Use consistent initial rendering */}
+      {!isMounted || projectsLoading ? (
+        <SkeletonTable rows={10} columns={4} className="mt-4" showHeader={true} />
+      ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -224,7 +232,7 @@ export const TopProjects = () => {
             </div>
           )}
         </div>
-      </LoadingWrapper>
+      )}
     </div>
   );
 };

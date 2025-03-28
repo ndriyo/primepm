@@ -1,10 +1,19 @@
+'use client';
+
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ZAxis } from 'recharts';
 import { useProjects } from '@/app/_contexts/ProjectContext';
 import { LoadingWrapper } from '@/app/_components/ui/LoadingWrapper';
 import { SkeletonChart } from '@/app/_components/ui/skeleton';
+import { useState, useEffect } from 'react';
 
 export const RiskQuadrantChart = () => {
-  const { projects, loading } = useProjects();
+  const { projects, loading: projectsLoading } = useProjects();
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Set isMounted to true after initial render
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   
   // Generate risk data based on project criteria
   // Using revenue impact as a proxy for impact and complexity as a proxy for probability
@@ -42,10 +51,10 @@ export const RiskQuadrantChart = () => {
   return (
     <div className="card h-[300px]">
       <h3 className="text-lg font-medium text-gray-900 mb-2">Risk Assessment</h3>
-      <LoadingWrapper
-        isLoading={loading}
-        skeleton={<SkeletonChart height="220px" />}
-      >
+      {/* Use consistent initial rendering */}
+      {!isMounted || projectsLoading ? (
+        <SkeletonChart height="220px" />
+      ) : (
         <div className="h-[85%]">
           <ResponsiveContainer width="100%" height="100%">
             <ScatterChart
@@ -96,7 +105,7 @@ export const RiskQuadrantChart = () => {
             </ScatterChart>
           </ResponsiveContainer>
         </div>
-      </LoadingWrapper>
+      )}
     </div>
   );
 };

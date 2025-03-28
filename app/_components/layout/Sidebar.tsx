@@ -60,7 +60,7 @@ export const Sidebar = () => {
             alt="PrimePM Logo"
             width={128}
             height={32}
-            className="h-8 w-auto mr-2"
+            className="h-32 w-auto mr-2"
             priority
           />
         </div>

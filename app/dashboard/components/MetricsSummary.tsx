@@ -8,10 +8,16 @@ import { useEffect, useState } from 'react';
 import { PortfolioSelection } from '@/app/_repositories/PortfolioRepository';
 
 export const MetricsSummary = () => {
-  const { projects, loading } = useProjects();
+  const { projects, loading: projectsLoading } = useProjects();
   const { user } = useAuth();
   const [activePortfolio, setActivePortfolio] = useState<PortfolioSelection | null>(null);
   const [portfolioLoading, setPortfolioLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Set isMounted to true after initial render
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Filter projects based on user role
   const filteredProjects = user?.role === 'projectManager' && user?.departmentId
@@ -128,37 +134,37 @@ export const MetricsSummary = () => {
 
 
   return (
-    <LoadingWrapper
-      isLoading={loading || portfolioLoading}
-      skeleton={
+    <>
+      {/* Use consistent initial rendering */}
+      {!isMounted || projectsLoading || portfolioLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {[...Array(5)].map((_, i) => (
             <SkeletonCard key={i} />
           ))}
         </div>
-      }
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {metrics.map((metric, index) => (
-          <div 
-            key={index}
-            className="relative overflow-hidden rounded-lg bg-gradient-to-br shadow-md p-6"
-            style={{
-              backgroundImage: `linear-gradient(to bottom right, ${metric.gradientColors[0]}, ${metric.gradientColors[1]})`
-            }}
-          >
-            <div className="flex items-center">
-              <div className="bg-white/20 text-white p-3 rounded-lg mr-4">
-                {metric.icon}
-              </div>
-              <div>
-                <p className="text-white text-sm font-medium">{metric.label}</p>
-                <p className="text-2xl font-bold text-white">{metric.value}</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {metrics.map((metric, index) => (
+            <div 
+              key={index}
+              className="relative overflow-hidden rounded-lg bg-gradient-to-br shadow-md p-6"
+              style={{
+                backgroundImage: `linear-gradient(to bottom right, ${metric.gradientColors[0]}, ${metric.gradientColors[1]})`
+              }}
+            >
+              <div className="flex items-center">
+                <div className="bg-white/20 text-white p-3 rounded-lg mr-4">
+                  {metric.icon}
+                </div>
+                <div>
+                  <p className="text-white text-sm font-medium">{metric.label}</p>
+                  <p className="text-2xl font-bold text-white">{metric.value}</p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-    </LoadingWrapper>
+          ))}
+        </div>
+      )}
+    </>
   );
 };

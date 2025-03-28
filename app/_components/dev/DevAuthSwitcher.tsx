@@ -21,8 +21,8 @@ export default function DevAuthSwitcher() {
   
   // Custom login handler that also refreshes all data
   const handleLogin = (userId: string) => {
-    // Store the user ID in localStorage to persist through reload
-    localStorage.setItem('lastSelectedUserId', userId);
+    // Store the user ID in localStorage to persist through reload, dont use this
+    //localStorage.setItem('lastSelectedUserId', userId);
     
     // Login 
     login(userId);
@@ -33,8 +33,8 @@ export default function DevAuthSwitcher() {
   
   // Custom organization switch handler
   const handleOrgSwitch = (orgId: string) => {
-    // Store the org ID in localStorage to persist through reload
-    localStorage.setItem('lastSelectedOrgId', orgId);
+    // Store the org ID in localStorage to persist through reload, dont use this
+    //localStorage.setItem('lastSelectedOrgId', orgId);
     
     // Switch organization
     switchOrganization(orgId);

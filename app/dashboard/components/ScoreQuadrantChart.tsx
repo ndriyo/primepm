@@ -1,13 +1,22 @@
+'use client';
+
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ZAxis, Cell } from 'recharts';
 import { useProjects } from '@/app/_contexts/ProjectContext';
 import { useAuth } from '@/app/_contexts/AuthContext';
 import { LoadingWrapper } from '@/app/_components/ui/LoadingWrapper';
 import { SkeletonChart } from '@/app/_components/ui/skeleton';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 export const ScoreQuadrantChart = () => {
-  const { projects, getProjectScore, loading } = useProjects();
+  const { projects, getProjectScore, loading: projectsLoading } = useProjects();
   const { user } = useAuth();
+  
+  // Add client-side only state to control rendering
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   
   // Define types for our chart data
   type ProjectDataPoint = {
@@ -100,10 +109,10 @@ export const ScoreQuadrantChart = () => {
   return (
     <div className="card h-[300px]">
       <h3 className="text-lg font-medium text-gray-900 mb-2">{chartTitle}</h3>
-      <LoadingWrapper
-        isLoading={loading}
-        skeleton={<SkeletonChart height="220px" />}
-      >
+      {/* Use consistent initial rendering */}
+      {!isMounted || projectsLoading ? (
+        <SkeletonChart height="220px" />
+      ) : (
         <div className="h-[85%]">
           <ResponsiveContainer width="100%" height="100%">
             <ScatterChart
@@ -194,7 +203,7 @@ export const ScoreQuadrantChart = () => {
             </ScatterChart>
           </ResponsiveContainer>
         </div>
-      </LoadingWrapper>
+      )}
     </div>
   );
 };

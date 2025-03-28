@@ -147,21 +147,21 @@ export async function PATCH(
     }
     
     // Check for active criteria version before proceeding
-    console.log("Checking for active criteria version");
-    try {
-      await getActiveCriteriaVersionId(organizationId);
-      console.log("Active criteria version found");
-    } catch (error) {
-      console.log(`No active criteria version found for org: ${organizationId}`);
-      return NextResponse.json(
-        { 
-          error: "No active criteria version found", 
-          code: "NO_ACTIVE_CRITERIA",
-          message: "Your organization doesn't have an active criteria version. Please set one up before updating a project."
-        }, 
-        { status: 400 }
-      );
-    }
+    // console.log("Checking for active criteria version");
+    // try {
+    //   await getActiveCriteriaVersionId(organizationId);
+    //   console.log("Active criteria version found");
+    // } catch (error) {
+    //   console.log(`No active criteria version found for org: ${organizationId}`);
+    //   return NextResponse.json(
+    //     { 
+    //       error: "No active criteria version found", 
+    //       code: "NO_ACTIVE_CRITERIA",
+    //       message: "Your organization doesn't have an active criteria version. Please set one up before updating a project."
+    //     }, 
+    //     { status: 400 }
+    //   );
+    // }
     
     // Extract criteriaScores to handle separately
     const { criteriaScores, ...projectFields } = data;

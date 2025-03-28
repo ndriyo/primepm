@@ -193,6 +193,25 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Check for active criteria version BEFORE processing project creation
+    try {
+      const activeVersion = await criteriaRepo.findActiveVersion(organizationId);
+      if (!activeVersion) {
+        return NextResponse.json({
+          error: "No active criteria version found",
+          code: "NO_ACTIVE_CRITERIA",
+          message: "Your organization doesn't have an active criteria version. Please set one up before creating a project."
+        }, { status: 400 });
+      }
+    } catch (criteriaError) {
+      console.error("Error checking criteria version:", criteriaError);
+      return NextResponse.json({
+        error: "Failed to verify criteria version",
+        code: "CRITERIA_CHECK_FAILED",
+        message: "Could not verify if an active criteria version exists. Try again later."
+      }, { status: 500 });
+    }
+    
     const data = await request.json();
     
     // Validate required fields

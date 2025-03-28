@@ -1,14 +1,43 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DocumentArrowDownIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/app/_contexts/AuthContext';
 
 export function ImportInstructions() {
-  const [isDownloading, setIsDownloading] = useState(false);
   const { user, organization } = useAuth();
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [hasActiveVersion, setHasActiveVersion] = useState<boolean>(true);
+  
+  useEffect(() => {
+    async function checkActiveVersion() {
+      if (!organization?.id || !user?.id) return;
+      
+      try {
+        const response = await fetch(`/api/criteria/versions/active`, {
+          headers: {
+            'x-organization-id': organization.id,
+            'x-user-id': user.id,
+            'x-user-role': user.role || '',
+          }
+        });
+        
+        setHasActiveVersion(response.ok);
+      } catch (error) {
+        console.error('Error checking active criteria version:', error);
+        setHasActiveVersion(false);
+      }
+    }
+    
+    checkActiveVersion();
+  }, [organization, user]);
   
   const handleDownloadTemplate = async () => {
+    if (!hasActiveVersion) {
+      alert('Cannot download template: No active criteria version found. Please set up criteria first.');
+      return;
+    }
+    
     setIsDownloading(true);
     
     try {
@@ -74,7 +103,7 @@ export function ImportInstructions() {
       
       <button
         onClick={handleDownloadTemplate}
-        disabled={isDownloading}
+        disabled={isDownloading || !hasActiveVersion}
         className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
       >
         <DocumentArrowDownIcon className="mr-2 h-5 w-5" />

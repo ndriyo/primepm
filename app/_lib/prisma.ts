@@ -34,41 +34,55 @@ export function getPrismaWithRLS(organizationId?: string, userId?: string, userR
       }) {
         const { args, query, model, operation } = params;
         
-        // Only apply RLS to specific models and operations
+        // Determine if the operation supports a 'where' clause.
+        const isFilterableOperation = 
+          operation.startsWith('find') || 
+          operation === 'update' || 
+          operation === 'delete' || 
+          operation === 'count';
+        
+        // Only apply RLS to the 'project' model
         if (model && ['project', 'Project'].includes(model)) {
-          // Clone the args to avoid mutating the original
-          const newArgs = { ...args };
-          
-          // If where clause doesn't exist, create it
-          if (!newArgs.where) {
-            newArgs.where = {};
+          if (isFilterableOperation) {
+            // Clone the args to avoid mutating the original
+            const newArgs = { ...args };
+            
+            // If where clause doesn't exist, create it
+            if (!newArgs.where) {
+              newArgs.where = {};
+            }
+            
+            // Always filter by organization for filterable operations
+            if (organizationId) {
+              newArgs.where.organizationId = organizationId;
+            }
+            
+            // For Project Managers, filter by department (for find operations)
+            if (userRole === 'projectManager' && departmentId && operation.includes('find')) {
+              newArgs.where.departmentId = departmentId;
+            }
+            
+            return query(newArgs);
+          } else {
+            // For non-filterable operations (like create), pass through the original args
+            return query(args);
           }
-          
-          // Always filter by organization
-          if (organizationId) {
-            newArgs.where.organizationId = organizationId;
-          }
-          
-          // For Project Managers, filter by department
-          if (userRole === 'projectManager' && departmentId && operation.includes('find')) {
-            newArgs.where.departmentId = departmentId;
-          }
-          
-          // Execute the query with the modified args
-          return query(newArgs);
         }
         
-        // For other models, just ensure organization filtering
-        if (model && args && args.where && organizationId) {
+        // For other models, apply organization filtering only for filterable operations
+        if (model && args && isFilterableOperation && organizationId) {
           const newArgs = { ...args };
           if (!newArgs.where) {
             newArgs.where = {};
           }
           
-          // Only add organizationId if the model has this field
-          const hasOrgField = ['organization', 'department', 'user', 'project', 'criteriaVersion', 'portfolioSelection']
-            .some(name => model.toLowerCase().includes(name.toLowerCase()));
-            
+          // Check if the model should have organizationId filtering
+          // Exclude projectCriteriaScore which doesn't have an organizationId field
+          const hasOrgField = 
+            model.toLowerCase() !== 'projectcriteriascore' && 
+            ['organization', 'department', 'user', 'project', 'criteriaVersion', 'portfolioSelection']
+              .some(name => model.toLowerCase().includes(name.toLowerCase()));
+          
           if (hasOrgField && !newArgs.where.organizationId) {
             newArgs.where.organizationId = organizationId;
           }
@@ -76,10 +90,10 @@ export function getPrismaWithRLS(organizationId?: string, userId?: string, userR
           return query(newArgs);
         }
         
-        // Default case - pass through
+        // Default case - pass through original args
         return query(args);
-      },
-    },
+      }
+    }
   });
 }
 

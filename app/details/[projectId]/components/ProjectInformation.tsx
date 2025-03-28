@@ -73,6 +73,22 @@ export const ProjectInformation = ({ projectId }: ProjectInformationProps) => {
     
     prefetchProjects();
   }, [projectId]);
+  
+  // Debug project data when it changes
+  useEffect(() => {
+    if (project) {
+      console.log('Project data:', project);
+      console.log('Project criteria:', project.criteria);
+      console.log('Criteria from context:', criteria);
+      
+      // Check if criteria is properly initialized
+      if (!project.criteria || typeof project.criteria !== 'object') {
+        console.warn('Project criteria is not properly initialized:', project.criteria);
+      } else if (Object.keys(project.criteria).length === 0) {
+        console.warn('Project criteria is empty');
+      }
+    }
+  }, [project, criteria]);
 
   // Handle navigation to create/edit project
   const handleCreateProject = () => {
@@ -273,10 +289,39 @@ export const ProjectInformation = ({ projectId }: ProjectInformationProps) => {
                 )}
               </div>
               
-              <ProjectRadarChart 
-                project={project as unknown as Project} 
-                criteria={criteria}
-              />
+              {/* Debug data in useEffect instead of in JSX */}
+              {/* Create a dummy criteria object if the project doesn't have any criteria data */}
+              {(() => {
+                // Create a dummy criteria object for testing if needed
+                const dummyCriteria = criteria.length > 0 && (!project.criteria || Object.keys(project.criteria).length === 0)
+                  ? criteria.reduce((acc: Record<string, number>, criterion: { key: string }) => {
+                      acc[criterion.key] = 5; // Default value
+                      return acc;
+                    }, {} as Record<string, number>)
+                  : null;
+                
+                // Log if we're using dummy data
+                if (dummyCriteria) {
+                  console.log('Using dummy criteria data for radar chart:', dummyCriteria);
+                }
+                
+                return (
+                  <ProjectRadarChart 
+                    project={{
+                      ...project,
+                      // Use dummy criteria if available, otherwise use project criteria or empty object
+                      criteria: dummyCriteria || project.criteria || {},
+                      // Ensure description is a string as required by Project type
+                      description: project.description || '',
+                      // Convert department object to string as expected by Project type
+                      department: project.department?.name || '',
+                      // Ensure departmentId is properly set
+                      departmentId: project.department?.id || project.departmentId || ''
+                    } as unknown as Project}
+                    criteria={criteria}
+                  />
+                );
+              })()}
               
               <div className="mt-6 space-y-4">
                 {Object.keys(project.criteria).length > 0 ? (

@@ -212,6 +212,68 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
         return;
       }
       
+      // Try to get projects from ProjectContext first via React Query cache
+      const projectsFromCache = queryClient.getQueryData(['projects', user?.organizationId, user?.id, user?.role, user?.departmentId]);
+      if (projectsFromCache && !skipCache) {
+        console.log('Using projects from ProjectContext cache');
+        
+        // Filter the projects based on current filters
+        const allProjects = projectsFromCache as Project[];
+        const filteredProjects = allProjects.filter(project => {
+          // Search filter
+          if (filters.search && !project.name.toLowerCase().includes(filters.search.toLowerCase())) {
+            return false;
+          }
+          
+          // Department filter
+          if (filters.departments.length > 0 && project.departmentId && 
+              !filters.departments.includes(project.departmentId)) {
+            return false;
+          }
+          
+          // Budget filter
+          if (filters.budget.min !== null && (project.budget === undefined || project.budget < filters.budget.min)) {
+            return false;
+          }
+          if (filters.budget.max !== null && (project.budget === undefined || project.budget > filters.budget.max)) {
+            return false;
+          }
+          
+          // Resources filter
+          if (filters.resources.min !== null && (project.resources === undefined || project.resources < filters.resources.min)) {
+            return false;
+          }
+          if (filters.resources.max !== null && (project.resources === undefined || project.resources > filters.resources.max)) {
+            return false;
+          }
+          
+          // Date filter
+          if (filters.dateRange.start && new Date(project.startDate) < new Date(filters.dateRange.start)) {
+            return false;
+          }
+          if (filters.dateRange.end && new Date(project.endDate) > new Date(filters.dateRange.end)) {
+            return false;
+          }
+          
+          // Status filter
+          if (filters.status.length > 0 && !filters.status.includes(project.status)) {
+            return false;
+          }
+          
+          // Tags filter
+          if (filters.tags.length > 0 && !filters.tags.some(tag => project.tags.includes(tag))) {
+            return false;
+          }
+          
+          return true;
+        });
+        
+        setProjects(filteredProjects);
+        setResultsCount(filteredProjects.length);
+        setIsLoading(false);
+        return;
+      }
+      
       const params = getQueryParams(filters, page, pageSize);
       const url = `/api/projects?${params.toString()}`;
       

@@ -1,9 +1,9 @@
 'use client';
 
-import { BentoMetrics } from '@/app/_components/dashboard/BentoMetrics';
-import { ScoreQuadrantChart } from '@/app/_components/dashboard/ScoreQuadrantChart';
-import { StatusChart } from '@/app/_components/dashboard/StatusChart';
-import { TopProjects } from '@/app/_components/dashboard/TopProjects';
+import { BentoMetrics } from '@/app/dashboard/components/BentoMetrics';
+import { ScoreQuadrantChart } from '@/app/dashboard/components/ScoreQuadrantChart';
+import { StatusChart } from '@/app/dashboard/components/StatusChart';
+import { TopProjects } from '@/app/dashboard/components/TopProjects';
 import { useRouter } from 'next/navigation';
 
 export const Dashboard = () => {

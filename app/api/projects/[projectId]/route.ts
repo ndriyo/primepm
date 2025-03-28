@@ -135,6 +135,20 @@ export async function PATCH(
       );
     }
     
+    // Check for active criteria version before proceeding
+    try {
+      await getActiveCriteriaVersionId(organizationId);
+    } catch (error) {
+      return NextResponse.json(
+        { 
+          error: "No active criteria version found", 
+          code: "NO_ACTIVE_CRITERIA",
+          message: "Your organization doesn't have an active criteria version. Please set one up before updating a project."
+        }, 
+        { status: 400 }
+      );
+    }
+    
     // Extract criteriaScores to handle separately
     const { criteriaScores, ...projectFields } = data;
     

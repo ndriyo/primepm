@@ -53,7 +53,7 @@ export function calculateCriterionScore(
   scaleMax: number = 5
 ): number {
   // Normalize the score to 0-1 range
-  const normalizedScore = (score - scaleMin) / (scaleMax - scaleMin);
+  const normalizedScore = (score - scaleMin + 1) / (scaleMax - scaleMin + 1);
   
   // Apply inverse transformation if needed
   const adjustedScore = isInverse ? 1 - normalizedScore : normalizedScore;
@@ -117,7 +117,8 @@ export function calculateOverallScore(
 
   // Normalize to output scale if requested
   if (normalizeOutput) {
-    finalScore = outputScaleMin + finalScore * (outputScaleMax - outputScaleMin);
+//    finalScore = outputScaleMin + finalScore * (outputScaleMax - outputScaleMin);
+    finalScore = finalScore * (outputScaleMax - outputScaleMin + 1);
   }
 
   // Round to specified decimal places

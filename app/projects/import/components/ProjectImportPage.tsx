@@ -200,6 +200,22 @@ export function ProjectImportPage() {
     setValidationProgress(0);
     
     try {
+      // Check for active criteria version first
+      if (!organization?.id || !user?.id) {
+        throw new Error('Authentication required');
+      }
+      
+      const criteriaResponse = await fetch('/api/criteria/versions/active', {
+        headers: {
+          'x-organization-id': organization.id,
+          'x-user-id': user.id,
+          'x-user-role': user.role || '',
+        }
+      });
+      
+      if (!criteriaResponse.ok) {
+        throw new Error('No active criteria version found. Please set up criteria before importing projects.');
+      }
       // Simulate progress updates
       const progressInterval = setInterval(() => {
         setValidationProgress(prev => {

@@ -99,9 +99,13 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
+  console.log("PATCH request started");
+  const startTime = Date.now();
+  
   try {
     // Await the params object before accessing properties
     const { projectId } = await params;
+    console.log(`Processing PATCH for project: ${projectId}`);
     
     // Get auth information from headers
     const userId = request.headers.get("x-user-id");
@@ -110,25 +114,32 @@ export async function PATCH(
     const departmentId = request.headers.get("x-department-id");
     
     if (!userId || !organizationId) {
+      console.log("Authentication failed: missing userId or organizationId");
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
       );
     }
     
+    console.log("Parsing request body");
     const data = await request.json();
+    console.log(`Request data parsed, contains criteriaScores: ${!!data.criteriaScores}`);
     
     // Validate if project exists
+    console.log("Finding existing project");
     const existingProject = await projectRepo.findById(projectId);
     if (!existingProject) {
+      console.log(`Project not found: ${projectId}`);
       return NextResponse.json(
         { error: "Project not found" },
         { status: 404 }
       );
     }
+    console.log("Project found");
     
     // Validate if project belongs to user's organization
     if (existingProject.organizationId !== organizationId) {
+      console.log(`Organization mismatch: ${existingProject.organizationId} vs ${organizationId}`);
       return NextResponse.json(
         { error: "Unauthorized to access this project" },
         { status: 403 }
@@ -136,9 +147,12 @@ export async function PATCH(
     }
     
     // Check for active criteria version before proceeding
+    console.log("Checking for active criteria version");
     try {
       await getActiveCriteriaVersionId(organizationId);
+      console.log("Active criteria version found");
     } catch (error) {
+      console.log(`No active criteria version found for org: ${organizationId}`);
       return NextResponse.json(
         { 
           error: "No active criteria version found", 
@@ -159,6 +173,8 @@ export async function PATCH(
     };
     
     // Update the project basic info
+    console.log("Updating project basic info");
+    const updateStartTime = Date.now();
     const updatedProject = await projectRepo.update(
       projectId,
       projectData,
@@ -166,15 +182,22 @@ export async function PATCH(
       userRole || undefined,
       departmentId || undefined
     );
+    console.log(`Project basic info updated in ${Date.now() - updateStartTime}ms`);
     
     // If there are criteria scores to update, handle them separately
     if (criteriaScores && Array.isArray(criteriaScores)) {
+      console.log(`Processing ${criteriaScores.length} criteria scores`);
       try {
         // Get active criteria version id
+        console.log("Getting active criteria version ID");
         const activeVersionId = await getActiveCriteriaVersionId(organizationId);
+        console.log(`Active version ID: ${activeVersionId}`);
         
         // Update each criteria score
+        console.log("Updating criteria scores");
+        const scoresStartTime = Date.now();
         for (const scoreData of criteriaScores) {
+          console.log(`Updating score for criterion: ${scoreData.criterionKey}`);
           await projectRepo.updateCriteriaScore(
             projectId,
             scoreData.criterionKey,
@@ -186,10 +209,11 @@ export async function PATCH(
             departmentId || undefined
           );
         }
-        
-        console.log(`Updated ${criteriaScores.length} criteria scores for project ${projectId}`);
+        console.log(`Updated all criteria scores in ${Date.now() - scoresStartTime}ms`);
         
         // Recalculate and update the overall score
+        console.log("Recalculating overall score");
+        const scoreCalcStartTime = Date.now();
         const overallScore = await projectRepo.calculateOverallScore(
           projectId, 
           activeVersionId,
@@ -197,12 +221,14 @@ export async function PATCH(
           userRole || undefined,
           departmentId || undefined
         );
-        console.log(`Recalculated project score: ${overallScore}`);
+        console.log(`Recalculated project score: ${overallScore} in ${Date.now() - scoreCalcStartTime}ms`);
         
         // Get the updated project with the new score
+        console.log("Refreshing project to get updated score");
         const refreshedProject = await projectRepo.findById(projectId);
         if (refreshedProject) {
           updatedProject.score = refreshedProject.score;
+          console.log(`Updated score in response: ${updatedProject.score}`);
         }
       } catch (scoreError) {
         console.error(`Error updating criteria scores:`, scoreError);
@@ -211,9 +237,11 @@ export async function PATCH(
       }
     }
     
+    console.log(`PATCH request completed in ${Date.now() - startTime}ms`);
     return NextResponse.json(updatedProject);
   } catch (error) {
     console.error(`Error updating project:`, error);
+    console.log(`PATCH request failed after ${Date.now() - startTime}ms`);
     return NextResponse.json(
       { error: "Failed to update project" },
       { status: 500 }

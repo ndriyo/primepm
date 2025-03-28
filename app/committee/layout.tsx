@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
+import { ProjectProvider } from '@/app/_contexts/ProjectContext';
 import { CommitteeProvider } from '@/app/_contexts/CommitteeContext';
 import { LoadingWrapper } from '@/app/_components/ui/LoadingWrapper';
 
@@ -11,9 +12,11 @@ export default function CommitteeLayout({
 }) {
   return (
     <Suspense fallback={<div className="p-4">Loading committee data...</div>}>
-      <CommitteeProvider>
-        {children}
-      </CommitteeProvider>
+      <ProjectProvider>
+        <CommitteeProvider>
+          {children}
+        </CommitteeProvider>
+      </ProjectProvider>
     </Suspense>
   );
 }

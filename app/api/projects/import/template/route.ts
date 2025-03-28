@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
     ];
     // Append dynamic criteria headers
     for (const criterion of criteriaDetails) {
-      baseHeaders.push(`${criterion.key}*`);
+      baseHeaders.push(`${criterion.key}`);
     }
     const exampleRow = [
       "", // Project ID (empty for new projects)

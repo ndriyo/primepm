@@ -28,9 +28,7 @@ export default function Providers({
       <AuthProvider>
         <DepartmentProvider>
           <CriteriaProvider>
-            <ProjectProvider>
-              {children}
-            </ProjectProvider>
+            {children}
           </CriteriaProvider>
         </DepartmentProvider>
       </AuthProvider>

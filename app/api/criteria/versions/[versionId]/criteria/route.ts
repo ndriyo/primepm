@@ -48,15 +48,16 @@ export async function GET(
       console.log('WARNING: version.criteria is undefined');
     } else if (version.criteria.length === 0) {
       console.log('WARNING: version.criteria is an empty array');
-    } else {
-      console.log('Criteria data sample:', version.criteria[0]);
-    }
+    } 
+    // else {
+    //   console.log('Criteria data sample:', version.criteria[0]);
+    // }
     
     // Additional diagnostic: directly query criteria table to confirm data exists
     const directCriteria = await prisma.criterion.findMany({
       where: { versionId: versionId }
     });
-    console.log(`Direct criteria query result count: ${directCriteria.length}`);
+    //console.log(`Direct criteria query result count: ${directCriteria.length}`);
     
     return NextResponse.json(version.criteria || []);
   } catch (error) {

@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProjects } from '@/app/_contexts/ProjectContext';
+import { useCriteria } from '@/app/_contexts/CriteriaContext';
 import { ProjectRadarChart } from '@/src/components/project-selection/ProjectRadarChart';
 import { Project } from '@/app/_contexts/ProjectContext';
+import { Criterion } from '@/app/_hooks/useCriteriaQuery';
 
 interface ProjectDetailsProps {
   projectId?: string;
@@ -12,6 +14,7 @@ interface ProjectDetailsProps {
 
 export const ProjectDetails = ({ projectId }: ProjectDetailsProps) => {
   const { selectedProject, projects, setSelectedProject } = useProjects();
+  const { criteria } = useCriteria(); // Get criteria from context
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const router = useRouter();
   
@@ -165,8 +168,11 @@ export const ProjectDetails = ({ projectId }: ProjectDetailsProps) => {
             <div className="flex justify-between items-center">
               <h4 className="text-sm font-medium text-gray-700">Overall Score</h4>
               <span className={`text-lg font-bold ${
-                (currentProject.score || 0) >= 7 ? 'text-green-600' : 
-                (currentProject.score || 0) >= 4 ? 'text-yellow-600' : 'text-red-600'
+                criteria.length > 0 
+                  ? (currentProject.score || 0) >= 7 ? 'text-green-600' : 
+                    (currentProject.score || 0) >= 4 ? 'text-yellow-600' : 'text-red-600'
+                  : (currentProject.score || 0) >= 3.5 ? 'text-green-600' : 
+                    (currentProject.score || 0) > 2 ? 'text-yellow-600' : 'text-red-600'
               }`}>
                 {currentProject.score?.toFixed(2) || 'N/A'}
               </span>
@@ -175,79 +181,97 @@ export const ProjectDetails = ({ projectId }: ProjectDetailsProps) => {
               <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full"
-                  style={{ width: `${(currentProject.score / 10) * 100}%` }}
+                  style={{ 
+                    width: `${(currentProject.score / (criteria.length > 0 ? 10 : 5)) * 100}%` 
+                  }}
                 ></div>
               </div>
             )}
           </div>
           
-          <ProjectRadarChart project={currentProject} />
+          <ProjectRadarChart 
+            project={currentProject} 
+            criteria={criteria as unknown as Criterion[]} 
+          />
           
           <div className="mt-6 space-y-4">
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <h4 className="text-sm font-medium text-gray-700">Revenue Impact</h4>
-                <span className="text-sm font-medium text-gray-900">{currentProject.criteria.revenue}/10</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-green-500 h-2 rounded-full"
-                  style={{ width: `${currentProject.criteria.revenue * 10}%` }}
-                ></div>
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <h4 className="text-sm font-medium text-gray-700">Policy Impact</h4>
-                <span className="text-sm font-medium text-gray-900">{currentProject.criteria.policyImpact}/10</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-500 h-2 rounded-full"
-                  style={{ width: `${currentProject.criteria.policyImpact * 10}%` }}
-                ></div>
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <h4 className="text-sm font-medium text-gray-700">Budget (Lower is Higher)</h4>
-                <span className="text-sm font-medium text-gray-900">{currentProject.criteria.budget}/10</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-yellow-500 h-2 rounded-full"
-                  style={{ width: `${currentProject.criteria.budget * 10}%` }}
-                ></div>
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <h4 className="text-sm font-medium text-gray-700">Resources (Lower is More)</h4>
-                <span className="text-sm font-medium text-gray-900">{currentProject.criteria.resources}/10</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-orange-500 h-2 rounded-full"
-                  style={{ width: `${currentProject.criteria.resources * 10}%` }}
-                ></div>
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <h4 className="text-sm font-medium text-gray-700">Complexity (Lower is More Complex)</h4>
-                <span className="text-sm font-medium text-gray-900">{currentProject.criteria.complexity}/10</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-red-500 h-2 rounded-full"
-                  style={{ width: `${currentProject.criteria.complexity * 10}%` }}
-                ></div>
-              </div>
-            </div>
+            {/* Dynamically generate criteria bars based on active criteria */}
+            {criteria.length > 0 ? (
+              Object.entries(currentProject.criteria || {}).map(([key, value]) => {
+                // Find the criterion in the context
+                const criterionFromContext = criteria.find(c => c.key === key);
+                
+                if (!criterionFromContext) return null;
+                
+                // Get criterion details
+                const label = criterionFromContext.label || key;
+                const isInverse = criterionFromContext.isInverse || false;
+                const min = criterionFromContext.scale?.min !== undefined ? Number(criterionFromContext.scale.min) : 1;
+                const max = criterionFromContext.scale?.max !== undefined ? Number(criterionFromContext.scale.max) : 10;
+                
+                // Determine color based on criterion properties
+                const getColorClass = (isInverse: boolean) => {
+                  if (isInverse) {
+                    return 'bg-yellow-500'; // Lower is better
+                  } else {
+                    return 'bg-green-500'; // Higher is better
+                  }
+                };
+                
+                // Calculate width percentage based on the criterion's scale
+                const getWidthPercentage = (value: number, min: number, max: number) => {
+                  const percentage = ((value - min) / (max - min)) * 100;
+                  return Math.max(0, Math.min(100, percentage)); // Clamp between 0-100
+                };
+                
+                return (
+                  <div key={key}>
+                    <div className="flex justify-between items-center mb-1">
+                      <h4 className="text-sm font-medium text-gray-700">
+                        {label}
+                        {isInverse && <span className="ml-1 text-xs text-gray-500">(Lower is better)</span>}
+                      </h4>
+                      <span className="text-sm font-medium text-gray-900">{value}/{max}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`${getColorClass(isInverse)} h-2 rounded-full`}
+                        style={{ width: `${getWidthPercentage(value, min, max)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              // Fallback to hardcoded criteria if no active criteria available
+              <>
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <h4 className="text-sm font-medium text-gray-700">Revenue Impact</h4>
+                    <span className="text-sm font-medium text-gray-900">{currentProject.criteria.revenue}/10</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-green-500 h-2 rounded-full"
+                      style={{ width: `${currentProject.criteria.revenue * 10}%` }}
+                    ></div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <h4 className="text-sm font-medium text-gray-700">Policy Impact</h4>
+                    <span className="text-sm font-medium text-gray-900">{currentProject.criteria.policyImpact}/10</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-500 h-2 rounded-full"
+                      style={{ width: `${currentProject.criteria.policyImpact * 10}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

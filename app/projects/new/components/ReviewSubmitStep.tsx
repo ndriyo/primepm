@@ -49,14 +49,14 @@ export default function ReviewSubmitStep({
     return calculatePreviewScore(
       formData.criteria,
       criteria,
-      { normalizeOutput: true, outputScaleMax: 10, outputScaleMin: 0 }
+      { normalizeOutput: true, outputScaleMax: 5, outputScaleMin: 1 }
     );
   };
   
   // Get score color based on overall score
   const getScoreColor = (score: number): string => {
-    if (score >= 7) return 'text-green-600';
-    if (score >= 4) return 'text-yellow-600';
+    if (score >= 3.5) return 'text-green-600';
+    if (score >= 2.5) return 'text-yellow-600';
     return 'text-red-600';
   };
   
@@ -149,7 +149,7 @@ export default function ReviewSubmitStep({
           <div className="w-full bg-gray-200 rounded-full h-2.5">
             <div 
               className="bg-blue-600 h-2.5 rounded-full" 
-              style={{ width: `${(getOverallScore() / 10) * 100}%` }}
+              style={{ width: `${(getOverallScore() / 5) * 100}%` }}
             ></div>
           </div>
         </div>

@@ -521,7 +521,7 @@ export class ProjectRepository extends BaseRepository<
     // Use the centralized score calculator
     const calculatedScore = calculateScore(criteriaScores, {
       normalizeOutput: true,
-      outputScaleMax: 10,
+      outputScaleMax: 5,
       outputScaleMin: 0,
       decimalPlaces: 2
     });

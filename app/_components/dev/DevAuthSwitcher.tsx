@@ -1,13 +1,11 @@
 'use client';
 
 import { useAuth } from '@/app/_contexts/AuthContext';
-import { useProjects } from '@/app/_contexts/ProjectContext';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 export default function DevAuthSwitcher() {
   const { user, users, organizations, login, switchOrganization } = useAuth();
-  const { refreshProjects, setSelectedProject } = useProjects();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   
@@ -15,9 +13,6 @@ export default function DevAuthSwitcher() {
   const refreshAllData = () => {
     // Invalidate all queries to ensure fresh data
     queryClient.removeQueries();
-    
-    // Refresh projects data from ProjectContext
-    refreshProjects();
     
     // Force a hard reload of the page to ensure all contexts are refreshed
     // This is the most reliable way to ensure all data is refreshed
@@ -29,9 +24,8 @@ export default function DevAuthSwitcher() {
     // Store the user ID in localStorage to persist through reload
     localStorage.setItem('lastSelectedUserId', userId);
     
-    // Login and clear selected project
+    // Login 
     login(userId);
-    setSelectedProject(null);
     
     // Refresh all data
     refreshAllData();
@@ -42,9 +36,8 @@ export default function DevAuthSwitcher() {
     // Store the org ID in localStorage to persist through reload
     localStorage.setItem('lastSelectedOrgId', orgId);
     
-    // Switch organization and clear selected project
+    // Switch organization
     switchOrganization(orgId);
-    setSelectedProject(null);
     
     // Refresh all data
     refreshAllData();

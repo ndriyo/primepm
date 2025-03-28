@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
 import { useProjects } from '@/app/_contexts/ProjectContext';
@@ -20,10 +22,17 @@ const CHART_COLORS = [
 ];
 
 export const StatusChart: React.FC = () => {
-  const { projects, loading } = useProjects();
+  const { projects, loading: projectsLoading } = useProjects();
   const { user } = useAuth();
   const [chartData, setChartData] = useState<Array<{name: string, value: number, fill: string}>>([]);
   const [chartTitle, setChartTitle] = useState('Budget Distribution');
+  
+  // Add client-side only state to control rendering
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   
   // Filter projects based on user role
   useEffect(() => {
@@ -96,10 +105,10 @@ export const StatusChart: React.FC = () => {
   return (
     <div className="card h-[300px]">
       <h3 className="text-lg font-medium text-gray-900 mb-2">{chartTitle}</h3>
-      <LoadingWrapper
-        isLoading={loading}
-        skeleton={<SkeletonChart height="220px" />}
-      >
+      {/* Use consistent initial rendering */}
+      {!isMounted || projectsLoading ? (
+        <SkeletonChart height="220px" />
+      ) : (
         <ResponsiveContainer width="100%" height="85%">
           <Treemap
             data={chartData}
@@ -111,7 +120,7 @@ export const StatusChart: React.FC = () => {
             <Tooltip content={<CustomTooltip />} />
           </Treemap>
         </ResponsiveContainer>
-      </LoadingWrapper>
+      )}
     </div>
   );
 };

@@ -37,7 +37,7 @@ export const PageLayout = ({ children }: PageLayoutProps) => {
             alt="PrimePM Logo"
             width={242}
             height={96}
-            className="h-24 w-auto mr-3"
+            className="h-auto w-auto mr-3"
             priority
           />
         </div>

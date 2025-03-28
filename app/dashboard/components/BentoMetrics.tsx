@@ -9,10 +9,16 @@ import { useEffect, useState } from 'react';
 import { PortfolioSelection } from '@/app/_repositories/PortfolioRepository';
 
 export const BentoMetrics = () => {
-  const { projects, loading } = useProjects();
+  const { projects, loading: projectsLoading } = useProjects();
   const { user } = useAuth();
   const [activePortfolio, setActivePortfolio] = useState<PortfolioSelection | null>(null);
   const [portfolioLoading, setPortfolioLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Set isMounted to true after initial render
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Filter projects based on user role
   const filteredProjects = user?.role === 'projectManager' && user?.departmentId
@@ -107,28 +113,28 @@ export const BentoMetrics = () => {
   ];
 
   return (
-    <LoadingWrapper
-      isLoading={loading || portfolioLoading}
-      skeleton={
+    <>
+      {/* Use consistent initial rendering */}
+      {!isMounted || projectsLoading || portfolioLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {[...Array(5)].map((_, i) => (
             <SkeletonCard key={i} />
           ))}
         </div>
-      }
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {metrics.map((metric, index) => (
-          <BentoCard
-            key={index}
-            title={metric.title}
-            value={metric.value}
-            subtitle={metric.subtitle}
-            colors={metric.colors}
-            delay={0.1 * index}
-          />
-        ))}
-      </div>
-    </LoadingWrapper>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {metrics.map((metric, index) => (
+            <BentoCard
+              key={index}
+              title={metric.title}
+              value={metric.value}
+              subtitle={metric.subtitle}
+              colors={metric.colors}
+              delay={0.1 * index}
+            />
+          ))}
+        </div>
+      )}
+    </>
   );
 };

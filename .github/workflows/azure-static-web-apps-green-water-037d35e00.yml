@@ -46,7 +46,7 @@ jobs:
           github_id_token: ${{ steps.idtoken.outputs.result }}
           ###### End of Repository/Build Configurations ######
         env: # Add environment variables here
-          NODE_VERSION: 23
+          NODE_VERSION: 18.20.4
           POST_BUILD_COMMAND: "npm install @prisma/client && npx prisma generate"
           DATABASE_URL: "postgresql://postgres.zwweamxsxemiefdlkgzn:eComindo12345!!@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
           NEXT_PUBLIC_SUPABASE_URL: "https://zwweamxsxemiefdlkgzn.supabase.co"

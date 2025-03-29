@@ -52,7 +52,6 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: "https://zwweamxsxemiefdlkgzn.supabase.co"
           NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3d2VhbXhzeGVtaWVmZGxrZ3puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMzU2ODcsImV4cCI6MjA1NjgxMTY4N30.PzBtSrFNrmri3Srvtjq_yuiX3efSZHQ_hghFLCBieGQ"
           SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3d2VhbXhzeGVtaWVmZGxrZ3puIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MTIzNTY4NywiZXhwIjoyMDU2ODExNjg3fQ.ZC2FZkSTkg3C5KF8mWjwZYegBzLH_76hFY67MZmKe88
-          NODE_ENV: development
           
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'

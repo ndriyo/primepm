@@ -19,6 +19,9 @@ dist
 .env
 .env*.local
 
+# Github Action
+.github
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

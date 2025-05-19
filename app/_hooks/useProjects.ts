@@ -145,10 +145,11 @@ export function useProjects() {
   const ProjectsApi = createProjectsApi(user);
   
   // Query for fetching projects with optional filters
-  const useProjectsQuery = (filters: ProjectFilters = {}) => {
+  const useProjectsQuery = (filters: ProjectFilters = {}, options?: { enabled?: boolean }) => { // Add options parameter
     return useQuery({
       queryKey: ['projects', filters],
       queryFn: () => ProjectsApi.getProjects(filters),
+      enabled: options?.enabled, // Pass the 'enabled' option to useQuery
     });
   };
   

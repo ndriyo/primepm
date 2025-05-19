@@ -541,4 +541,21 @@ export class CriteriaRepository {
     // Return rounded results to 4 decimal places
     return weights.map(w => parseFloat((w / weightSum).toFixed(4)));
   }
+
+  async findManyByKeysAndVersion(keys: string[], versionId: string): Promise<Array<{ id: string; key: string }>> {
+    // This method uses the global prisma instance, which is standard for this repository.
+    // The versionId, derived from an organization-specific active version, provides scoping.
+    const criteria = await prisma.criterion.findMany({
+      where: {
+        key: { in: keys },
+        versionId: versionId,
+      },
+      select: { // Only select what's needed
+        id: true,
+        key: true
+      }
+    });
+    // No need to cast to full Criterion type if only id and key are used.
+    return criteria; 
+  }
 }

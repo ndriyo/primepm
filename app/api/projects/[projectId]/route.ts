@@ -192,15 +192,41 @@ export async function PATCH(
         console.log("Getting active criteria version ID");
         const activeVersionId = await getActiveCriteriaVersionId(organizationId);
         console.log(`Active version ID: ${activeVersionId}`);
+
+        // ---- START OF OPTIMIZATION ----
+        const criterionKeys = criteriaScores.map(cs => cs.criterionKey);
+        const keyToIdMap = new Map<string, string>();
+
+        if (criterionKeys.length > 0) {
+          console.log(`Batch fetching IDs for criterion keys: ${criterionKeys.join(', ')} for version ${activeVersionId}`);
+          // Use the new method from criteriaRepo
+          const criteriaData = await criteriaRepo.findManyByKeysAndVersion(criterionKeys, activeVersionId); 
+          criteriaData.forEach(c => keyToIdMap.set(c.key, c.id));
+          console.log(`Fetched ${keyToIdMap.size} criterion IDs mapped.`);
+        }
+        // ---- END OF OPTIMIZATION ----
         
         // Update each criteria score
         console.log("Updating criteria scores");
         const scoresStartTime = Date.now();
         for (const scoreData of criteriaScores) {
-          console.log(`Updating score for criterion: ${scoreData.criterionKey}`);
+          // ---- MODIFICATION TO USE MAPPED ID ----
+          const criterionId = keyToIdMap.get(scoreData.criterionKey);
+
+          if (!criterionId) {
+            // This case should ideally not happen if keys are valid and belong to the active version.
+            // Log a warning and skip, or decide on stricter error handling.
+            console.warn(`Could not find pre-fetched ID for criterion key: ${scoreData.criterionKey} in version ${activeVersionId}. Skipping score update for this criterion.`);
+            continue; 
+          }
+          // The console log in projectRepo.updateCriteriaScore for "Looking up criterion ID for key" should no longer appear
+          // because we are now passing a UUID.
+          console.log(`Preparing to update score for criterion key: ${scoreData.criterionKey} (using mapped ID: ${criterionId})`);
+          // ---- END MODIFICATION ----
+
           await projectRepo.updateCriteriaScore(
             projectId,
-            scoreData.criterionKey,
+            criterionId, // IMPORTANT: Pass the resolved criterionId
             activeVersionId,
             scoreData.score,
             scoreData.comment || null, // Use comment from the form if available

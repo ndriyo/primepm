@@ -2,7 +2,7 @@
 
 import { createContext, useState, useContext, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/app/_contexts/AuthContext';
 import { useCriteria } from '@/app/_contexts/CriteriaContext';
 import { fetchWithAuth } from '@/app/_lib/fetchInterceptor';
@@ -101,8 +101,7 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
       // Criteria scores require special handling
       // Removed criteriaScores handling
       
-      // Set the parsed filter state
-      setFilters({
+      const newFilterState: FilterState = {
         search: searchQuery,
         departments,
         budget: {
@@ -119,30 +118,50 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
         },
         tags,
         status
-      });
-    }
-  }, [searchParams, criteria]);
-  
-  // Fetch departments for filter options
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        if (user) {
-          const response = await fetchWithAuth('/api/departments', {}, user);
-          if (response.ok) {
-            const data = await response.json();
-            setDepartments(data);
-          } else {
-            console.error('Failed to fetch departments:', response.status);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching departments:', error);
+      };
+
+      // Only update if the filters have actually changed
+      if (JSON.stringify(newFilterState) !== JSON.stringify(filters)) {
+        setFilters(newFilterState);
       }
-    };
-    
-    fetchDepartments();
-  }, [user]);
+    }
+  }, [searchParams, criteria, filters]); // Add filters to dependency array for comparison
+  
+  // Fetch departments for filter options using React Query
+  const { 
+    data: fetchedDepartments, 
+    isLoading: departmentsLoading, 
+    error: departmentsError 
+  } = useQuery<{ id: string; name: string }[]>({
+    queryKey: ['departments', user?.organizationId],
+    queryFn: async () => {
+      if (!user?.organizationId) {
+        console.log('No organization ID, skipping department fetch');
+        return [];
+      }
+      const response = await fetchWithAuth('/api/departments', {}, user);
+      if (!response.ok) {
+        console.error('Failed to fetch departments:', response.status);
+        throw new Error('Failed to fetch departments');
+      }
+      return response.json();
+    },
+    enabled: !!user && !!user.organizationId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  useEffect(() => {
+    if (fetchedDepartments) {
+      setDepartments(fetchedDepartments);
+    }
+  }, [fetchedDepartments]);
+
+  useEffect(() => {
+    if (departmentsError) {
+      console.error('Error fetching departments via React Query:', departmentsError);
+      setDepartments([]);
+    }
+  }, [departmentsError]);
   
   // Function to convert filters to API query params
   const getQueryParams = (filters: FilterState, page: number, pageSize: number): URLSearchParams => {
@@ -202,107 +221,44 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
   };
   
   // Fetch projects with the current filters
-  const fetchProjects = useCallback(async (filters: FilterState, page: number, pageSize: number, skipCache = false) => {
+  const fetchProjects = useCallback(async (currentFilters: FilterState, currentPage: number, currentPageSize: number, skipCache = false) => {
     setIsLoading(true);
-    
     try {
-      if (!user) {
+      if (!user || !user.organizationId) {
         setProjects([]);
         setResultsCount(0);
-        return;
-      }
-      
-      // Try to get projects from ProjectContext first via React Query cache
-      const projectsFromCache = queryClient.getQueryData(['projects', user?.organizationId, user?.id, user?.role, user?.departmentId]);
-      if (projectsFromCache && !skipCache) {
-        console.log('Using projects from ProjectContext cache');
-        
-        // Filter the projects based on current filters
-        const allProjects = projectsFromCache as Project[];
-        const filteredProjects = allProjects.filter(project => {
-          // Search filter
-          if (filters.search && !project.name.toLowerCase().includes(filters.search.toLowerCase())) {
-            return false;
-          }
-          
-          // Department filter
-          if (filters.departments.length > 0 && project.departmentId && 
-              !filters.departments.includes(project.departmentId)) {
-            return false;
-          }
-          
-          // Budget filter
-          if (filters.budget.min !== null && (project.budget === undefined || project.budget < filters.budget.min)) {
-            return false;
-          }
-          if (filters.budget.max !== null && (project.budget === undefined || project.budget > filters.budget.max)) {
-            return false;
-          }
-          
-          // Resources filter
-          if (filters.resources.min !== null && (project.resources === undefined || project.resources < filters.resources.min)) {
-            return false;
-          }
-          if (filters.resources.max !== null && (project.resources === undefined || project.resources > filters.resources.max)) {
-            return false;
-          }
-          
-          // Date filter
-          if (filters.dateRange.start && new Date(project.startDate) < new Date(filters.dateRange.start)) {
-            return false;
-          }
-          if (filters.dateRange.end && new Date(project.endDate) > new Date(filters.dateRange.end)) {
-            return false;
-          }
-          
-          // Status filter
-          if (filters.status.length > 0 && !filters.status.includes(project.status)) {
-            return false;
-          }
-          
-          // Tags filter
-          if (filters.tags.length > 0 && !filters.tags.some(tag => project.tags.includes(tag))) {
-            return false;
-          }
-          
-          return true;
-        });
-        
-        setProjects(filteredProjects);
-        setResultsCount(filteredProjects.length);
         setIsLoading(false);
         return;
       }
+
+      const queryParams = getQueryParams(currentFilters, currentPage, currentPageSize);
+      const queryKey = ['projects', user.organizationId, queryParams.toString()];
       
-      const params = getQueryParams(filters, page, pageSize);
-      const url = `/api/projects?${params.toString()}`;
-      
-      // Check cache first if available and not skipping cache
       if (!skipCache) {
-        const cachedData = queryClient.getQueryData(['projects', params.toString(), user.id]);
+        const cachedData = queryClient.getQueryData<{ projects: Project[], total: number }>(queryKey);
         if (cachedData) {
-          setProjects(cachedData as Project[]);
-          setResultsCount((cachedData as Project[]).length);
+          setProjects(cachedData.projects);
+          setResultsCount(cachedData.total);
           setIsLoading(false);
           return;
         }
       }
-      
+
+      const url = `/api/projects?${queryParams.toString()}`;
       const response = await fetchWithAuth(url, {}, user);
-      
+
       if (!response.ok) {
         console.error('Failed to fetch projects:', response.status);
         setProjects([]);
         setResultsCount(0);
-        return;
+        throw new Error('Failed to fetch projects');
       }
-      
-      const data = await response.json();
-      setProjects(data.projects || data);
-      setResultsCount(data.total || data.length);
-      
-      // Cache the results with user ID in the key to ensure proper cache invalidation
-      queryClient.setQueryData(['projects', params.toString(), user.id], data.projects || data);
+
+      const data = await response.json(); // Expects { projects: Project[], total: number }
+      setProjects(data.projects || []);
+      setResultsCount(data.total || 0);
+      queryClient.setQueryData(queryKey, data); // Cache the structured data
+
     } catch (error) {
       console.error('Error fetching projects:', error);
       setProjects([]);
@@ -310,19 +266,17 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [queryClient, user]);
-  
-  // Debounced version of fetchProjects to avoid too many API calls
+  }, [queryClient, user]); // user dependency is important here
+
   const debouncedFetchProjects = useMemo(
-    () => debounce((filters: FilterState, page: number, pageSize: number) => {
-      fetchProjects(filters, page, pageSize);
+    () => debounce((currentFilters: FilterState, currentPage: number, currentPageSize: number) => {
+      fetchProjects(currentFilters, currentPage, currentPageSize);
     }, 300),
-    [fetchProjects]
+    [fetchProjects] 
   );
-  
-  // Fetch projects when filters or pagination changes
+
   useEffect(() => {
-    if (user) {
+    if (user && user.organizationId) { // Ensure user and orgId are present
       debouncedFetchProjects(filters, page, pageSize);
       
       // Update URL with current filters
@@ -334,7 +288,7 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
     return () => {
       debouncedFetchProjects.cancel();
     };
-  }, [filters, page, pageSize, debouncedFetchProjects, user]);
+  }, [filters, page, pageSize, user, debouncedFetchProjects]); // Added user here
   
   // Handler functions
   
@@ -547,39 +501,32 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
     // Force a fresh fetch
     fetchProjects(filters, page, pageSize, true);
     
-    // Also refresh departments
-    const fetchDepartments = async () => {
-      try {
-        if (user) {
-          const response = await fetchWithAuth('/api/departments', {}, user);
-          if (response.ok) {
-            const data = await response.json();
-            setDepartments(data);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching departments:', error);
-      }
-    };
+    // Invalidate and refetch departments using React Query
+    queryClient.invalidateQueries({ queryKey: ['departments', user?.organizationId] });
+    // The useQuery for departments will automatically refetch due to invalidation
     
-    fetchDepartments();
-  }, [fetchProjects, filters, page, pageSize, queryClient, user]);
+  }, [fetchProjects, filters, page, pageSize, queryClient, user]); // user is a dependency for fetchProjects
   
-  // Add effect to refresh data when user changes
+  // Add effect to refresh data when user changes (e.g. login/logout, org switch)
+  // This will trigger the individual useQuery hooks if their keys change or are invalidated.
   useEffect(() => {
     if (user) {
-      refreshData();
+      // Invalidate queries that depend on the user or organization
+      queryClient.invalidateQueries({ queryKey: ['projects'] }); // Broadly invalidate projects
+      queryClient.invalidateQueries({ queryKey: ['departments', user.organizationId] });
+      // Data fetching will be handled by the respective useEffect/useQuery instances
+      // based on their dependencies (like filters, page, user.organizationId)
     }
-  }, [user, refreshData]);
+  }, [user, queryClient]);
 
-  const contextValue = {
+  const contextValue = useMemo(() => ({
     // State
     isFilterPanelOpen,
     setIsFilterPanelOpen,
     isLoading,
     projects,
-    departments,
-    criteria, // Add criteria to the context value
+    departments: departments || [], // Ensure departments is always an array
+    criteria, 
     resultsCount,
     page,
     setPage,
@@ -609,7 +556,13 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
     formatCurrency,
     formatDate,
     formatNumber
-  };
+  }), [
+    isFilterPanelOpen, isLoading, projects, departments, criteria, resultsCount, page, pageSize, filters, activeFilters, 
+    refreshData, // Ensure all functions passed in context are stable or included in deps
+    handleSearchChange, handleDepartmentChange, handleBudgetChange, handleResourcesChange, handleDateRangeChange,
+    handleTagChange, handleStatusChange, handleClearFilters, removeFilter, handleSelectProject,
+    handleCreateProject, handleImportProjects, formatCurrency, formatDate, formatNumber, setPage, setPageSize, setIsFilterPanelOpen
+  ]);
 
   return (
     <ProjectSearchContext.Provider value={contextValue}>

@@ -19,7 +19,7 @@ import {
 
 export const ProjectSelection = () => {
   // Sample organization ID - in a real app, this would come from auth context
-  const organizationId = "org-1"; // Placeholder - replace with actual org ID
+  //const organizationId = "org-1"; // Placeholder - replace with actual org ID
   
   const { useProjectsQuery } = useProjects();
   const { useActiveVersionQuery } = useCriteria();

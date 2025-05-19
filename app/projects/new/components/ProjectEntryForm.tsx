@@ -106,9 +106,9 @@ export default function ProjectEntryForm() {
             id: projectData.id,
             name: projectData.name,
             description: projectData.description,
-            department: projectData.department,
-            // Set both department and departmentId to ensure dropdown works correctly
-            departmentId: projectData.departmentId || projectData.department,
+            // Use department object from projectData if available
+            department: projectData.department?.name || '', 
+            departmentId: projectData.department?.id || projectData.departmentId || '',
             budget: projectData.budget,
             resources: projectData.resources,
             tags: projectData.tags || [],

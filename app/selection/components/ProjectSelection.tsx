@@ -8,6 +8,7 @@ import { ProjectSelectionTable } from '@/app/selection/components/ProjectSelecti
 import { CriteriaManagement } from '@/app/criteria/components/CriteriaManagement';
 import { useProjects } from '@/app/_hooks/useProjects';
 import { useCriteria } from '@/app/_hooks/useCriteria';
+import { useAuth } from '@/app/_contexts/AuthContext'; // <<<< IMPORT useAuth
 import { adaptRepositoryProjects } from '@/app/_lib/adapters';
 import { Project } from '@/src/data/projects';
 import { LoadingWrapper } from '@/app/_components/ui/LoadingWrapper';
@@ -18,9 +19,9 @@ import {
 } from '@/app/_components/ui/skeleton';
 
 export const ProjectSelection = () => {
-  // Sample organization ID - in a real app, this would come from auth context
-  const organizationId = "org-1"; // Placeholder - replace with actual org ID
-  
+  const { user, organization } = useAuth(); // <<<< GET user and organization
+  const organizationId = organization?.id; // <<<< DEFINE organizationId
+
   const { useProjectsQuery } = useProjects();
   const { useActiveVersionQuery } = useCriteria();
   
@@ -32,13 +33,16 @@ export const ProjectSelection = () => {
     data: repoProjects = [], 
     isLoading: projectsLoading, 
     error: projectsError 
-  } = useProjectsQuery({ organizationId, status: 'planning' });
+  } = useProjectsQuery(
+    { organizationId: organizationId, status: 'planning' }, // <<<< USE defined organizationId
+    { enabled: !!organizationId } // <<<< Pass enabled option
+  );
   
   const {
     data: activeVersion,
     isLoading: versionLoading,
     error: versionError
-  } = useActiveVersionQuery(organizationId);
+  } = useActiveVersionQuery(organizationId as string); // <<<< USE defined organizationId (enabled is handled internally)
 
   // Convert repository projects to the format expected by UI components
   const projects = adaptRepositoryProjects(repoProjects);

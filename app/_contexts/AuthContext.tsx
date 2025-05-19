@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react'; // Add useCallback
 
 // Define types for our mock users and organizations
 export interface MockOrganization {
@@ -192,7 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
   
-  const login = (userId: string) => {
+  const login = useCallback((userId: string) => {
     const selectedUser = MOCK_USERS.find(u => u.id === userId);
     if (selectedUser) {
       // Store the user ID in localStorage
@@ -209,9 +209,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setOrganization(userOrg);
       }
     }
-  };
+  }, []); // setUser and setOrganization are stable, MOCK_ constants are module scope
   
-  const switchOrganization = (orgId: string) => {
+  const switchOrganization = useCallback((orgId: string) => {
     const selectedOrg = MOCK_ORGANIZATIONS.find(org => org.id === orgId);
     if (selectedOrg) {
       // Store the org ID in localStorage
@@ -230,19 +230,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     }
-  };
+  }, [user]); // Depends on user state for the conditional logic
+  
+  const contextValue = useMemo(() => ({
+    isAuthenticated: !!user,
+    user,
+    organization,
+    organizations: MOCK_ORGANIZATIONS,
+    departments: MOCK_DEPARTMENTS,
+    users: MOCK_USERS,
+    login,
+    switchOrganization
+  }), [user, organization, login, switchOrganization]); // Added login and switchOrganization
   
   return (
-    <AuthContext.Provider value={{
-      isAuthenticated: !!user,
-      user,
-      organization,
-      organizations: MOCK_ORGANIZATIONS,
-      departments: MOCK_DEPARTMENTS,
-      users: MOCK_USERS,
-      login,
-      switchOrganization
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

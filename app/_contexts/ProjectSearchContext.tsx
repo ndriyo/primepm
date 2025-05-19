@@ -2,7 +2,7 @@
 
 import { createContext, useState, useContext, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/app/_contexts/AuthContext';
 import { useCriteria } from '@/app/_contexts/CriteriaContext';
 import { fetchWithAuth } from '@/app/_lib/fetchInterceptor';
@@ -76,7 +76,7 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+  const [departments, setDepartmentsState] = useState<{ id: string; name: string }[]>([]); // State variable for departments
   const [resultsCount, setResultsCount] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -88,7 +88,7 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (searchParams) {
       const searchQuery = searchParams.get('search') || '';
-      const departments = searchParams.getAll('department');
+      const departmentsParam = searchParams.getAll('department');
       const budgetMin = searchParams.get('budgetMin');
       const budgetMax = searchParams.get('budgetMax');
       const resourcesMin = searchParams.get('resourcesMin');
@@ -98,13 +98,9 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
       const tags = searchParams.getAll('tag');
       const status = searchParams.getAll('status');
       
-      // Criteria scores require special handling
-      // Removed criteriaScores handling
-      
-      // Set the parsed filter state
-      setFilters({
+      const newFilterState: FilterState = {
         search: searchQuery,
-        departments,
+        departments: departmentsParam,
         budget: {
           min: budgetMin ? parseInt(budgetMin) : null,
           max: budgetMax ? parseInt(budgetMax) : null
@@ -119,190 +115,96 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
         },
         tags,
         status
-      });
-    }
-  }, [searchParams, criteria]);
-  
-  // Fetch departments for filter options
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        if (user) {
-          const response = await fetchWithAuth('/api/departments', {}, user);
-          if (response.ok) {
-            const data = await response.json();
-            setDepartments(data);
-          } else {
-            console.error('Failed to fetch departments:', response.status);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching departments:', error);
+      };
+
+      if (JSON.stringify(newFilterState) !== JSON.stringify(filters)) {
+        setFilters(newFilterState);
       }
-    };
-    
-    fetchDepartments();
-  }, [user]);
+    }
+  }, [searchParams, criteria, filters]);
   
-  // Function to convert filters to API query params
-  const getQueryParams = (filters: FilterState, page: number, pageSize: number): URLSearchParams => {
+  const { 
+    data: fetchedDepartmentsData, // Renamed to avoid conflict with state variable
+    isLoading: departmentsLoading, 
+    error: departmentsError 
+  } = useQuery<{ id: string; name: string }[]>({
+    queryKey: ['departments', user?.organizationId],
+    queryFn: async () => {
+      if (!user?.organizationId) {
+        return [];
+      }
+      const response = await fetchWithAuth('/api/departments', {}, user);
+      if (!response.ok) {
+        throw new Error('Failed to fetch departments');
+      }
+      return response.json();
+    },
+    enabled: !!user && !!user.organizationId,
+    staleTime: 5 * 60 * 1000, 
+  });
+
+  useEffect(() => {
+    if (fetchedDepartmentsData) {
+      setDepartmentsState(fetchedDepartmentsData);
+    }
+  }, [fetchedDepartmentsData]);
+
+  useEffect(() => {
+    if (departmentsError) {
+      console.error('Error fetching departments via React Query:', departmentsError);
+      setDepartmentsState([]);
+    }
+  }, [departmentsError]);
+  
+  const getQueryParams = useCallback((currentFilters: FilterState, currentPage: number, currentPageSize: number): URLSearchParams => {
     const params = new URLSearchParams();
-    
-    // Add search term
-    if (filters.search) {
-      params.append('search', filters.search);
-    }
-    
-    // Add department filters
-    filters.departments.forEach(dept => {
-      params.append('department', dept);
-    });
-    
-    // Add budget range
-    if (filters.budget.min !== null) {
-      params.append('budgetMin', filters.budget.min.toString());
-    }
-    if (filters.budget.max !== null) {
-      params.append('budgetMax', filters.budget.max.toString());
-    }
-    
-    // Add resources range
-    if (filters.resources.min !== null) {
-      params.append('resourcesMin', filters.resources.min.toString());
-    }
-    if (filters.resources.max !== null) {
-      params.append('resourcesMax', filters.resources.max.toString());
-    }
-    
-    // Add date range
-    if (filters.dateRange.start) {
-      params.append('startDate', filters.dateRange.start);
-    }
-    if (filters.dateRange.end) {
-      params.append('endDate', filters.dateRange.end);
-    }
-    
-    // Add tags
-    filters.tags.forEach(tag => {
-      params.append('tag', tag);
-    });
-    
-    // Add status
-    filters.status.forEach(status => {
-      params.append('status', status);
-    });
-    
-    // Removed criteria scores params
-    
-    // Add pagination
-    params.append('page', page.toString());
-    params.append('pageSize', pageSize.toString());
-    
+    if (currentFilters.search) params.append('search', currentFilters.search);
+    currentFilters.departments.forEach(dept => params.append('department', dept));
+    if (currentFilters.budget.min !== null) params.append('budgetMin', currentFilters.budget.min.toString());
+    if (currentFilters.budget.max !== null) params.append('budgetMax', currentFilters.budget.max.toString());
+    if (currentFilters.resources.min !== null) params.append('resourcesMin', currentFilters.resources.min.toString());
+    if (currentFilters.resources.max !== null) params.append('resourcesMax', currentFilters.resources.max.toString());
+    if (currentFilters.dateRange.start) params.append('startDate', currentFilters.dateRange.start);
+    if (currentFilters.dateRange.end) params.append('endDate', currentFilters.dateRange.end);
+    currentFilters.tags.forEach(tag => params.append('tag', tag));
+    currentFilters.status.forEach(statusItem => params.append('status', statusItem));
+    params.append('page', currentPage.toString());
+    params.append('pageSize', currentPageSize.toString());
     return params;
-  };
+  }, []);
   
-  // Fetch projects with the current filters
-  const fetchProjects = useCallback(async (filters: FilterState, page: number, pageSize: number, skipCache = false) => {
+  const fetchProjects = useCallback(async (currentFilters: FilterState, currentPage: number, currentPageSize: number, skipCache = false) => {
     setIsLoading(true);
-    
     try {
-      if (!user) {
+      if (!user || !user.organizationId) {
         setProjects([]);
         setResultsCount(0);
-        return;
-      }
-      
-      // Try to get projects from ProjectContext first via React Query cache
-      const projectsFromCache = queryClient.getQueryData(['projects', user?.organizationId, user?.id, user?.role, user?.departmentId]);
-      if (projectsFromCache && !skipCache) {
-        console.log('Using projects from ProjectContext cache');
-        
-        // Filter the projects based on current filters
-        const allProjects = projectsFromCache as Project[];
-        const filteredProjects = allProjects.filter(project => {
-          // Search filter
-          if (filters.search && !project.name.toLowerCase().includes(filters.search.toLowerCase())) {
-            return false;
-          }
-          
-          // Department filter
-          if (filters.departments.length > 0 && project.departmentId && 
-              !filters.departments.includes(project.departmentId)) {
-            return false;
-          }
-          
-          // Budget filter
-          if (filters.budget.min !== null && (project.budget === undefined || project.budget < filters.budget.min)) {
-            return false;
-          }
-          if (filters.budget.max !== null && (project.budget === undefined || project.budget > filters.budget.max)) {
-            return false;
-          }
-          
-          // Resources filter
-          if (filters.resources.min !== null && (project.resources === undefined || project.resources < filters.resources.min)) {
-            return false;
-          }
-          if (filters.resources.max !== null && (project.resources === undefined || project.resources > filters.resources.max)) {
-            return false;
-          }
-          
-          // Date filter
-          if (filters.dateRange.start && new Date(project.startDate) < new Date(filters.dateRange.start)) {
-            return false;
-          }
-          if (filters.dateRange.end && new Date(project.endDate) > new Date(filters.dateRange.end)) {
-            return false;
-          }
-          
-          // Status filter
-          if (filters.status.length > 0 && !filters.status.includes(project.status)) {
-            return false;
-          }
-          
-          // Tags filter
-          if (filters.tags.length > 0 && !filters.tags.some(tag => project.tags.includes(tag))) {
-            return false;
-          }
-          
-          return true;
-        });
-        
-        setProjects(filteredProjects);
-        setResultsCount(filteredProjects.length);
         setIsLoading(false);
         return;
       }
+      const queryParams = getQueryParams(currentFilters, currentPage, currentPageSize);
+      const queryKey = ['projects', user.organizationId, queryParams.toString()];
       
-      const params = getQueryParams(filters, page, pageSize);
-      const url = `/api/projects?${params.toString()}`;
-      
-      // Check cache first if available and not skipping cache
       if (!skipCache) {
-        const cachedData = queryClient.getQueryData(['projects', params.toString(), user.id]);
+        const cachedData = queryClient.getQueryData<{ projects: Project[], total: number }>(queryKey);
         if (cachedData) {
-          setProjects(cachedData as Project[]);
-          setResultsCount((cachedData as Project[]).length);
+          setProjects(cachedData.projects);
+          setResultsCount(cachedData.total);
           setIsLoading(false);
           return;
         }
       }
-      
+      const url = `/api/projects?${queryParams.toString()}`;
       const response = await fetchWithAuth(url, {}, user);
-      
       if (!response.ok) {
-        console.error('Failed to fetch projects:', response.status);
         setProjects([]);
         setResultsCount(0);
-        return;
+        throw new Error('Failed to fetch projects');
       }
-      
       const data = await response.json();
-      setProjects(data.projects || data);
-      setResultsCount(data.total || data.length);
-      
-      // Cache the results with user ID in the key to ensure proper cache invalidation
-      queryClient.setQueryData(['projects', params.toString(), user.id], data.projects || data);
+      setProjects(data.projects || []);
+      setResultsCount(data.total || 0);
+      queryClient.setQueryData(queryKey, data);
     } catch (error) {
       console.error('Error fetching projects:', error);
       setProjects([]);
@@ -310,43 +212,33 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [queryClient, user]);
-  
-  // Debounced version of fetchProjects to avoid too many API calls
+  }, [queryClient, user, getQueryParams]);
+
   const debouncedFetchProjects = useMemo(
-    () => debounce((filters: FilterState, page: number, pageSize: number) => {
-      fetchProjects(filters, page, pageSize);
+    () => debounce((currentFilters: FilterState, currentPage: number, currentPageSize: number) => {
+      fetchProjects(currentFilters, currentPage, currentPageSize);
     }, 300),
-    [fetchProjects]
+    [fetchProjects] 
   );
-  
-  // Fetch projects when filters or pagination changes
+
   useEffect(() => {
-    if (user) {
+    if (user && user.organizationId) {
       debouncedFetchProjects(filters, page, pageSize);
-      
-      // Update URL with current filters
       const params = getQueryParams(filters, page, pageSize);
-      const url = `${window.location.pathname}?${params.toString()}`;
-      window.history.replaceState({}, '', url);
+      const urlPath = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState({}, '', urlPath);
     }
-    
     return () => {
       debouncedFetchProjects.cancel();
     };
-  }, [filters, page, pageSize, debouncedFetchProjects, user]);
+  }, [filters, page, pageSize, user, debouncedFetchProjects, getQueryParams]);
   
-  // Handler functions
-  
-  // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setFilters(prev => ({ ...prev, search: e.target.value }));
-    // Reset to first page when search changes
     setPage(1);
-  };
+  }, []);
   
-  // Handle department filter change
-  const handleDepartmentChange = (deptId: string, checked: boolean) => {
+  const handleDepartmentChange = useCallback((deptId: string, checked: boolean) => {
     setFilters(prev => ({
       ...prev,
       departments: checked 
@@ -354,80 +246,51 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
         : prev.departments.filter(id => id !== deptId)
     }));
     setPage(1);
-  };
+  }, []);
   
-  // Handle budget range change
-  const handleBudgetChange = (min: number | null, max: number | null) => {
+  const handleBudgetChange = useCallback((min: number | null, max: number | null) => {
+    setFilters(prev => ({ ...prev, budget: { min, max } }));
+    setPage(1);
+  }, []);
+  
+  const handleResourcesChange = useCallback((min: number | null, max: number | null) => {
+    setFilters(prev => ({ ...prev, resources: { min, max } }));
+    setPage(1);
+  }, []);
+  
+  const handleDateRangeChange = useCallback((start: string | null, end: string | null) => {
+    setFilters(prev => ({ ...prev, dateRange: { start, end } }));
+    setPage(1);
+  }, []);
+  
+  const handleTagChange = useCallback((tag: string, checked: boolean) => {
     setFilters(prev => ({
       ...prev,
-      budget: { min, max }
+      tags: checked ? [...prev.tags, tag] : prev.tags.filter(t => t !== tag)
     }));
     setPage(1);
-  };
+  }, []);
   
-  // Handle resources range change
-  const handleResourcesChange = (min: number | null, max: number | null) => {
+  const handleStatusChange = useCallback((status: string, checked: boolean) => {
     setFilters(prev => ({
       ...prev,
-      resources: { min, max }
+      status: checked ? [...prev.status, status] : prev.status.filter(s => s !== status)
     }));
     setPage(1);
-  };
+  }, []);
   
-  // Handle date range change
-  const handleDateRangeChange = (start: string | null, end: string | null) => {
-    setFilters(prev => ({
-      ...prev,
-      dateRange: { start, end }
-    }));
-    setPage(1);
-  };
-  
-  // Handle tag selection
-  const handleTagChange = (tag: string, checked: boolean) => {
-    setFilters(prev => ({
-      ...prev,
-      tags: checked
-        ? [...prev.tags, tag]
-        : prev.tags.filter(t => t !== tag)
-    }));
-    setPage(1);
-  };
-  
-  // Handle status filter change
-  const handleStatusChange = (status: string, checked: boolean) => {
-    setFilters(prev => ({
-      ...prev,
-      status: checked
-        ? [...prev.status, status]
-        : prev.status.filter(s => s !== status)
-    }));
-    setPage(1);
-  };
-  
-  // Removed handleCriteriaScoreChange function
-  
-  // Clear all filters
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     setFilters(defaultFilterState);
     setPage(1);
-  };
+  }, []);
   
-  // Get a list of all active filters for display
   const activeFilters = useMemo(() => {
     const filterItems: FilterItem[] = [];
-    
-    if (filters.search) {
-      filterItems.push({ key: 'search', label: `Search: ${filters.search}` });
-    }
-    
+    if (filters.search) filterItems.push({ key: 'search', label: `Search: ${filters.search}` });
     filters.departments.forEach(deptId => {
-      const dept = departments.find(d => d.id === deptId);
-      if (dept) {
-        filterItems.push({ key: `dept_${deptId}`, label: `Department: ${dept.name}` });
-      }
+      const dept = departments.find(d => d.id === deptId); // Use 'departments' state variable here
+      if (dept) filterItems.push({ key: `dept_${deptId}`, label: `Department: ${dept.name}` });
     });
-    
     if (filters.budget.min !== null || filters.budget.max !== null) {
       let label = 'Budget: ';
       if (filters.budget.min !== null) label += `$${filters.budget.min.toLocaleString()}`;
@@ -435,7 +298,6 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
       if (filters.budget.max !== null) label += `$${filters.budget.max.toLocaleString()}`;
       filterItems.push({ key: 'budget', label });
     }
-    
     if (filters.resources.min !== null || filters.resources.max !== null) {
       let label = 'Resources: ';
       if (filters.resources.min !== null) label += `${filters.resources.min.toLocaleString()}`;
@@ -443,7 +305,6 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
       if (filters.resources.max !== null) label += `${filters.resources.max.toLocaleString()}`;
       filterItems.push({ key: 'resources', label });
     }
-    
     if (filters.dateRange.start || filters.dateRange.end) {
       let label = 'Dates: ';
       if (filters.dateRange.start) label += new Date(filters.dateRange.start).toLocaleDateString();
@@ -451,135 +312,80 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
       if (filters.dateRange.end) label += new Date(filters.dateRange.end).toLocaleDateString();
       filterItems.push({ key: 'dates', label });
     }
-    
-    filters.tags.forEach(tag => {
-      filterItems.push({ key: `tag_${tag}`, label: `Tag: ${tag}` });
-    });
-    
-    filters.status.forEach(status => {
-      filterItems.push({ key: `status_${status}`, label: `Status: ${status}` });
-    });
-    
-    // Removed criteriaScores from active filters
-    
+    filters.tags.forEach(tag => filterItems.push({ key: `tag_${tag}`, label: `Tag: ${tag}` }));
+    filters.status.forEach(statusItem => filterItems.push({ key: `status_${statusItem}`, label: `Status: ${statusItem}` }));
     return filterItems;
-  }, [filters, departments]);
+  }, [filters, departments]); // Use 'departments' state variable in dependency array
   
-  // Remove a single filter
-  const removeFilter = (key: string) => {
-    if (key === 'search') {
-      setFilters(prev => ({ ...prev, search: '' }));
-    } else if (key === 'budget') {
-      setFilters(prev => ({ ...prev, budget: { min: null, max: null } }));
-    } else if (key === 'resources') {
-      setFilters(prev => ({ ...prev, resources: { min: null, max: null } }));
-    } else if (key === 'dates') {
-      setFilters(prev => ({ ...prev, dateRange: { start: null, end: null } }));
-    } else if (key.startsWith('dept_')) {
+  const removeFilter = useCallback((key: string) => {
+    if (key === 'search') setFilters(prev => ({ ...prev, search: '' }));
+    else if (key === 'budget') setFilters(prev => ({ ...prev, budget: { min: null, max: null } }));
+    else if (key === 'resources') setFilters(prev => ({ ...prev, resources: { min: null, max: null } }));
+    else if (key === 'dates') setFilters(prev => ({ ...prev, dateRange: { start: null, end: null } }));
+    else if (key.startsWith('dept_')) {
       const deptId = key.replace('dept_', '');
-      setFilters(prev => ({
-        ...prev,
-        departments: prev.departments.filter(id => id !== deptId)
-      }));
+      setFilters(prev => ({ ...prev, departments: prev.departments.filter(id => id !== deptId) }));
     } else if (key.startsWith('tag_')) {
       const tag = key.replace('tag_', '');
-      setFilters(prev => ({
-        ...prev,
-        tags: prev.tags.filter(t => t !== tag)
-      }));
+      setFilters(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
     } else if (key.startsWith('status_')) {
-      const status = key.replace('status_', '');
-      setFilters(prev => ({
-        ...prev,
-        status: prev.status.filter(s => s !== status)
-      }));
-    // Removed criterion_ case from removeFilter
+      const statusItem = key.replace('status_', '');
+      setFilters(prev => ({ ...prev, status: prev.status.filter(s => s !== statusItem) }));
     }
-    
     setPage(1);
-  };
+  }, []);
   
-  // Navigate to project details
-  const handleSelectProject = (projectId: string) => {
+  const handleSelectProject = useCallback((projectId: string) => {
     router.push(`/details/${projectId}`);
-  };
+  }, [router]);
   
-  // Create new project
-  const handleCreateProject = () => {
+  const handleCreateProject = useCallback(() => {
     router.push('/projects/new');
-  };
+  }, [router]);
   
-  // Navigate to import projects page
-  const handleImportProjects = () => {
+  const handleImportProjects = useCallback(() => {
     router.push('/projects/import');
-  };
+  }, [router]);
   
-  // Format dollar amount
-  const formatCurrency = (amount: number | undefined | null) => {
+  const formatCurrency = useCallback((amount: number | undefined | null) => {
     if (amount === undefined || amount === null) return '-';
     return `$${amount.toLocaleString()}`;
-  };
+  }, []);
   
-  // Format number with thousand separator
-  const formatNumber = (value: number | undefined | null) => {
+  const formatNumber = useCallback((value: number | undefined | null) => {
     if (value === undefined || value === null) return '-';
     return value.toLocaleString();
-  };
+  }, []);
   
-  // Format date
-  const formatDate = (dateString: string | undefined | null) => {
+  const formatDate = useCallback((dateString: string | undefined | null) => {
     if (!dateString) return '-';
-    
-    // Format date as "Mar 21 '25"
     const date = new Date(dateString);
     const month = date.toLocaleString('en-US', { month: 'short' });
     const day = date.getDate();
     const year = date.getFullYear().toString().substr(-2);
-    
     return `${month} ${day} '${year}`;
-  };
+  }, []);
 
-  // Function to refresh data by forcing a refetch
   const refreshData = useCallback(() => {
-    // Clear all project-related cache
     queryClient.invalidateQueries({ queryKey: ['projects'] });
-    
-    // Force a fresh fetch
     fetchProjects(filters, page, pageSize, true);
-    
-    // Also refresh departments
-    const fetchDepartments = async () => {
-      try {
-        if (user) {
-          const response = await fetchWithAuth('/api/departments', {}, user);
-          if (response.ok) {
-            const data = await response.json();
-            setDepartments(data);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching departments:', error);
-      }
-    };
-    
-    fetchDepartments();
+    queryClient.invalidateQueries({ queryKey: ['departments', user?.organizationId] });
   }, [fetchProjects, filters, page, pageSize, queryClient, user]);
   
-  // Add effect to refresh data when user changes
   useEffect(() => {
     if (user) {
-      refreshData();
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['departments', user.organizationId] });
     }
-  }, [user, refreshData]);
+  }, [user, queryClient]);
 
-  const contextValue = {
-    // State
+  const contextValue = useMemo(() => ({
     isFilterPanelOpen,
     setIsFilterPanelOpen,
     isLoading,
     projects,
-    departments,
-    criteria, // Add criteria to the context value
+    departments: departments || [], // Use 'departments' state variable here
+    criteria, 
     resultsCount,
     page,
     setPage,
@@ -587,8 +393,6 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
     setPageSize,
     filters,
     activeFilters,
-    
-    // Handlers
     handleSearchChange,
     handleDepartmentChange,
     handleBudgetChange,
@@ -601,15 +405,17 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
     handleSelectProject,
     handleCreateProject,
     handleImportProjects,
-    
-    // Data refresh
     refreshData,
-    
-    // Formatting utilities
     formatCurrency,
     formatDate,
     formatNumber
-  };
+  }), [
+    isFilterPanelOpen, isLoading, projects, departments, criteria, resultsCount, page, pageSize, filters, activeFilters, // Use 'departments' state variable here
+    refreshData, handleSearchChange, handleDepartmentChange, handleBudgetChange, handleResourcesChange, 
+    handleDateRangeChange, handleTagChange, handleStatusChange, handleClearFilters, removeFilter, 
+    handleSelectProject, handleCreateProject, handleImportProjects, formatCurrency, formatDate, formatNumber, 
+    setIsFilterPanelOpen, setPage, setPageSize
+  ]);
 
   return (
     <ProjectSearchContext.Provider value={contextValue}>
@@ -618,7 +424,6 @@ export function ProjectSearchProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Hook to use the project search context
 export function useProjectSearch() {
   const context = useContext(ProjectSearchContext);
   if (context === undefined) {

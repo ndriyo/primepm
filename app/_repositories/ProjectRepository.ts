@@ -5,12 +5,18 @@ import { CriteriaRepository } from './CriteriaRepository';
 import { calculateOverallScore as calculateScore, CriteriaScore } from '../_lib/scoreCalculator';
 
 // Temporary Project type definition until Prisma client is generated
+export interface DepartmentSimple {
+  id: string;
+  name: string;
+}
+
 export interface Project {
   id: string;
   name: string;
   description?: string | null;
   organizationId: string;
   departmentId?: string | null;
+  department?: DepartmentSimple | null; // Added for full department object
   status: string;
   startDate: Date;
   endDate: Date;
@@ -176,7 +182,8 @@ export class ProjectRepository extends BaseRepository<
           include: {
             criterion: true
           }
-        }
+        },
+        department: true // Include the full department object
       }
     });
 

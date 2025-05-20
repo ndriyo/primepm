@@ -35,8 +35,8 @@ export const PageLayout = ({ children }: PageLayoutProps) => {
           <Image
             src="https://zwweamxsxemiefdlkgzn.supabase.co/storage/v1/object/public/asset/logo_transparent.png"
             alt="PrimePM Logo"
-            width={242}
-            height={96}
+            width={256}
+            height={100}
             className="h-auto w-auto mr-3"
             priority
           />

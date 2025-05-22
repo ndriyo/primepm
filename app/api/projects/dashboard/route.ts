@@ -6,12 +6,17 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{}> }
 ) {
+  console.log("NETLIFY LOG: --- Start /api/projects/dashboard ---");
+  console.log("NETLIFY LOG: All Request Headers:", JSON.stringify(Object.fromEntries(request.headers.entries())));
+
   try {
     // Get organization ID and user info from headers (set by auth context)
     const organizationId = request.headers.get('x-organization-id');
     const userId = request.headers.get('x-user-id');
     const userRole = request.headers.get('x-user-role');
     const departmentId = request.headers.get('x-department-id');
+
+    console.log(`NETLIFY LOG: Parsed - OrgID: ${organizationId}, UserID: ${userId}, UserRole: ${userRole}, DeptID: ${departmentId}`);
     
     if (!organizationId) {
       return NextResponse.json(
@@ -34,6 +39,7 @@ export async function GET(
     // Fetch projects based on user role
     let projects;
     if (userRole === 'projectManager' && departmentId) {
+      console.log("NETLIFY LOG: Condition for PM path MET. Calling findByDepartment.");
       // Project Manager sees only their department's projects
       projects = await projectRepo.findByDepartment(
         departmentId, 
@@ -41,6 +47,7 @@ export async function GET(
         userRole || undefined
       );
     } else {
+      console.log("NETLIFY LOG: Condition for PM path NOT MET or other role. Calling findByOrganization.");
       // PMO/Executive sees all projects in the organization
       projects = await projectRepo.findByOrganization(
         organizationId, 
@@ -68,9 +75,12 @@ export async function GET(
     return NextResponse.json(projectsWithDepartments);
   } catch (error) {
     console.error('Error fetching dashboard projects:', error);
+    console.log("NETLIFY LOG: --- Error in /api/projects/dashboard ---", error);
     return NextResponse.json(
       { error: 'Failed to fetch projects' },
       { status: 500 }
     );
+  } finally {
+    console.log("NETLIFY LOG: --- End /api/projects/dashboard ---");
   }
 }

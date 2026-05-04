@@ -20,10 +20,19 @@ app.use(
   '*',
   cors({
     origin: (origin) => {
-      const allowed = (Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map(s => s.trim()).filter(Boolean);
       if (!origin) return null;
+      // Always allow local development
       if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) return origin;
-      if (allowed.includes(origin)) return origin;
+      const allowed = (Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map(s => s.trim()).filter(Boolean);
+      for (const pattern of allowed) {
+        // Support wildcard subdomain patterns, e.g. https://*.primepmdev.pages.dev
+        if (pattern.includes('*')) {
+          const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '[^.]+');
+          if (new RegExp(`^${escaped}$`).test(origin)) return origin;
+        } else if (origin === pattern) {
+          return origin;
+        }
+      }
       return null;
     },
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

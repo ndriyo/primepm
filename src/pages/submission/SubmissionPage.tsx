@@ -6,27 +6,32 @@ import { Button } from '../../components/ui/Button';
 import { navigate } from '../../lib/router';
 import { SubmissionWizard } from './SubmissionWizard';
 
-type Mode = { kind: 'list' } | { kind: 'create' } | { kind: 'edit'; projectId: string };
+type Mode =
+  | { kind: 'list' }
+  | { kind: 'create' }
+  | { kind: 'edit'; projectId: string; from: 'list' | 'detail' };
 
-/** Read ?edit=<id> from the current URL — used by /projects/:id detail
- *  page when the user clicks "Edit" and lands here. */
-function readEditParam(): string | null {
+/** Read ?edit=<id>&from=<caller> from the current URL — used by
+ *  /projects/:id detail page when the user clicks "Edit". */
+function readEditParam(): { id: string; from: 'list' | 'detail' } | null {
   const sp = new URLSearchParams(window.location.search);
   const id = sp.get('edit');
-  if (!id) return null;
-  return /^[0-9a-f-]{36}$/i.test(id) ? id : null;
+  if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const from = sp.get('from') === 'detail' ? 'detail' : 'list';
+  return { id, from };
 }
 
 function clearEditParam(): void {
   const url = new URL(window.location.href);
   url.searchParams.delete('edit');
+  url.searchParams.delete('from');
   window.history.replaceState({}, '', url.toString());
 }
 
 export function SubmissionPage() {
   const [mode, setMode] = useState<Mode>(() => {
-    const id = readEditParam();
-    return id ? { kind: 'edit', projectId: id } : { kind: 'list' };
+    const param = readEditParam();
+    return param ? { kind: 'edit', projectId: param.id, from: param.from } : { kind: 'list' };
   });
   const [projects, setProjects] = useState<ProjectSummary[] | null>(null);
   const [activeVersion, setActiveVersion] = useState<CriteriaVersion | null>(null);
@@ -90,11 +95,21 @@ export function SubmissionPage() {
     );
   }
   if (mode.kind === 'edit') {
+    const projectId = mode.projectId;
+    const exitToCaller = () => {
+      clearEditParam();
+      if (mode.kind === 'edit' && mode.from === 'detail') {
+        navigate(`/projects/${projectId}`);
+      } else {
+        setMode({ kind: 'list' });
+        void refresh();
+      }
+    };
     return (
       <SubmissionWizard
-        projectId={mode.projectId}
-        onCancel={() => { clearEditParam(); setMode({ kind: 'list' }); void refresh(); }}
-        onSaved={() => { clearEditParam(); setMode({ kind: 'list' }); void refresh(); }}
+        projectId={projectId}
+        onCancel={exitToCaller}
+        onSaved={exitToCaller}
       />
     );
   }
@@ -236,7 +251,7 @@ export function SubmissionPage() {
                   <tr
                     key={p.id}
                     className="border-t border-(--color-border)/60 hover:bg-(--color-surface-2)/60 cursor-pointer transition-colors"
-                    onClick={() => setMode({ kind: 'edit', projectId: p.id })}
+                    onClick={() => setMode({ kind: 'edit', projectId: p.id, from: 'list' })}
                   >
                     <td className="px-4 py-2.5">
                       <div className="font-medium truncate">{p.name}</div>

@@ -16,11 +16,16 @@ import { useAuth } from './auth/useAuth';
 import { LoginPage } from './auth/LoginPage';
 import { isApiConfigured } from './api/client';
 import { useRoute, navigate } from './lib/router';
-import { ProjectListPage } from './pages/ProjectListPage';
-import { AppShell } from './components/layout/AppShell';
-import { DashboardPage } from './pages/DashboardPage';
+import { PpShell } from './components/layout/PpShell';
 import { SubmissionPage } from './pages/submission/SubmissionPage';
 import { SelectionPage } from './pages/selection/SelectionPage';
+import { DashboardRealPage } from './pages/dashboard/DashboardRealPage';
+import { DashboardSoonPage } from './pages/dashboard/DashboardSoonPage';
+import { OngoingProjectListPage } from './pages/ongoing/OngoingProjectListPage';
+import { OngoingProjectDetailPage } from './pages/ongoing/OngoingProjectDetailPage';
+import { OngoingProjectSoonPage } from './pages/ongoing/OngoingProjectSoonPage';
+import { OngoingProjectSoonDetailPage } from './pages/ongoing/OngoingProjectSoonDetailPage';
+import { SoonPage } from './pages/SoonPage';
 
 const GRID_PANE_MIN = 240;
 const GRID_PANE_MAX = 1400;
@@ -50,17 +55,36 @@ export default function App() {
   }
 
   if (apiMode) {
-    // Scheduler is full-bleed (own toolbar). All other API-mode pages share the AppShell.
+    // Scheduler view is full-bleed (own toolbar) — no shell.
     if (route.name === 'project') {
-      return <AppShell><AppContent projectId={route.id} key={route.id} /></AppShell>;
+      return <AppContent projectId={route.id} key={route.id} />;
     }
-    if (route.name === 'dashboard') return <AppShell><DashboardPage /></AppShell>;
-    if (route.name === 'submission') return <AppShell><SubmissionPage /></AppShell>;
-    if (route.name === 'selection') return <AppShell><SelectionPage /></AppShell>;
-    if (route.name === 'list') return <AppShell><ProjectListPage /></AppShell>;
+
+    // New design routes (each page provides its own PpShell wrapper)
+    if (route.name === 'dashboard') return <DashboardRealPage />;
+    if (route.name === 'dashboard-soon') return <DashboardSoonPage />;
+    if (route.name === 'list') return <OngoingProjectListPage />;
+    if (route.name === 'project-detail') return <OngoingProjectDetailPage projectId={route.id} key={route.id} />;
+    if (route.name === 'ongoing-soon') return <OngoingProjectSoonPage />;
+    if (route.name === 'ongoing-soon-detail') return <OngoingProjectSoonDetailPage id={route.id} key={route.id} />;
+    if (route.name === 'soon') return <SoonPage kind={route.kind} />;
+
+    // Existing pages — wrap inside the new shell (their internal styling stays light/old).
+    if (route.name === 'submission') {
+      return <PpShell crumbs={[{ label: 'Projects' }, { label: 'Project Submission' }]}><SubmissionPage /></PpShell>;
+    }
+    if (route.name === 'selection') {
+      return <PpShell crumbs={[{ label: 'Projects' }, { label: 'Project Selection' }]}><SelectionPage /></PpShell>;
+    }
+    // 'project-edit' uses SubmissionPage internal edit mode — for now route to submission list.
+    if (route.name === 'project-edit') {
+      return <PpShell crumbs={[{ label: 'Projects' }, { label: 'Project Submission' }]}><SubmissionPage /></PpShell>;
+    }
+
+    // Fallback → dashboard
     if (typeof window !== 'undefined') {
-      window.history.replaceState({}, '', '/projects');
-      return <AppShell><ProjectListPage /></AppShell>;
+      window.history.replaceState({}, '', '/dashboard');
+      return <DashboardRealPage />;
     }
   }
 

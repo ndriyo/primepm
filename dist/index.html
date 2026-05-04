@@ -1,14 +1,483 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PrimePM - Designed to Deliver</title>
-    <script type="module" crossorigin src="/assets/index-DWVEaR9B.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CflK4y6f.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PrimePM — The PMO Command Center</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<style>
+:root {
+  --pp-accent: #4F46E5;
+  --pp-accent-50: #EEF2FF;
+  --pp-accent-100: #E0E7FF;
+  --pp-bg: #FAFAF9;
+  --pp-surface: #FFFFFF;
+  --pp-surface-2: #F5F5F4;
+  --pp-border: #E7E5E4;
+  --pp-border-strong: #D6D3D1;
+  --pp-text: #1C1917;
+  --pp-text-2: #44403C;
+  --pp-text-3: #78716C;
+  --pp-text-4: #A8A29E;
+  --pp-green: #16A34A;
+  --pp-green-bg: #DCFCE7;
+  --pp-amber: #D97706;
+  --pp-amber-bg: #FEF3C7;
+  --pp-red: #DC2626;
+  --pp-red-bg: #FEE2E2;
+  --pp-font-sans: "Inter Tight", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --pp-font-display: "Instrument Serif", "Times New Roman", serif;
+  --pp-r-md: 10px;
+  --pp-r-lg: 14px;
+  --pp-r-xl: 20px;
+  --pp-shadow-md: 0 4px 12px rgba(28,25,23,.06), 0 1px 2px rgba(28,25,23,.04);
+  --pp-shadow-lg: 0 12px 32px rgba(28,25,23,.08), 0 2px 6px rgba(28,25,23,.04);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--pp-bg); color: var(--pp-text); font-family: var(--pp-font-sans); font-size: 13.5px; line-height: 1.5; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; font-feature-settings: "ss01","cv11"; }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--pp-r-md); border: 1px solid var(--pp-border); background: var(--pp-surface); color: var(--pp-text); font-size: 12.5px; font-weight: 500; text-decoration: none; cursor: pointer; font-family: inherit; transition: background .12s, opacity .12s; }
+.btn:hover { background: var(--pp-surface-2); }
+.btn.primary { background: var(--pp-text); color: var(--pp-bg); border-color: var(--pp-text); }
+.btn.primary:hover { opacity: .92; }
+.btn.accent { background: var(--pp-accent); color: white; border-color: var(--pp-accent); }
+.btn svg { width: 14px; height: 14px; }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 999px; background: var(--pp-surface-2); color: var(--pp-text-2); white-space: nowrap; }
+
+.landing { min-height: 100vh; background: var(--pp-bg); color: var(--pp-text); font-family: var(--pp-font-sans); display: flex; flex-direction: column; }
+
+.land-nav { display: flex; align-items: center; gap: 36px; padding: 22px 56px; border-bottom: 1px solid transparent; position: sticky; top: 0; background: color-mix(in oklab, var(--pp-bg) 80%, transparent); backdrop-filter: blur(14px); z-index: 20; transition: border-color .2s; }
+.land-nav.scrolled { border-color: var(--pp-border); }
+.land-brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; letter-spacing: -0.015em; text-decoration: none; color: inherit; }
+.land-brand em { font-family: var(--pp-font-display); font-style: italic; font-weight: 400; color: var(--pp-text-3); margin-left: 2px; font-size: 16px; }
+.land-brand .mark { width: 30px; height: 30px; border-radius: 8px; background: var(--pp-text); color: var(--pp-bg); font-family: var(--pp-font-display); font-style: italic; font-size: 18px; display: grid; place-items: center; }
+.land-links { display: flex; gap: 4px; }
+.land-links a { padding: 6px 12px; font-size: 13.5px; color: var(--pp-text-2); border-radius: 8px; text-decoration: none; cursor: pointer; transition: background .1s; }
+.land-links a:hover { background: var(--pp-surface-2); color: var(--pp-text); }
+.land-nav-spacer { flex: 1; }
+.land-cta { display: flex; gap: 8px; align-items: center; }
+
+.hero { position: relative; padding: 64px 56px 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; max-width: 1480px; margin: 0 auto; width: 100%; }
+.hero-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(800px 320px at 20% 10%, color-mix(in oklab, var(--pp-accent) 12%, transparent), transparent), radial-gradient(600px 300px at 90% 30%, color-mix(in oklab, var(--pp-green) 8%, transparent), transparent); }
+.hero-bg::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(var(--pp-border) 1px, transparent 1px), linear-gradient(90deg, var(--pp-border) 1px, transparent 1px); background-size: 56px 56px; opacity: .35; mask-image: radial-gradient(circle at 50% 30%, black, transparent 75%); }
+.hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; padding: 5px 12px 5px 6px; background: var(--pp-surface); border: 1px solid var(--pp-border); border-radius: 999px; color: var(--pp-text-3); }
+.hero-eyebrow .pip { background: var(--pp-accent-100); color: var(--pp-accent); border-radius: 999px; padding: 2px 8px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; }
+.hero h1 { margin: 22px 0 18px; font-size: clamp(40px, 5.6vw, 76px); line-height: 1; font-weight: 500; letter-spacing: -0.035em; text-wrap: balance; }
+.hero h1 em { font-family: var(--pp-font-display); font-style: italic; font-weight: 400; color: var(--pp-text-3); }
+.hero p.lead { font-size: 17px; color: var(--pp-text-3); line-height: 1.55; max-width: 480px; margin: 0 0 28px; text-wrap: pretty; }
+.hero-cta { display: flex; gap: 10px; align-items: center; }
+.hero-trust { margin-top: 36px; display: flex; align-items: center; gap: 18px; font-size: 12px; color: var(--pp-text-3); }
+.hero-trust .logos { display: flex; gap: 22px; align-items: center; }
+.hero-trust .logos b { font-weight: 600; letter-spacing: -0.01em; color: var(--pp-text-2); opacity: .7; font-size: 14px; }
+
+.hero-visual { position: relative; height: 520px; }
+.hv-frame { position: absolute; background: var(--pp-surface); border: 1px solid var(--pp-border); border-radius: var(--pp-r-lg); box-shadow: var(--pp-shadow-lg); overflow: hidden; }
+.hv-main { inset: 0 0 0 40px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.hv-head { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--pp-text-3); }
+.hv-head .dots { display: flex; gap: 5px; }
+.hv-head .dots span { width: 9px; height: 9px; border-radius: 50%; background: var(--pp-border-strong); }
+.hv-head .pill { background: var(--pp-surface-2); padding: 2px 8px; border-radius: 999px; font-size: 10.5px; }
+.hv-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.hv-kpi { background: var(--pp-surface-2); border-radius: 10px; padding: 10px 12px; }
+.hv-kpi .lbl { font-size: 9.5px; color: var(--pp-text-3); letter-spacing: 0.04em; text-transform: uppercase; }
+.hv-kpi .val { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.hv-kpi .delta { font-size: 10px; color: var(--pp-green); margin-top: 2px; }
+.hv-kpi .delta.r { color: var(--pp-red); }
+.hv-kpi .delta.a { color: var(--pp-amber); }
+.hv-chart { background: var(--pp-surface-2); border-radius: 10px; padding: 14px 14px 10px; flex: 1; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.hv-chart .ttl { font-size: 11px; font-weight: 600; }
+.hv-chart .sub { font-size: 10.5px; color: var(--pp-text-3); }
+.hv-list { background: var(--pp-surface-2); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.hv-list .row { display: flex; align-items: center; gap: 8px; font-size: 11px; margin-bottom: 0; }
+.hv-list .row .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.hv-list .row .nm { flex: 1; color: var(--pp-text-2); }
+.hv-list .row .pct { color: var(--pp-text-3); font-variant-numeric: tabular-nums; font-size: 10px; }
+.hv-callout { position: absolute; background: var(--pp-surface); border: 1px solid var(--pp-border); border-radius: var(--pp-r-md); padding: 12px 14px; box-shadow: var(--pp-shadow-md); width: 220px; font-size: 11.5px; }
+.hv-callout .cap { font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pp-text-4); font-weight: 600; margin-bottom: 4px; }
+.hv-callout strong { font-weight: 600; }
+.hv-callout-1 { top: 80px; left: -32px; animation: float1 8s ease-in-out infinite; }
+.hv-callout-2 { bottom: 60px; right: -28px; animation: float2 9s ease-in-out infinite; }
+@keyframes float1 { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
+@keyframes float2 { 0%,100% { transform: translateY(0) } 50% { transform: translateY(6px) } }
+
+.logo-strip { padding: 28px 56px; border-top: 1px solid var(--pp-border); border-bottom: 1px solid var(--pp-border); background: var(--pp-surface); }
+.logo-strip-inner { max-width: 1480px; margin: 0 auto; display: flex; gap: 56px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.logo-strip .lbl { font-size: 11.5px; color: var(--pp-text-4); letter-spacing: 0.05em; text-transform: uppercase; }
+.logo-strip .logos { display: flex; gap: 44px; align-items: center; flex-wrap: wrap; }
+.logo-strip .logo { font-family: var(--pp-font-display); font-size: 22px; letter-spacing: -0.01em; color: var(--pp-text-2); opacity: .55; }
+.logo-strip .logo.sans { font-family: var(--pp-font-sans); font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
+
+.section { padding: 120px 56px; max-width: 1480px; margin: 0 auto; width: 100%; }
+.section-head { max-width: 720px; margin-bottom: 48px; }
+.section-eyebrow { font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pp-accent); font-weight: 600; margin-bottom: 14px; display: block; }
+.section-head h2 { margin: 0 0 16px; font-size: clamp(32px, 4vw, 52px); letter-spacing: -0.025em; font-weight: 500; line-height: 1.05; text-wrap: balance; }
+.section-head h2 em { font-family: var(--pp-font-display); font-style: italic; color: var(--pp-text-3); font-weight: 400; }
+.section-head p { margin: 0; font-size: 17px; color: var(--pp-text-3); line-height: 1.55; text-wrap: pretty; }
+
+.feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.feature { background: var(--pp-surface); border: 1px solid var(--pp-border); border-radius: var(--pp-r-lg); padding: 28px; display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
+.feature.span-2 { grid-column: span 2; }
+.feature .ico-tile { width: 36px; height: 36px; border-radius: 9px; background: var(--pp-surface-2); display: grid; place-items: center; color: var(--pp-text); }
+.feature h3 { margin: 0; font-size: 18px; letter-spacing: -0.015em; font-weight: 600; }
+.feature p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--pp-text-3); }
+.feature-vis { margin-top: auto; padding-top: 18px; }
+
+.stats { background: var(--pp-text); color: var(--pp-bg); padding: 80px 56px; }
+.stats-inner { max-width: 1480px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 36px; }
+.stat .num { font-family: var(--pp-font-display); font-style: italic; font-size: clamp(48px, 6vw, 76px); font-weight: 400; letter-spacing: -0.015em; line-height: 1; }
+.stat .num .small { font-family: var(--pp-font-sans); font-style: normal; font-size: 0.42em; font-weight: 500; color: var(--pp-text-4); margin-left: 6px; }
+.stat .lbl { font-size: 13px; color: var(--pp-text-4); margin-top: 14px; max-width: 260px; line-height: 1.5; }
+
+.personas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.persona { background: var(--pp-surface); border: 1px solid var(--pp-border); border-radius: var(--pp-r-lg); padding: 22px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; transition: transform .2s, border-color .2s; }
+.persona:hover { transform: translateY(-2px); border-color: var(--pp-border-strong); }
+.persona .role { font-size: 11.5px; color: var(--pp-text-4); letter-spacing: 0.04em; text-transform: uppercase; }
+.persona h4 { margin: 0; font-size: 17px; letter-spacing: -0.015em; font-weight: 600; }
+.persona p { margin: 0; font-size: 12.5px; color: var(--pp-text-3); line-height: 1.55; }
+.persona .focus { margin-top: auto; padding-top: 14px; display: flex; flex-wrap: wrap; gap: 4px; }
+.persona .focus span { background: var(--pp-surface-2); border-radius: 6px; padding: 2px 8px; font-size: 10.5px; color: var(--pp-text-2); }
+
+.quote-wrap { padding: 100px 56px; background: var(--pp-surface); border-top: 1px solid var(--pp-border); border-bottom: 1px solid var(--pp-border); }
+.quote-inner { max-width: 980px; margin: 0 auto; text-align: center; }
+.quote-inner blockquote { font-family: var(--pp-font-display); font-style: italic; font-weight: 400; font-size: clamp(28px, 3vw, 40px); line-height: 1.25; letter-spacing: -0.015em; margin: 0 0 26px; color: var(--pp-text); text-wrap: balance; }
+.quote-inner blockquote::before { content: "\201C"; color: var(--pp-text-3); margin-right: 4px; }
+.quote-inner blockquote::after { content: "\201D"; color: var(--pp-text-3); margin-left: 4px; }
+.quote-inner cite { font-style: normal; font-size: 13px; color: var(--pp-text-3); display: flex; align-items: center; justify-content: center; gap: 12px; }
+.quote-inner cite .av { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #7C3AED, #4F46E5); color: white; display: grid; place-items: center; font-size: 11px; font-weight: 600; }
+
+.price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.price { background: var(--pp-surface); border: 1px solid var(--pp-border); border-radius: var(--pp-r-lg); padding: 30px 28px; display: flex; flex-direction: column; gap: 16px; }
+.price.featured { background: var(--pp-text); color: var(--pp-bg); border-color: var(--pp-text); position: relative; }
+.price.featured .feat-pill { position: absolute; top: 14px; right: 14px; background: var(--pp-accent); color: white; font-size: 10px; padding: 3px 8px; border-radius: 999px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; }
+.price h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.price .amount { font-family: var(--pp-font-display); font-style: italic; font-size: 56px; line-height: 1; letter-spacing: -0.02em; }
+.price.featured .amount { color: var(--pp-bg); }
+.price .amount .per { font-family: var(--pp-font-sans); font-style: normal; font-size: 14px; font-weight: 500; color: var(--pp-text-3); margin-left: 6px; }
+.price.featured .amount .per { color: var(--pp-text-4); }
+.price .desc { font-size: 13px; color: var(--pp-text-3); margin: 0 0 8px; line-height: 1.5; }
+.price.featured .desc { color: var(--pp-text-4); }
+.price ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--pp-text-2); }
+.price.featured ul { color: var(--pp-bg); }
+.price ul li { display: flex; align-items: flex-start; gap: 8px; }
+.price ul li svg { width: 14px; height: 14px; color: var(--pp-green); flex-shrink: 0; margin-top: 3px; }
+.price.featured ul li svg { color: var(--pp-accent-100); }
+.price .btn { margin-top: auto; justify-content: center; }
+
+.cta-band { padding: 100px 56px; text-align: center; }
+.cta-band-inner { max-width: 720px; margin: 0 auto; background: var(--pp-bg); border: 1px solid var(--pp-border); border-radius: var(--pp-r-xl); padding: 56px 40px; position: relative; overflow: hidden; }
+.cta-band-inner::before { content: ""; position: absolute; inset: 0; background: radial-gradient(400px 200px at 50% 0%, color-mix(in oklab, var(--pp-accent) 16%, transparent), transparent); pointer-events: none; }
+.cta-band h2 { position: relative; margin: 0 0 16px; font-size: clamp(32px, 4vw, 48px); letter-spacing: -0.025em; font-weight: 500; line-height: 1.1; }
+.cta-band h2 em { font-family: var(--pp-font-display); font-style: italic; color: var(--pp-text-3); font-weight: 400; }
+.cta-band p { position: relative; color: var(--pp-text-3); margin: 0 0 26px; font-size: 16px; }
+.cta-band .cta-row { position: relative; display: flex; gap: 10px; justify-content: center; }
+
+.footer { border-top: 1px solid var(--pp-border); padding: 36px 56px 28px; background: var(--pp-surface); }
+.footer-inner { max-width: 1480px; margin: 0 auto; display: grid; grid-template-columns: 1fr 2fr; gap: 36px; }
+.footer-cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.footer-cols .col h4 { margin: 0 0 12px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pp-text-4); font-weight: 600; }
+.footer-cols .col a { display: block; padding: 4px 0; color: var(--pp-text-2); text-decoration: none; font-size: 13px; }
+.footer-cols .col a:hover { color: var(--pp-text); }
+.footer-base { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--pp-border); display: flex; justify-content: space-between; font-size: 12px; color: var(--pp-text-4); }
+
+@media (max-width: 1024px) {
+  .hero { grid-template-columns: 1fr; padding: 48px 32px; }
+  .hero-visual { display: none; }
+  .land-nav { padding: 18px 24px; gap: 20px; }
+  .section { padding: 80px 32px; }
+  .feature-grid, .price-grid, .personas { grid-template-columns: 1fr 1fr; }
+  .feature.span-2 { grid-column: auto; }
+  .stats-inner { grid-template-columns: 1fr 1fr; }
+  .footer-inner { grid-template-columns: 1fr; }
+  .footer-cols { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .feature-grid, .price-grid, .personas { grid-template-columns: 1fr; }
+  .stats-inner { grid-template-columns: 1fr; }
+  .land-links { display: none; }
+  .stats { padding: 60px 24px; }
+  .quote-wrap { padding: 60px 24px; }
+  .cta-band { padding: 60px 24px; }
+  .footer { padding: 28px 24px 20px; }
+  .logo-strip { padding: 20px 24px; }
+}
+</style>
+</head>
+<body>
+<div class="landing">
+
+  <nav class="land-nav" id="topnav">
+    <a href="/" class="land-brand">
+      <span class="mark">P</span>
+      <span>PrimePM<em>·pmo</em></span>
+    </a>
+    <div class="land-links">
+      <a href="#product">Product</a>
+      <a href="#solutions">Solutions</a>
+      <a href="#customers">Customers</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#">Docs</a>
+    </div>
+    <div class="land-nav-spacer"></div>
+    <div class="land-cta">
+      <a href="/login" class="btn">Sign in</a>
+      <a href="/login?signup=1" class="btn primary">Get started
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div>
+      <span class="hero-eyebrow">
+        <span class="pip">NEW</span>
+        AI-assisted portfolio briefings — read more
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </span>
+      <h1>The PMO command center for <em>complex</em> portfolios.</h1>
+      <p class="lead">PrimePM connects every project, risk, dependency and dollar to the strategy they serve — so PMO leaders can answer "what's slipping, what's at risk, what's the return" in one view, every Monday.</p>
+      <div class="hero-cta">
+        <a href="/login?signup=1" class="btn primary" style="padding: 9px 16px; font-size: 14px;">
+          Start free trial
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+        <a href="/dashboard" class="btn" style="padding: 9px 16px; font-size: 14px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4" fill="currentColor"/></svg>
+          See live demo
+        </a>
+      </div>
+      <div class="hero-trust">
+        <span>Trusted by PMOs at</span>
+        <div class="logos">
+          <b>Halberg</b><b>Northwind</b><b>Cedarstone</b><b>Verity</b>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="hv-frame hv-main">
+        <div class="hv-head">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <span style="font-weight:600;color:var(--pp-text)">Portfolio · FY26 Q2</span>
+          <span class="pill">8 projects</span>
+          <span style="margin-left:auto;color:var(--pp-text-4);font-size:10px">Updated 4m ago</span>
+        </div>
+        <div class="hv-kpis">
+          <div class="hv-kpi"><div class="lbl">Health</div><div class="val">5/8</div><div class="delta">+1 vs last wk</div></div>
+          <div class="hv-kpi"><div class="lbl">Budget</div><div class="val">$13.4M</div><div class="delta a">62% used</div></div>
+          <div class="hv-kpi"><div class="lbl">Risks</div><div class="val">26</div><div class="delta r">4 high</div></div>
+          <div class="hv-kpi"><div class="lbl">Forecast</div><div class="val">$16.4M</div><div class="delta">+$5.8M YTD</div></div>
+        </div>
+        <div class="hv-chart">
+          <div style="display:flex;justify-content:space-between">
+            <div><div class="ttl">Benefits realization</div><div class="sub">Plan · Forecast · Realized</div></div>
+            <div class="sub">FY26</div>
+          </div>
+          <svg width="100%" height="100%" viewBox="0 0 320 110" preserveAspectRatio="none" style="flex:1;min-height:0">
+            <defs><linearGradient id="g1" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#16A34A" stop-opacity=".25"/><stop offset="100%" stop-color="#16A34A" stop-opacity="0"/></linearGradient></defs>
+            <line x1="0" x2="320" y1="30" y2="30" stroke="#E7E5E4" stroke-width="1"/><line x1="0" x2="320" y1="60" y2="60" stroke="#E7E5E4" stroke-width="1"/><line x1="0" x2="320" y1="90" y2="90" stroke="#E7E5E4" stroke-width="1"/>
+            <path d="M0,95 L29,90 L58,82 L87,72 L116,62 L145,50 L174,38 L203,26 L232,16 L261,8 L290,4 L320,2" fill="none" stroke="#A8A29E" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <path d="M0,98 L29,92 L58,86 L87,78 L116,68 L145,58 L174,48 L203,36 L232,26 L261,18 L290,12 L320,8" fill="none" stroke="#4F46E5" stroke-width="2"/>
+            <path d="M0,100 L29,96 L58,92 L87,86 L116,78 L145,72 L174,64 L203,58 L232,50 L232,110 L0,110 Z" fill="url(#g1)"/>
+            <path d="M0,100 L29,96 L58,92 L87,86 L116,78 L145,72 L174,64 L203,58 L232,50" fill="none" stroke="#16A34A" stroke-width="2"/>
+            <circle cx="232" cy="50" r="3" fill="#16A34A"/>
+            <line x1="232" y1="0" x2="232" y2="110" stroke="#4F46E5" stroke-dasharray="2 3" stroke-width="1" opacity=".5"/>
+          </svg>
+        </div>
+        <div class="hv-list">
+          <div class="row"><span class="dot" style="background:#16A34A"></span><span class="nm">Atlas — CDP</span><span class="pct">62%</span></div>
+          <div class="row"><span class="dot" style="background:#D97706"></span><span class="nm">Northstar — Revenue Cloud</span><span class="pct">48%</span></div>
+          <div class="row"><span class="dot" style="background:#DC2626"></span><span class="nm">Kepler — Warehouse Auto</span><span class="pct">34%</span></div>
+          <div class="row"><span class="dot" style="background:#16A34A"></span><span class="nm">Monarch — Treasury</span><span class="pct">71%</span></div>
+        </div>
+      </div>
+      <div class="hv-callout hv-callout-1">
+        <div class="cap">RISK ESCALATED</div>
+        <div><strong>Robotics integration SLA</strong></div>
+        <div style="color:var(--pp-text-3);margin-top:4px">Kepler · exposure 63 · owner RC</div>
+      </div>
+      <div class="hv-callout hv-callout-2">
+        <div class="cap">OBJECTIVE</div>
+        <div><strong>Quote-to-cash velocity +35%</strong></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+          <div style="flex:1;height:4px;background:var(--pp-surface-2);border-radius:99px;overflow:hidden"><div style="width:48%;height:100%;background:var(--pp-amber)"></div></div>
+          <span style="color:var(--pp-text-3);font-size:10px">48%</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="logo-strip">
+    <div class="logo-strip-inner">
+      <span class="lbl">Connecting tools your teams already use</span>
+      <div class="logos">
+        <span class="logo">Jira</span><span class="logo sans">monday</span><span class="logo">Asana</span><span class="logo sans">ServiceNow</span><span class="logo">Workday</span><span class="logo sans">SAP</span><span class="logo">Salesforce</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="section" id="product">
+    <div class="section-head">
+      <span class="section-eyebrow">The five questions PMO leaders get asked</span>
+      <h2>Built around the meetings that <em>actually happen.</em></h2>
+      <p>Steering committees don't ask about velocity. They ask whether the strategy is still on track, where the money is going, and what's about to slip. PrimePM is engineered for those exact conversations.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature span-2">
+        <div class="ico-tile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg></div>
+        <h3>Strategy → Project, in one click</h3>
+        <p>Trace every dollar back to an objective. PrimePM ties OKRs to the projects funding them and rolls progress up automatically.</p>
+        <div class="feature-vis" style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:grid;grid-template-columns:1fr 100px;gap:12px;align-items:center;font-size:12px;padding:8px 10px;background:var(--pp-surface-2);border-radius:8px"><div><strong>O2.</strong> Be the data-activation backbone for revenue</div><div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:6px;background:white;border-radius:99px;overflow:hidden"><div style="width:55%;height:100%;background:var(--pp-amber)"></div></div><span style="font-size:11px;color:var(--pp-text-3)">55%</span></div></div>
+          <div style="padding:8px 10px 8px 22px;font-size:12px;color:var(--pp-text-3);border-left:1px solid var(--pp-border);margin-left:12px">↳ Atlas — Customer Data Platform &nbsp;<span style="color:var(--pp-green)">●</span>&nbsp; 62%</div>
+          <div style="padding:8px 10px 8px 22px;font-size:12px;color:var(--pp-text-3);border-left:1px solid var(--pp-border);margin-left:12px">↳ Lyra — Mobile App Refresh &nbsp;<span style="color:var(--pp-amber)">●</span>&nbsp; 56%</div>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="ico-tile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 21h20L12 3zM12 10v5M12 18.5h.01"/></svg></div>
+        <h3>Risk that travels</h3>
+        <p>A 5×5 heatmap where exposure is real, not aspirational. High-severity risks bubble up; owners are accountable.</p>
+        <div class="feature-vis"><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px">
+          <div style="aspect-ratio:1;background:var(--pp-green-bg);border-radius:4px"></div><div style="aspect-ratio:1;background:var(--pp-green-bg);border-radius:4px"></div><div style="aspect-ratio:1;background:var(--pp-amber-bg);border-radius:4px"></div><div style="aspect-ratio:1;background:var(--pp-amber-bg);border-radius:4px"></div><div style="aspect-ratio:1;background:var(--pp-red-bg);border-radius:4px"></div>
+          <div style="aspect-ratio:1;background:var(--pp-green-bg);border-radius:4px"></div><div style="aspect-ratio:1;background:var(--pp-amber-bg);border-radius:4px"></div><div style="aspect-ratio:1;background:var(--pp-amber-bg);border-radius:4px"></div><div style="aspect-ratio:1;background:var(--pp-red-bg);border-radius:4px;display:grid;place-items:center"><span style="background:var(--pp-red);color:white;font-size:8px;padding:1px 4px;border-radius:3px;font-weight:600">R-204</span></div><div style="aspect-ratio:1;background:var(--pp-red-bg);border-radius:4px"></div>
+          <div style="aspect-ratio:1;background:var(--pp-green-bg);border-radius:4px"></div><div style="aspect-ratio:1;background:var(--pp-amber-bg);border-radius:4px"></div><div style="aspect-ratio:1;background:var(--pp-amber-bg);border-radius:4px;display:grid;place-items:center"><span style="background:var(--pp-amber);color:white;font-size:8px;padding:1px 4px;border-radius:3px;font-weight:600">R-191</span></div><div style="aspect-ratio:1;background:var(--pp-red-bg);border-radius:4px"></div><div style="aspect-ratio:1;background:var(--pp-red-bg);border-radius:4px"></div>
+        </div></div>
+      </div>
+      <div class="feature">
+        <div class="ico-tile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M14 7h7v7"/></svg></div>
+        <h3>Benefits, not just budget</h3>
+        <p>Plan vs. forecast vs. realized — on the same axis. Stop celebrating delivery; start celebrating return.</p>
+        <div class="feature-vis"><div style="font-size:11px;color:var(--pp-text-3);margin-bottom:6px">Realized YTD</div><div style="font-size:26px;font-weight:600;letter-spacing:-0.02em;color:var(--pp-green)">$5.8M</div><div style="font-size:11px;color:var(--pp-text-3);margin-top:2px">32% of $18M plan</div></div>
+      </div>
+      <div class="feature">
+        <div class="ico-tile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg></div>
+        <h3>Drill from portfolio to task in two clicks</h3>
+        <p>Every chart is a path. Click a project, see milestones; click a milestone, see tasks.</p>
+        <div class="feature-vis" style="display:flex;align-items:center;gap:8px;font-size:12px">
+          <span style="background:var(--pp-surface-2);padding:4px 10px;border-radius:6px">Portfolio</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          <span style="background:var(--pp-accent-50);color:var(--pp-accent);padding:4px 10px;border-radius:6px;font-weight:500">Project</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          <span style="background:var(--pp-surface-2);padding:4px 10px;border-radius:6px">Task</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stats-inner">
+      <div class="stat"><div class="num">42<span class="small">% faster</span></div><div class="lbl">Average time from "I have a question" to "I have an answer" — vs. legacy PPM tools.</div></div>
+      <div class="stat"><div class="num">$3.4M<span class="small">avg/yr</span></div><div class="lbl">Recovered from cancelled or de-scoped projects identified earlier in the lifecycle.</div></div>
+      <div class="stat"><div class="num">8.2<span class="small">/10</span></div><div class="lbl">Sponsor-reported confidence in monthly portfolio status — up from 5.4 baseline.</div></div>
+      <div class="stat"><div class="num">14<span class="small">days</span></div><div class="lbl">Median time to bring a new project under PMO governance, from intake to first review.</div></div>
+    </div>
+  </section>
+
+  <section class="section" id="solutions">
+    <div class="section-head">
+      <span class="section-eyebrow">Who it's for</span>
+      <h2>One workspace, every PMO seat at the table.</h2>
+      <p>PrimePM is configurable per role — directors see portfolios, sponsors see briefings, resource managers see capacity.</p>
+    </div>
+    <div class="personas">
+      <div class="persona"><div class="role">PMO Director</div><h4>The portfolio you can defend</h4><p>Roll-ups across 50+ projects, weekly briefings ready in minutes, audit-ready governance trails.</p><div class="focus"><span>RAG roll-up</span><span>Stage gates</span><span>Audit log</span></div></div>
+      <div class="persona"><div class="role">Program Manager</div><h4>Cross-project blockers, surfaced</h4><p>See where one program waits on another — by date, owner, and impact — long before it surfaces in a status meeting.</p><div class="focus"><span>Dependencies</span><span>Milestones</span><span>Critical path</span></div></div>
+      <div class="persona"><div class="role">Resource Manager</div><h4>Capacity, not best guesses</h4><p>Allocations against true availability, week by week. Reassign the right person without breaking three other projects.</p><div class="focus"><span>Heatmap</span><span>Forecast</span><span>What-if</span></div></div>
+      <div class="persona"><div class="role">Executive sponsor</div><h4>The brief you don't have to write</h4><p>One-page narratives, automatically composed from the live data — with the caveats, not just the highlights.</p><div class="focus"><span>Narrative</span><span>RAG</span><span>Decisions</span></div></div>
+    </div>
+  </section>
+
+  <div class="quote-wrap" id="customers">
+    <div class="quote-inner">
+      <blockquote>PrimePM is the first tool that lets me answer the CFO's question in real time, not on Tuesday after my analysts have stayed up all night.</blockquote>
+      <cite><span class="av">EM</span><span><strong style="color:var(--pp-text);font-weight:500">Elena Marchetti</strong> · VP, Enterprise PMO at Halberg Industries</span></cite>
+    </div>
+  </div>
+
+  <section class="section" id="pricing">
+    <div class="section-head">
+      <span class="section-eyebrow">Pricing</span>
+      <h2>Built to scale with the PMO, not <em>against</em> it.</h2>
+      <p>Flat per-project pricing on the workspace, unlimited viewers across the org.</p>
+    </div>
+    <div class="price-grid">
+      <div class="price">
+        <h3>Team</h3><div class="amount">$24<span class="per">/ project / mo</span></div>
+        <p class="desc">For program managers and small PMOs running up to 25 projects.</p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Portfolio dashboard, RAG roll-ups</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Risk register &amp; dependencies</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Jira, Asana, monday connectors</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Unlimited viewers</li>
+        </ul>
+        <a href="/login?signup=1" class="btn">Start free trial</a>
+      </div>
+      <div class="price featured">
+        <span class="feat-pill">Most popular</span>
+        <h3>Enterprise</h3><div class="amount">$48<span class="per">/ project / mo</span></div>
+        <p class="desc">For PMOs governing 25–500 projects with formal stage-gates and benefits tracking.</p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Everything in Team</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>OKR alignment &amp; benefits curves</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Stage-gate governance &amp; approvals</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>SAML SSO, audit log, SCIM</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>AI-assisted briefings</li>
+        </ul>
+        <a href="/login?signup=1" class="btn accent">Talk to sales</a>
+      </div>
+      <div class="price">
+        <h3>Strategic</h3><div class="amount" style="font-size:38px">Custom</div>
+        <p class="desc">For global organizations with 500+ projects, regional PMOs, and dedicated governance models.</p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Everything in Enterprise</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Multi-PMO federation</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>SAP / Workday / Oracle integrations</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Dedicated success architect</li>
+        </ul>
+        <a href="#" class="btn">Contact us</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="cta-band-inner">
+      <h2>The PMO meeting<br/><em>that runs itself.</em></h2>
+      <p>Try PrimePM free for 30 days. Bring your real portfolio — we'll get you to first briefing in under an hour.</p>
+      <div class="cta-row">
+        <a href="/login?signup=1" class="btn primary" style="padding:10px 18px">Start free trial <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+        <a href="/dashboard" class="btn" style="padding:10px 18px">Book a demo</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <div class="land-brand"><span class="mark">P</span><span>PrimePM<em>·pmo</em></span></div>
+        <p style="margin:14px 0 0;font-size:13px;color:var(--pp-text-3);max-width:280px;line-height:1.55">The portfolio command center for serious PMOs.</p>
+      </div>
+      <div class="footer-cols">
+        <div class="col"><h4>Product</h4><a href="#">Dashboard</a><a href="#">Risk register</a><a href="#">Dependencies</a><a href="#">Benefits</a><a href="#">Integrations</a></div>
+        <div class="col"><h4>Solutions</h4><a href="#">PMO Director</a><a href="#">Program Manager</a><a href="#">Resource Manager</a><a href="#">Executive sponsor</a></div>
+        <div class="col"><h4>Company</h4><a href="#">About</a><a href="#">Customers</a><a href="#">Careers</a><a href="#">Press</a></div>
+        <div class="col"><h4>Resources</h4><a href="#">Docs</a><a href="#">Changelog</a><a href="#">Security</a><a href="#">Status</a></div>
+      </div>
+    </div>
+    <div class="footer-base">
+      <span>© 2026 PrimePM Inc. All rights reserved.</span>
+      <span>SOC 2 Type II · ISO 27001 · GDPR</span>
+    </div>
+  </footer>
+
+</div>
+<script>
+  const nav = document.getElementById('topnav');
+  window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 8); });
+</script>
+</body>
 </html>

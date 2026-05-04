@@ -12,7 +12,6 @@ import {
   TrendingUp,
   Gauge,
   Calendar,
-  LogOut,
   Settings,
 } from 'lucide-react';
 import { useRoute, navigate, type Route } from '../../lib/router';
@@ -44,7 +43,7 @@ function SidebarNavBlock({ section, route }: { section: NavSection; route: Route
             <button
               key={idx}
               type="button"
-              className={`pp-nav-item${item.label === 'Sign out' ? ' pp-signout' : ''}`}
+              className="pp-nav-item"
               aria-current={active ? 'true' : undefined}
               onClick={item.onClick ?? (item.path ? () => navigate(item.path!) : undefined)}
             >
@@ -64,7 +63,7 @@ function SidebarNavBlock({ section, route }: { section: NavSection; route: Route
 
 export function PpSidebar({ projectCount = 0 }: { projectCount?: number }) {
   const route = useRoute();
-  const { session, signOut } = useAuth();
+  const { session } = useAuth();
 
   const initials = (session?.user?.email ?? 'U')
     .split('@')[0]
@@ -145,12 +144,6 @@ export function PpSidebar({ projectCount = 0 }: { projectCount?: number }) {
           match: r => r.name === 'soon' && r.kind === 'steering' },
         { label: 'Stage-gate calendar', icon: <Calendar size={16} />, path: '/soon/stage-gate', soon: true,
           match: r => r.name === 'soon' && r.kind === 'stage-gate' },
-      ],
-    },
-    {
-      title: 'Account',
-      items: [
-        { label: 'Sign out', icon: <LogOut size={16} />, onClick: () => void signOut() },
       ],
     },
   ];

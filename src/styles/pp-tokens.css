@@ -3,12 +3,12 @@
    its --color-* tokens untouched. */
 
 :root {
-  /* Brand */
-  --pp-accent: #4F46E5;
-  --pp-accent-50: #EEF2FF;
-  --pp-accent-100: #E0E7FF;
-  --pp-accent-600: #4F46E5;
-  --pp-accent-700: #4338CA;
+  /* Brand — sky blue across light and dark for consistency */
+  --pp-accent: #0EA5E9;
+  --pp-accent-50: #E0F2FE;
+  --pp-accent-100: #BAE6FD;
+  --pp-accent-600: #0284C7;
+  --pp-accent-700: #0369A1;
 
   /* Neutrals — warm slate (light) */
   --pp-bg: #FAFAF9;
@@ -67,8 +67,11 @@
   --pp-red-bg: rgba(220,38,38,.16);
   --pp-blue-bg: rgba(2,132,199,.16);
   --pp-gray-bg: #1C1917;
-  --pp-accent-50: rgba(79,70,229,.12);
-  --pp-accent-100: rgba(79,70,229,.2);
+  --pp-accent: #38BDF8;
+  --pp-accent-50: rgba(56,189,248,.14);
+  --pp-accent-100: rgba(56,189,248,.24);
+  --pp-accent-600: #38BDF8;
+  --pp-accent-700: #7DD3FC;
 
   --pp-shadow-sm: 0 1px 2px rgba(0,0,0,.4);
   --pp-shadow-md: 0 4px 12px rgba(0,0,0,.4);

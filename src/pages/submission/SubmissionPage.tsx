@@ -4,7 +4,6 @@ import { apiClient } from '../../api/client';
 import type { CriteriaVersion, ProjectSummary } from '../../api/types';
 import { Button } from '../../components/ui/Button';
 import { navigate } from '../../lib/router';
-import { cn } from '../../lib/cn';
 import { SubmissionWizard } from './SubmissionWizard';
 
 type Mode = { kind: 'list' } | { kind: 'create' } | { kind: 'edit'; projectId: string };
@@ -256,25 +255,23 @@ export function SubmissionPage() {
   );
 }
 
+/** Status pill — matches the design used on Ongoing Project pages.
+ *  Maps the project's status string to a green / amber / red / blue RAG kind. */
 function StatusBadge({ status }: { status: string }) {
-  const tone = statusTone(status);
+  const kind = ragForStatus(status);
   return (
-    <span className={cn(
-      'inline-block text-[11px] font-medium px-2 py-0.5 rounded',
-      tone,
-    )}>
+    <span className={`pp-pill ${kind}`}>
+      <span className="pp-dot" />
       {status}
     </span>
   );
 }
 
-function statusTone(status: string): string {
+function ragForStatus(status: string): 'green' | 'amber' | 'red' | 'blue' {
   const s = status.toLowerCase();
-  if (s.includes('progress') || s.includes('active') || s.includes('approved')) return 'bg-emerald-50 text-emerald-700';
-  if (s.includes('plan')) return 'bg-sky-50 text-sky-700';
-  if (s.includes('initiat')) return 'bg-violet-50 text-violet-700';
-  if (s.includes('hold')) return 'bg-amber-50 text-amber-700';
-  if (s.includes('complet')) return 'bg-zinc-100 text-zinc-700';
-  if (s.includes('reject')) return 'bg-red-50 text-red-700';
-  return 'bg-zinc-100 text-zinc-700';
+  if (s.includes('done') || s.includes('approved') || s.includes('complet')) return 'green';
+  if (s.includes('progress') || s.includes('active')) return 'green';
+  if (s.includes('hold') || s.includes('paused') || s.includes('block') || s.includes('reject')) return 'red';
+  if (s.includes('review') || s.includes('pending')) return 'amber';
+  return 'blue';
 }

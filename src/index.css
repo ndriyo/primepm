@@ -16,15 +16,15 @@
   --color-ink-muted: #d6d3d1;
   --color-ink-subtle: #a8a29e;
 
-  --color-brand: #6366f1;
-  --color-brand-soft: rgba(99, 102, 241, 0.15);
-  --color-brand-strong: #818cf8;
+  --color-brand: #38bdf8;
+  --color-brand-soft: rgba(56, 189, 248, 0.18);
+  --color-brand-strong: #7dd3fc;
 
-  --color-bar: #818cf8;
+  --color-bar: #38bdf8;
   --color-bar-summary: #fafaf9;
   --color-bar-milestone: #fafaf9;
   --color-bar-critical: #f87171;
-  --color-bar-progress: #c7d2fe;
+  --color-bar-progress: #bae6fd;
 
   --color-weekend: #1c1917;
   --color-today: #f87171;

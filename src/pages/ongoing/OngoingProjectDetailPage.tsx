@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Calendar, ArrowLeft, Edit, Trash2, GanttChart } from 'lucide-react';
 import { PpShell } from '../../components/layout/PpShell';
 import { apiClient } from '../../api/client';
-import type { ProjectFull, ProjectSummary } from '../../api/types';
+import type { Criterion, ProjectFull, ProjectSummary } from '../../api/types';
 import { navigate } from '../../lib/router';
 import { formatCompact } from '../../lib/formatNumber';
 import { Card, Pill } from '../dashboard/DashboardCommon';
@@ -27,6 +27,7 @@ export function OngoingProjectDetailPage({ projectId }: { projectId: string }) {
   const [project, setProject] = useState<ProjectFull | null>(null);
   const [summary, setSummary] = useState<ProjectSummary | null>(null);
   const [scores, setScores] = useState<Array<{ criterionId: string; score: number; comment: string | null }>>([]);
+  const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,7 +35,8 @@ export function OngoingProjectDetailPage({ projectId }: { projectId: string }) {
     Promise.all([
       apiClient.getProjectFull(projectId).catch((e) => { setError(String(e)); return null; }),
       apiClient.listProjects().catch(() => ({ projects: [] as ProjectSummary[] })),
-    ]).then(([full, list]) => {
+      apiClient.getActiveCriteria().catch(() => ({ version: null, criteria: [] as Criterion[] })),
+    ]).then(([full, list, active]) => {
       if (cancelled) return;
       if (full) {
         setProject(full.project);
@@ -42,9 +44,12 @@ export function OngoingProjectDetailPage({ projectId }: { projectId: string }) {
       }
       const s = list.projects.find(p => p.id === projectId);
       if (s) setSummary(s);
+      setCriteria(active.criteria);
     });
     return () => { cancelled = true; };
   }, [projectId]);
+
+  const criteriaById = new Map(criteria.map(c => [c.id, c]));
 
   const handleDelete = async () => {
     if (!confirm('Delete this project? All tasks, dependencies, and scores will be lost.')) return;
@@ -135,22 +140,40 @@ export function OngoingProjectDetailPage({ projectId }: { projectId: string }) {
                     </div>
                   ) : (
                     <div>
-                      {scores.map(s => (
-                        <div key={s.criterionId} style={{
-                          display: 'grid',
-                          gridTemplateColumns: '1fr auto auto',
-                          gap: 12,
-                          alignItems: 'center',
-                          padding: '10px 18px',
-                          borderBottom: '1px solid var(--pp-border)',
-                        }}>
-                          <span style={{ fontSize: 12.5, color: 'var(--pp-text-2)' }}>{s.criterionId}</span>
-                          <div className="pp-bbar" style={{ width: 120 }}>
-                            <i style={{ width: `${Math.min(100, (s.score / 5) * 100)}%`, background: 'var(--pp-accent)' }} />
+                      {scores.map(s => {
+                        const c = criteriaById.get(s.criterionId);
+                        const max = 5;
+                        return (
+                          <div key={s.criterionId} style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 160px auto',
+                            gap: 12,
+                            alignItems: 'center',
+                            padding: '12px 18px',
+                            borderBottom: '1px solid var(--pp-border)',
+                          }}>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--pp-text)' }}>
+                                {c?.label ?? s.criterionId}
+                              </div>
+                              {c?.description && (
+                                <div style={{ fontSize: 11.5, color: 'var(--pp-text-3)', marginTop: 2 }}>
+                                  {c.description}
+                                </div>
+                              )}
+                            </div>
+                            <div className="pp-bbar">
+                              <i style={{
+                                width: `${Math.min(100, (s.score / max) * 100)}%`,
+                                background: 'var(--pp-accent)',
+                              }} />
+                            </div>
+                            <span className="pp-num tabular" style={{ minWidth: 56, textAlign: 'right' }}>
+                              {s.score.toFixed(2)}
+                            </span>
                           </div>
-                          <span className="pp-num tabular">{s.score.toFixed(2)}</span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </Card>

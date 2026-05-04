@@ -8,8 +8,26 @@ import { SubmissionWizard } from './SubmissionWizard';
 
 type Mode = { kind: 'list' } | { kind: 'create' } | { kind: 'edit'; projectId: string };
 
+/** Read ?edit=<id> from the current URL — used by /projects/:id detail
+ *  page when the user clicks "Edit" and lands here. */
+function readEditParam(): string | null {
+  const sp = new URLSearchParams(window.location.search);
+  const id = sp.get('edit');
+  if (!id) return null;
+  return /^[0-9a-f-]{36}$/i.test(id) ? id : null;
+}
+
+function clearEditParam(): void {
+  const url = new URL(window.location.href);
+  url.searchParams.delete('edit');
+  window.history.replaceState({}, '', url.toString());
+}
+
 export function SubmissionPage() {
-  const [mode, setMode] = useState<Mode>({ kind: 'list' });
+  const [mode, setMode] = useState<Mode>(() => {
+    const id = readEditParam();
+    return id ? { kind: 'edit', projectId: id } : { kind: 'list' };
+  });
   const [projects, setProjects] = useState<ProjectSummary[] | null>(null);
   const [activeVersion, setActiveVersion] = useState<CriteriaVersion | null>(null);
   const [criteriaCount, setCriteriaCount] = useState(0);
@@ -75,8 +93,8 @@ export function SubmissionPage() {
     return (
       <SubmissionWizard
         projectId={mode.projectId}
-        onCancel={() => { setMode({ kind: 'list' }); void refresh(); }}
-        onSaved={() => { setMode({ kind: 'list' }); void refresh(); }}
+        onCancel={() => { clearEditParam(); setMode({ kind: 'list' }); void refresh(); }}
+        onSaved={() => { clearEditParam(); setMode({ kind: 'list' }); void refresh(); }}
       />
     );
   }

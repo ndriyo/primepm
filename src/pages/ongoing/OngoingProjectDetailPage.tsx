@@ -96,7 +96,7 @@ export function OngoingProjectDetailPage({ projectId }: { projectId: string }) {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button className="pp-btn" onClick={() => navigate(`/projects/${projectId}/edit`)}>
+                <button className="pp-btn" onClick={() => navigate(`/projects/new?edit=${projectId}`)}>
                   <Edit size={14} /> Edit
                 </button>
                 <button className="pp-btn primary" onClick={() => navigate(`/p/${projectId}`)}>

@@ -6,6 +6,7 @@ import type { Criterion, CriteriaVersion, Department, SubmissionInput } from '..
 import { Button } from '../../components/ui/Button';
 import { Stepper } from '../../components/ui/Stepper';
 import { NumberInput } from '../../components/ui/NumberInput';
+import { TagInput } from '../../components/ui/TagInput';
 import { computeWeightedScore } from '../../lib/scoreCalculator';
 import { cn } from '../../lib/cn';
 import { ScoreRadar } from './ScoreRadar';
@@ -21,7 +22,7 @@ interface ProjectInfo {
   endDate: string;
   budget: string;
   resources: string;
-  tags: string;
+  tags: string[];
 }
 
 const todayIso = () => format(new Date(), 'yyyy-MM-dd');
@@ -51,7 +52,7 @@ export function SubmissionWizard({ projectId, onCancel, onSaved }: Props) {
     endDate: isoPlus(90),
     budget: '',
     resources: '',
-    tags: '',
+    tags: [],
   });
 
   const [scores, setScores] = useState<Record<string, number>>({});
@@ -85,7 +86,7 @@ export function SubmissionWizard({ projectId, onCancel, onSaved }: Props) {
             endDate: p.endDate.slice(0, 10),
             budget: p.budget !== null ? String(p.budget) : '',
             resources: p.resources ? String(p.resources) : '',
-            tags: (p.tags ?? []).join(', '),
+            tags: p.tags ?? [],
           });
           // Build initial scores: prefer existing rows; for criteria not present
           // (e.g. project was scored under a different version), fall back to scale.min.
@@ -148,7 +149,7 @@ export function SubmissionWizard({ projectId, onCancel, onSaved }: Props) {
         endDate: info.endDate,
         budget: info.budget ? Number(info.budget) : null,
         resources: info.resources ? Number(info.resources) : 0,
-        tags: info.tags.split(',').map(s => s.trim()).filter(Boolean),
+        tags: info.tags,
         scores: criteria.map(c => ({ criterionId: c.id, score: scores[c.id] ?? range.min })),
         weightedScore,
       };
@@ -333,8 +334,12 @@ function ProjectInfoStep({
         <Field label="Resources (mandays)">
           <NumberInput value={info.resources} onChange={v => update('resources', v)} placeholder="0" min={0} />
         </Field>
-        <Field label="Tags" full hint="Comma-separated">
-          <input value={info.tags} onChange={e => update('tags', e.target.value)} className={inputCls} placeholder="mobile, q4-launch, growth" />
+        <Field label="Tags" full hint="Press Enter or comma to add">
+          <TagInput
+            tags={info.tags}
+            onChange={tags => update('tags', tags)}
+            placeholder="mobile, q4-launch, growth"
+          />
         </Field>
       </div>
       {showRadar && <ScoreRadar criteria={criteria} scores={scores} range={range} />}
@@ -483,7 +488,19 @@ function ReviewSubmitStep({
           <Row label="Dates">{info.startDate} → {info.endDate}</Row>
           <Row label="Budget">{fmtNum(info.budget)}</Row>
           <Row label="Mandays">{fmtNum(info.resources)}</Row>
-          <Row label="Tags" wide>{info.tags || '—'}</Row>
+          <Row label="Tags" wide>
+            {info.tags.length === 0
+              ? '—'
+              : (
+                <span className="inline-flex flex-wrap gap-1">
+                  {info.tags.map(t => (
+                    <span key={t} className="inline-flex items-center text-[11.5px] font-medium bg-(--color-surface-2) border border-(--color-border) rounded-md px-2 py-0.5">
+                      {t}
+                    </span>
+                  ))}
+                </span>
+              )}
+          </Row>
           <Row label="Description" wide>{info.description || '—'}</Row>
         </dl>
       </div>

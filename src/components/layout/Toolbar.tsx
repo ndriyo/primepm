@@ -13,7 +13,6 @@ import {
   Sparkles,
   Undo2,
   Users,
-  Zap,
 } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { isApiConfigured } from '../../api/client';
@@ -54,22 +53,21 @@ export function Toolbar() {
   return (
     <div className="h-12 flex items-center justify-between px-3 border-b border-(--color-border) bg-(--color-surface) gap-2">
       <div className="flex items-center gap-2 min-w-0">
-        {isApiConfigured ? (
-          <Tooltip label="Back to projects">
+        {isApiConfigured && (
+          <Tooltip label="Back to project">
             <button
               type="button"
-              onClick={() => navigate('/projects')}
-              aria-label="Back to projects"
-              className="w-7 h-7 rounded-md bg-(--color-brand) flex items-center justify-center text-white shadow-sm hover:bg-(--color-brand-strong) transition-colors group relative"
+              onClick={() => {
+                const m = window.location.pathname.match(/^\/p\/([0-9a-f-]{36})/i);
+                navigate(m ? `/projects/${m[1]}` : '/projects');
+              }}
+              aria-label="Back to project"
+              className="h-7 px-2 rounded-md border border-(--color-border) bg-(--color-surface) text-(--color-ink-muted) hover:bg-(--color-surface-2) hover:text-(--color-ink) flex items-center gap-1.5 transition-colors text-[12.5px] font-medium"
             >
-              <Zap size={15} className="group-hover:hidden" />
-              <ArrowLeft size={15} className="hidden group-hover:block" />
+              <ArrowLeft size={13} />
+              Back
             </button>
           </Tooltip>
-        ) : (
-          <div className="w-7 h-7 rounded-md bg-(--color-brand) flex items-center justify-center text-white shadow-sm">
-            <Zap size={15} />
-          </div>
         )}
         {editingName ? (
           <input

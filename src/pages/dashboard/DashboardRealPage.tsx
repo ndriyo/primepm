@@ -4,6 +4,7 @@ import { PpShell } from '../../components/layout/PpShell';
 import { apiClient } from '../../api/client';
 import type { DashboardData, ProjectSummary } from '../../api/types';
 import { navigate } from '../../lib/router';
+import { formatCompact, formatGrouped } from '../../lib/formatNumber';
 import { KpiCard, Card, Pill } from './DashboardCommon';
 
 function ragForStatus(status: string): 'green' | 'amber' | 'red' | 'blue' {
@@ -71,19 +72,18 @@ export function DashboardRealPage() {
         <div className="pp-kpi-grid">
           <KpiCard
             label="Projects"
-            value={totalProjects}
+            value={formatGrouped(totalProjects)}
             unit=""
             delta={`${approved} approved · ${pending} pending`}
           />
           <KpiCard
             label="Total budget"
-            value={`$${totalBudget.toFixed(1)}`}
-            unit="K"
+            value={`$${formatCompact(totalBudget)}`}
             delta="across all projects"
           />
           <KpiCard
             label="Total effort"
-            value={Math.round(totalMandays).toString()}
+            value={formatCompact(totalMandays)}
             unit="mandays"
             delta="planned across all projects"
           />
@@ -98,7 +98,7 @@ export function DashboardRealPage() {
           />
           <KpiCard
             label="Statuses"
-            value={data?.byStatus.length ?? 0}
+            value={formatGrouped(data?.byStatus.length ?? 0)}
             delta="distinct project statuses"
           />
         </div>
@@ -124,7 +124,7 @@ export function DashboardRealPage() {
                       <div className="sub">{p.status}</div>
                     </div>
                     <div><Pill kind={ragForStatus(p.status)}>{p.status}</Pill></div>
-                    <div className="pp-num tabular">${(p.budget ?? 0).toFixed(1)}K</div>
+                    <div className="pp-num tabular">${formatCompact(p.budget ?? 0)}</div>
                     <div className="pp-num tabular">Score {p.score.toFixed(2)}</div>
                     <ArrowUpRight size={14} className="pp-muted" />
                   </button>

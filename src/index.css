@@ -2,6 +2,42 @@
 @import 'tailwindcss';
 @import './styles/pp-tokens.css';
 
+/* Dark-mode overrides for the legacy --color-* tokens used by the scheduler,
+   submission wizard, and selection / criteria management. Keeps existing
+   Tailwind utilities (bg-(--color-bg), border-(--color-border), text-(--color-ink),
+   etc.) working in both themes. */
+[data-theme="dark"] {
+  --color-bg: #0c0a09;
+  --color-surface: #161311;
+  --color-surface-2: #1c1917;
+  --color-border: #292524;
+  --color-border-strong: #3f3b38;
+  --color-ink: #fafaf9;
+  --color-ink-muted: #d6d3d1;
+  --color-ink-subtle: #a8a29e;
+
+  --color-brand: #6366f1;
+  --color-brand-soft: rgba(99, 102, 241, 0.15);
+  --color-brand-strong: #818cf8;
+
+  --color-bar: #818cf8;
+  --color-bar-summary: #fafaf9;
+  --color-bar-milestone: #fafaf9;
+  --color-bar-critical: #f87171;
+  --color-bar-progress: #c7d2fe;
+
+  --color-weekend: #1c1917;
+  --color-today: #f87171;
+
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 1px 3px rgb(0 0 0 / 0.5);
+  --shadow-popover: 0 12px 24px -8px rgb(0 0 0 / 0.55), 0 2px 6px rgb(0 0 0 / 0.4);
+  --shadow-modal: 0 24px 48px -12px rgb(0 0 0 / 0.6), 0 4px 12px rgb(0 0 0 / 0.4);
+}
+
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
@@ -44,6 +80,7 @@
 html, body, #root {
   height: 100%;
   margin: 0;
+  overflow: hidden;
 }
 
 html {
@@ -53,10 +90,6 @@ html {
   font-feature-settings: 'cv02', 'cv03', 'cv11', 'ss01';
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-}
-
-body {
-  overflow: hidden;
 }
 
 ::selection {

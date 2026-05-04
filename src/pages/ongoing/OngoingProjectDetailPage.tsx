@@ -4,6 +4,7 @@ import { PpShell } from '../../components/layout/PpShell';
 import { apiClient } from '../../api/client';
 import type { ProjectFull, ProjectSummary } from '../../api/types';
 import { navigate } from '../../lib/router';
+import { formatCompact } from '../../lib/formatNumber';
 import { Card, Pill } from '../dashboard/DashboardCommon';
 
 function ragForStatus(status: string): 'green' | 'amber' | 'red' | 'blue' {
@@ -162,7 +163,7 @@ export function OngoingProjectDetailPage({ projectId }: { projectId: string }) {
                     <Fact label="Status" value={project.status} />
                     <Fact label="Start date" value={fmtDate(project.startDate)} />
                     <Fact label="End date" value={fmtDate(project.endDate)} />
-                    <Fact label="Budget" value={project.budget != null ? `$${project.budget.toFixed(1)}K` : '—'} />
+                    <Fact label="Budget" value={project.budget != null ? `$${formatCompact(project.budget)}` : '—'} />
                     <Fact label="Resources" value={project.resources.toString()} />
                     {project.score != null && <Fact label="Weighted score" value={project.score.toFixed(2)} />}
                   </div>

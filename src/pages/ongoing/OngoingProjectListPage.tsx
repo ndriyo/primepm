@@ -4,6 +4,7 @@ import { PpShell } from '../../components/layout/PpShell';
 import { apiClient } from '../../api/client';
 import type { ProjectSummary } from '../../api/types';
 import { navigate } from '../../lib/router';
+import { formatCompact } from '../../lib/formatNumber';
 import { Pill } from '../dashboard/DashboardCommon';
 
 function ragForStatus(status: string): 'green' | 'amber' | 'red' | 'blue' {
@@ -86,7 +87,7 @@ export function OngoingProjectListPage() {
                     </div>
                   </div>
                   <div><Pill kind={ragForStatus(p.status)}>{p.status}</Pill></div>
-                  <div className="pp-num tabular">${(p.budget ?? 0).toFixed(1)}K</div>
+                  <div className="pp-num tabular">${formatCompact(p.budget ?? 0)}</div>
                   <div className="pp-num tabular">{p.score != null ? `Score ${p.score.toFixed(2)}` : '—'}</div>
                   <ArrowUpRight size={14} className="pp-muted" />
                 </button>

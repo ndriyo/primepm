@@ -26,6 +26,8 @@ import { OngoingProjectDetailPage } from './pages/ongoing/OngoingProjectDetailPa
 import { OngoingProjectSoonPage } from './pages/ongoing/OngoingProjectSoonPage';
 import { OngoingProjectSoonDetailPage } from './pages/ongoing/OngoingProjectSoonDetailPage';
 import { SoonPage } from './pages/SoonPage';
+import { ObjectivesSoonPage } from './pages/soon/ObjectivesSoonPage';
+import { RisksSoonPage } from './pages/soon/RisksSoonPage';
 
 const GRID_PANE_MIN = 240;
 const GRID_PANE_MAX = 1400;
@@ -55,9 +57,19 @@ export default function App() {
   }
 
   if (apiMode) {
-    // Scheduler view is full-bleed (own toolbar) — no shell.
+    // Scheduler now lives inside the new shell (sidebar visible across navs).
     if (route.name === 'project') {
-      return <AppContent projectId={route.id} key={route.id} />;
+      return (
+        <PpShell
+          mode="full"
+          crumbs={[
+            { label: 'Projects', onClick: () => navigate('/projects') },
+            { label: 'Schedule' },
+          ]}
+        >
+          <AppContent projectId={route.id} key={route.id} />
+        </PpShell>
+      );
     }
 
     // New design routes (each page provides its own PpShell wrapper)
@@ -67,7 +79,11 @@ export default function App() {
     if (route.name === 'project-detail') return <OngoingProjectDetailPage projectId={route.id} key={route.id} />;
     if (route.name === 'ongoing-soon') return <OngoingProjectSoonPage />;
     if (route.name === 'ongoing-soon-detail') return <OngoingProjectSoonDetailPage id={route.id} key={route.id} />;
-    if (route.name === 'soon') return <SoonPage kind={route.kind} />;
+    if (route.name === 'soon') {
+      if (route.kind === 'objectives') return <ObjectivesSoonPage />;
+      if (route.kind === 'risks') return <RisksSoonPage />;
+      return <SoonPage kind={route.kind} />;
+    }
 
     // Existing pages — wrap inside the new shell (their internal styling stays light/old).
     if (route.name === 'submission') {

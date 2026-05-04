@@ -4,7 +4,15 @@ import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'path';
 import type { Connect } from 'vite';
 
-const APP_ROUTES = ['/login', '/dashboard', '/projects', '/selection'];
+const APP_ROUTES = [
+  '/login',
+  '/dashboard',
+  '/dashboard-soon',
+  '/projects',
+  '/selection',
+  '/ongoing-soon',
+  '/soon',
+];
 
 function appRouteMiddleware(): {
   name: string;

@@ -43,7 +43,7 @@ jobs:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
       - name: Deploy to Cloudflare Pages
-        run: npx wrangler pages deploy dist --project-name=prime-schedule
+        run: npx wrangler pages deploy dist --project-name=primedev
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

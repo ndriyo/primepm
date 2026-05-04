@@ -1,0 +1,8 @@
+project_id = "gnopdrutdfxjydudqpqp"
+
+[api]
+enabled = true
+port = 54321
+
+[functions.api]
+verify_jwt = false

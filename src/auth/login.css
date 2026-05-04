@@ -1,0 +1,413 @@
+/* PrimePM login page — design-system tokens scoped to .pp-login */
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
+
+.pp-login {
+  --pp-accent: #4F46E5;
+  --pp-accent-50: #EEF2FF;
+  --pp-accent-100: #E0E7FF;
+  --pp-bg: #FAFAF9;
+  --pp-surface: #FFFFFF;
+  --pp-surface-2: #F5F5F4;
+  --pp-border: #E7E5E4;
+  --pp-text: #1C1917;
+  --pp-text-2: #44403C;
+  --pp-text-3: #78716C;
+  --pp-text-4: #A8A29E;
+  --pp-green: #16A34A;
+  --pp-red: #DC2626;
+  --pp-font-sans: "Inter Tight", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --pp-font-display: "Instrument Serif", "Times New Roman", serif;
+  --pp-r-md: 10px;
+  --pp-r-lg: 14px;
+
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--pp-bg);
+  font-family: var(--pp-font-sans);
+  font-size: 13.5px;
+  color: var(--pp-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Form side ── */
+.pp-login-form-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  position: relative;
+}
+
+.pp-login-brand {
+  position: absolute;
+  top: 28px;
+  left: 36px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: -0.015em;
+  text-decoration: none;
+  color: var(--pp-text);
+}
+.pp-login-brand em {
+  font-family: var(--pp-font-display);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--pp-text-3);
+  margin-left: 2px;
+  font-size: 16px;
+}
+.pp-login-brand .mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--pp-text);
+  color: var(--pp-bg);
+  font-family: var(--pp-font-display);
+  font-style: italic;
+  font-size: 18px;
+  display: grid;
+  place-items: center;
+}
+
+.pp-login-foot {
+  position: absolute;
+  bottom: 28px;
+  left: 36px;
+  right: 36px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--pp-text-4);
+}
+.pp-login-foot a {
+  color: inherit;
+  text-decoration: none;
+}
+.pp-login-foot a:hover { color: var(--pp-text-2); }
+
+/* ── Card ── */
+.pp-login-card {
+  width: 100%;
+  max-width: 380px;
+}
+
+.pp-login-card h1 {
+  margin: 0 0 8px;
+  font-size: 30px;
+  letter-spacing: -0.025em;
+  font-weight: 500;
+  line-height: 1.1;
+}
+.pp-login-card h1 em {
+  font-family: var(--pp-font-display);
+  font-style: italic;
+  color: var(--pp-text-3);
+  font-weight: 400;
+}
+.pp-login-card .sub {
+  margin: 0 0 26px;
+  font-size: 14px;
+  color: var(--pp-text-3);
+}
+
+/* ── SSO buttons ── */
+.pp-sso-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+.pp-sso-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: var(--pp-r-md);
+  background: var(--pp-surface);
+  border: 1px solid var(--pp-border);
+  color: var(--pp-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--pp-font-sans);
+  transition: background 0.12s;
+}
+.pp-sso-btn:hover { background: var(--pp-surface-2); }
+.pp-sso-btn .gico { width: 14px; height: 14px; }
+
+/* ── Divider ── */
+.pp-divider-or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 22px 0;
+  font-size: 11px;
+  color: var(--pp-text-4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.pp-divider-or::before,
+.pp-divider-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--pp-border);
+}
+
+/* ── Fields ── */
+.pp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.pp-field label {
+  font-size: 12px;
+  color: var(--pp-text-2);
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.pp-field label a {
+  font-size: 11.5px;
+  color: var(--pp-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.pp-field label a:hover { opacity: 0.8; }
+.pp-field input {
+  padding: 10px 12px;
+  border-radius: var(--pp-r-md);
+  border: 1px solid var(--pp-border);
+  background: var(--pp-surface);
+  color: var(--pp-text);
+  font-size: 14px;
+  font-family: var(--pp-font-sans);
+  transition: border-color 0.12s, box-shadow 0.12s;
+  outline: none;
+}
+.pp-field input:focus {
+  border-color: var(--pp-accent);
+  box-shadow: 0 0 0 3px var(--pp-accent-50);
+}
+.pp-field.error input { border-color: var(--pp-red); }
+.pp-field .pp-err { font-size: 11.5px; color: var(--pp-red); margin-top: 2px; }
+
+/* ── Checkbox ── */
+.pp-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--pp-text-2);
+  margin-bottom: 18px;
+  cursor: pointer;
+}
+.pp-checkbox input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--pp-accent);
+  cursor: pointer;
+}
+
+/* ── Submit button ── */
+.pp-btn-submit {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--pp-font-sans);
+  border-radius: var(--pp-r-md);
+  border: 1px solid var(--pp-text);
+  background: var(--pp-text);
+  color: var(--pp-bg);
+  cursor: pointer;
+  transition: opacity 0.12s;
+}
+.pp-btn-submit:hover:not(:disabled) { opacity: 0.9; }
+.pp-btn-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ── Footer note ── */
+.pp-foot-note {
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--pp-text-3);
+  text-align: center;
+}
+.pp-foot-note button {
+  background: none;
+  border: none;
+  color: var(--pp-accent);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--pp-font-sans);
+}
+.pp-foot-note button:hover { opacity: 0.8; }
+
+/* ── Info message ── */
+.pp-info {
+  font-size: 12px;
+  color: var(--pp-green);
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #DCFCE7;
+  border-radius: var(--pp-r-md);
+}
+
+/* ── Visual (right) side ── */
+.pp-login-visual-side {
+  position: relative;
+  background: #1C1917;
+  color: #FAFAF9;
+  overflow: hidden;
+  padding: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.pp-login-visual-side::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(700px 400px at 80% 30%, rgba(79, 70, 229, 0.30), transparent),
+    radial-gradient(500px 300px at 20% 80%, rgba(14, 165, 233, 0.22), transparent);
+  pointer-events: none;
+}
+.pp-login-visual-side::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(circle at 50% 50%, black, transparent 70%);
+  pointer-events: none;
+}
+
+.pp-lv-brand {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: -0.015em;
+  color: #FAFAF9;
+}
+.pp-lv-brand .mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #FAFAF9;
+  color: #1C1917;
+  font-family: var(--pp-font-display);
+  font-style: italic;
+  font-size: 18px;
+  display: grid;
+  place-items: center;
+}
+.pp-lv-brand em {
+  font-family: var(--pp-font-display);
+  font-style: italic;
+  font-weight: 400;
+  color: #A8A29E;
+  margin-left: 2px;
+  font-size: 16px;
+}
+
+.pp-lv-quote {
+  position: relative;
+  z-index: 2;
+  font-family: var(--pp-font-display);
+  font-style: italic;
+  font-size: clamp(28px, 2.6vw, 36px);
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  max-width: 560px;
+  text-wrap: balance;
+  color: #FAFAF9;
+}
+.pp-lv-quote::before { content: "\201C"; opacity: .4; margin-right: 4px; }
+.pp-lv-quote::after { content: "\201D"; opacity: .4; margin-left: 4px; }
+
+.pp-lv-attr {
+  position: relative;
+  z-index: 2;
+  font-style: normal;
+  font-family: var(--pp-font-sans);
+  font-size: 13.5px;
+  color: #A8A29E;
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pp-lv-attr .av {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7C3AED, #4F46E5);
+  color: white;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.pp-lv-meta {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 28px;
+  font-size: 12px;
+  color: #A8A29E;
+}
+.pp-lv-meta strong {
+  display: block;
+  font-family: var(--pp-font-display);
+  font-style: italic;
+  color: #FAFAF9;
+  font-size: 28px;
+  font-weight: 400;
+}
+
+/* ── Loading dots ── */
+.pp-dots-load {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.pp-dots-load span {
+  width: 5px;
+  height: 5px;
+  background: currentColor;
+  border-radius: 50%;
+  animation: pp-dotpulse 1.2s ease-in-out infinite;
+}
+.pp-dots-load span:nth-child(2) { animation-delay: .15s; }
+.pp-dots-load span:nth-child(3) { animation-delay: .3s; }
+@keyframes pp-dotpulse {
+  0%, 80%, 100% { opacity: .3; transform: scale(.8) }
+  40% { opacity: 1; transform: scale(1) }
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .pp-login { grid-template-columns: 1fr; }
+  .pp-login-visual-side { display: none; }
+}

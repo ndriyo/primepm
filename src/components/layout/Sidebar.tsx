@@ -1,147 +1,186 @@
-import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import {
-  ChartPieIcon,
-  ViewColumnsIcon,
-  DocumentTextIcon,
-  HomeIcon,
-  Bars3Icon,
-  XMarkIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon
-} from '@heroicons/react/24/outline';
+  ChevronsLeft,
+  ChevronsRight,
+  FilePlus2,
+  LayoutDashboard,
+  ListChecks,
+  LogOut,
+  Sliders,
+  Zap,
+} from 'lucide-react';
+import { cn } from '../../lib/cn';
+import { Tooltip } from '../ui/Tooltip';
+import { useRoute, navigate, type Route } from '../../lib/router';
+import { useAuth } from '../../auth/useAuth';
+
+const COLLAPSED_KEY = 'prime-schedule:sidebar-collapsed';
 
 interface NavItem {
-  name: string;
+  key: Route['name'];
+  label: string;
   path: string;
-  icon: React.ForwardRefExoticComponent<React.SVGProps<SVGSVGElement>>;
+  icon: React.ReactNode;
+  matches: (route: Route) => boolean;
 }
 
-const navigation: NavItem[] = [
-  { name: 'Dashboard', path: '/', icon: HomeIcon },
-  { name: 'Project Selection', path: '/selection', icon: ViewColumnsIcon },
-  { name: 'Project Details', path: '/details', icon: DocumentTextIcon },
-  { name: 'Reports', path: '/reports', icon: ChartPieIcon },
+const NAV: NavItem[] = [
+  {
+    key: 'dashboard',
+    label: 'Dashboard',
+    path: '/dashboard',
+    icon: <LayoutDashboard size={16} />,
+    matches: r => r.name === 'dashboard',
+  },
+  {
+    key: 'list',
+    label: 'Ongoing Project',
+    path: '/projects',
+    icon: <ListChecks size={16} />,
+    matches: r => r.name === 'list' || r.name === 'project',
+  },
+  {
+    key: 'submission',
+    label: 'Project Submission',
+    path: '/projects/new',
+    icon: <FilePlus2 size={16} />,
+    matches: r => r.name === 'submission',
+  },
+  {
+    key: 'selection',
+    label: 'Project Selection',
+    path: '/selection',
+    icon: <Sliders size={16} />,
+    matches: r => r.name === 'selection',
+  },
 ];
 
-export const Sidebar = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
-  
-  // Load user preference for desktop sidebar state from localStorage (if available)
-  useEffect(() => {
-    const savedState = localStorage.getItem('desktopSidebarOpen');
-    if (savedState !== null) {
-      setDesktopSidebarOpen(savedState === 'true');
+export function Sidebar() {
+  const route = useRoute();
+  const { session, signOut } = useAuth();
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(COLLAPSED_KEY) === '1';
+    } catch {
+      return false;
     }
-  }, []);
-  
-  // Save user preference when desktop sidebar state changes
+  });
+
   useEffect(() => {
-    localStorage.setItem('desktopSidebarOpen', String(desktopSidebarOpen));
-  }, [desktopSidebarOpen]);
-  const location = useLocation();
+    try {
+      localStorage.setItem(COLLAPSED_KEY, collapsed ? '1' : '0');
+    } catch {
+      // ignore
+    }
+  }, [collapsed]);
 
   return (
-    <>
-      {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-0 left-0 z-40 w-full bg-white shadow-sm p-4 flex items-center">
+    <aside
+      className={cn(
+        'h-full flex flex-col bg-(--color-surface) border-r border-(--color-border) transition-[width] duration-150',
+        collapsed ? 'w-14' : 'w-56',
+      )}
+    >
+      <div className="h-12 flex items-center px-3 border-b border-(--color-border) gap-2">
         <button
           type="button"
-          className="text-gray-500 hover:text-gray-600"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
+          onClick={() => navigate('/projects')}
+          aria-label="Home"
+          className="w-7 h-7 rounded-md bg-(--color-brand) text-white flex items-center justify-center shadow-sm hover:bg-(--color-brand-strong) transition-colors flex-shrink-0"
         >
-          <span className="sr-only">Toggle sidebar</span>
-          {sidebarOpen ? (
-            <XMarkIcon className="h-6 w-6" aria-hidden="true" />
-          ) : (
-            <Bars3Icon className="h-6 w-6" aria-hidden="true" />
-          )}
+          <Zap size={15} />
         </button>
-        <div className="ml-4 flex items-center">
-          <Image
-            src="https://zwweamxsxemiefdlkgzn.supabase.co/storage/v1/object/public/asset/logo_transparent.png"
-            alt="PrimePM Logo"
-            width={32}
-            height={32}
-            className="h-8 w-auto mr-2"
-            priority
-          />
-        </div>
+        {!collapsed && (
+          <div className="font-semibold text-[13px] tracking-tight truncate">PrimePM</div>
+        )}
       </div>
 
-      {/* Mobile sidebar */}
-      <div
-        className={`fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden ${
-          sidebarOpen ? 'block' : 'hidden'
-        }`}
-        onClick={() => setSidebarOpen(false)}
-      ></div>
+      <nav className="flex-1 p-2 flex flex-col gap-0.5 overflow-y-auto">
+        {NAV.map(item => {
+          const active = item.matches(route);
+          const button = (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => navigate(item.path)}
+              className={cn(
+                'w-full flex items-center gap-2.5 px-2.5 h-8 rounded-md text-[13px] font-medium transition-colors',
+                'border-l-2',
+                active
+                  ? 'bg-(--color-brand-soft) text-(--color-brand-strong) border-(--color-brand)'
+                  : 'text-(--color-ink-muted) hover:bg-(--color-surface-2) hover:text-(--color-ink) border-transparent',
+                collapsed && 'justify-center px-0',
+              )}
+            >
+              <span className={active ? 'text-(--color-brand-strong)' : ''}>{item.icon}</span>
+              {!collapsed && <span className="truncate">{item.label}</span>}
+            </button>
+          );
+          return collapsed ? (
+            <Tooltip key={item.key} label={item.label} side="right">
+              {button}
+            </Tooltip>
+          ) : (
+            button
+          );
+        })}
+      </nav>
 
-      <div
-        className={`fixed top-0 left-0 z-50 h-screen w-64 bg-white shadow-lg transform transition-transform ease-in-out duration-300 flex flex-col ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:relative lg:z-auto ${
-          desktopSidebarOpen ? 'lg:translate-x-0' : 'lg:-translate-x-full'
-        }`}
-      >
-        {/* Desktop sidebar toggle button */}
-        <div className="hidden lg:block absolute right-0 top-4 transform translate-x-12 z-20">
-          <button
-            type="button"
-            className="bg-white p-2 rounded-r-md shadow-md border border-l-0 border-gray-200 text-gray-500 hover:text-gray-700"
-            onClick={() => setDesktopSidebarOpen(!desktopSidebarOpen)}
+      <div className="border-t border-(--color-border) p-2 flex flex-col gap-1">
+        {session?.user?.email && !collapsed && (
+          <div
+            className="px-2 py-1 text-[11px] text-(--color-ink-subtle) truncate"
+            title={session.user.email}
           >
-            <span className="sr-only">Toggle sidebar</span>
-            {desktopSidebarOpen ? (
-              <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
-            ) : (
-              <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
-            )}
-          </button>
-        </div>
-
-        {/* Mobile close button */}
-        <div className="lg:hidden flex justify-end p-4">
-          <button
-            type="button"
-            className="text-gray-500 hover:text-gray-700"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <XMarkIcon className="h-6 w-6" aria-hidden="true" />
-          </button>
-        </div>
-        
-        <nav className="px-4 overflow-y-auto flex-1 py-5">
-          <ul className="space-y-2">
-            {navigation.map((item) => {
-              const isActive = location.pathname === item.path;
-              return (
-                <li key={item.name}>
-                  <Link
-                    to={item.path}
-                    className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg ${
-                      isActive
-                        ? 'bg-primary-50 text-primary-700'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <item.icon
-                      className={`mr-3 h-5 w-5 ${
-                        isActive ? 'text-primary-700' : 'text-gray-500'
-                      }`}
-                      aria-hidden="true"
-                    />
-                    {item.name}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
+            {session.user.email}
+          </div>
+        )}
+        <SidebarAction
+          collapsed={collapsed}
+          icon={<LogOut size={14} />}
+          label="Sign out"
+          onClick={() => void signOut()}
+        />
+        <SidebarAction
+          collapsed={collapsed}
+          icon={collapsed ? <ChevronsRight size={14} /> : <ChevronsLeft size={14} />}
+          label={collapsed ? 'Expand' : 'Collapse'}
+          onClick={() => setCollapsed(c => !c)}
+        />
       </div>
-    </>
+    </aside>
   );
-};
+}
+
+function SidebarAction({
+  icon,
+  label,
+  onClick,
+  collapsed,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  collapsed: boolean;
+}) {
+  const button = (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'w-full flex items-center gap-2 px-2.5 h-7 rounded-md text-[12px] text-(--color-ink-muted) hover:bg-(--color-surface-2) hover:text-(--color-ink) transition-colors',
+        collapsed && 'justify-center px-0',
+      )}
+    >
+      {icon}
+      {!collapsed && <span>{label}</span>}
+    </button>
+  );
+  return collapsed ? (
+    <Tooltip label={label} side="right">
+      {button}
+    </Tooltip>
+  ) : (
+    button
+  );
+}

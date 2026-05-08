@@ -1,0 +1,278 @@
+# primepm — Product Requirements Document v0.2
+
+| Field | Value |
+|---|---|
+| Version | 0.2 |
+| Date | 2026-05-08 |
+| Supersedes | PRD v0.1 |
+| Status | Active — drives next 90 days of work |
+| Owner | Solo developer (build-in-public methodology case study) |
+
+---
+
+## 1. Strategic Thesis
+
+primepm is a project portfolio management (PPM) tool with **baseline integrity, earned value tracking, and governance discipline built in by default — not bolted on**.
+
+The market is saturated with PM tools that let teams silently move goalposts, mask schedule slip, and avoid hard decisions. Incumbents (Planview, Clarity, Primavera, ServiceNow SPM) have these features in name but rarely enforce them. primepm's differentiation is the **enforcement**, not the feature inventory.
+
+**Target buyer:** Mid-market PMO directors and program leaders (50–500 person companies) who need real portfolio governance without the bloat, cost, or undisciplined defaults of enterprise incumbents.
+
+**Methodology framing:** primepm is also the public artifact of an agentic engineering methodology developed by a solo builder. The 90-day execution arc described in this document is itself the case study. Build cadence and design decisions will be documented as they happen.
+
+---
+
+## 2. Current Capabilities (Inherited from v0.1)
+
+The following are already shipped and stable:
+
+- Marketing landing page at `/` and authenticated application routes served from `app.html`.
+- Supabase email/password authentication in the React client.
+- API mode when `VITE_API_URL` is configured; local scheduler mode when it is not.
+- Auto-provisioning of a personal organization and user row on first authenticated API request.
+- Portfolio dashboard with project counts, budget totals, effort totals, status breakdowns, and top scored projects.
+- Project list and detail views with edit, delete, and schedule entry points.
+- Project submission wizard with project facts, department selection, tags, budget, mandays, self-assessment, and weighted score calculation.
+- Criteria/version management with active versions, score ranges, criteria CRUD, rubrics, and AHP pairwise weighting.
+- Pure TypeScript scheduling engine with task hierarchy, FS/SS/FF/SF dependencies, lag/lead, date constraints, cycle detection, summary rollups, critical path, and working calendar support.
+- Interactive scheduler with grid/Gantt split view, task inspector, dependency editing, command palette, keyboard shortcuts, templates, undo/redo, resource planning, utilization, and cost breakdowns.
+- Debounced persistence to local storage in standalone mode or to the API-backed schedule tables in authenticated mode.
+- Database groundwork for committee review, portfolio selections, portfolio simulations, audit logs, and schedule-specific entities.
+
+---
+
+## 3. Strategic Gap Analysis
+
+| Value chain stage | Status | Implication |
+|---|---|---|
+| Intake & prioritization (criteria, AHP, scoring) | ✅ Built, sophisticated | No further investment in next 90 days |
+| Planning (scheduling engine, Gantt, resources) | ✅ Built, deep | No further investment in next 90 days |
+| **Execution truth (baseline, actuals, variance)** | ❌ **Missing** | **Phase 1 priority** |
+| **Decision support (EVM, EAC, exec dashboards)** | ❌ **Missing** | **Phase 2 priority** |
+| **Governance enforcement (CR, audit, alignment, risk)** | 🟡 DB groundwork only | **Phase 3 priority** |
+
+The front and middle of the project value chain are over-built relative to the back half. Closing the back half along the thesis (truth + governance) is the singular focus of this PRD.
+
+---
+
+## 4. 90-Day Roadmap
+
+### Phase 1 — Make truth measurable (Weeks 1–4)
+
+**Goal:** Establish the foundation for measuring actual progress against committed plan. Without this phase, EVM and governance are impossible.
+
+**Scope:**
+
+1. **Google OAuth login** *(new in v0.2)*
+   - Add "Sign in with Google" alongside existing email/password.
+   - Account linking for users with both methods (same email).
+   - User identity, email, display name, and avatar pulled from Google profile.
+   - Sets foundation for future SSO (SAML, Microsoft, Okta) — not in scope for 90 days but should not be architecturally precluded.
+
+2. **Schedule baseline (immutable, versioned)**
+   - "Set baseline" action captures a frozen snapshot of the current schedule (tasks, dependencies, dates, durations, costs, resources).
+   - Baselines are immutable: cannot be edited or deleted once committed.
+   - Multiple baseline versions per project (v0 = original, v1 = first rebaseline, etc.). v0 is always retrievable regardless of how many rebaselines occur.
+   - Each baseline version stores: timestamp, user, optional rationale text, and full schedule snapshot.
+
+3. **Tracking Gantt overlay**
+   - Single Gantt view showing baseline bars vs. current schedule bars side-by-side per task.
+   - Visual variance indicator (color or pattern) when current dates differ from baseline.
+   - Toggle to switch baseline reference (v0 vs. latest, etc.).
+
+4. **Actuals capture**
+   - Per task: % complete, actual start date, actual finish date.
+   - Minimal viable input — no timesheet or rate-card integration in this phase.
+   - Actuals are distinct from current scheduled dates; the system never overwrites baseline or scheduled values when actuals are entered.
+
+**Success criteria for Phase 1:**
+- A user can log in with Google.
+- A user can baseline a project, modify the schedule freely after, and still see the original baseline overlaid against current state.
+- A user can enter actuals on tasks and see them rendered alongside baseline and scheduled values.
+
+---
+
+### Phase 2 — Make truth visible to the right audiences (Weeks 5–8)
+
+**Goal:** Transform raw baseline + actuals data into the metrics and visualizations that PMOs and executives actually consume.
+
+**Scope:**
+
+1. **EVM calculation engine**
+   - Computes Planned Value (PV), Earned Value (EV), Actual Cost (AC) at task and project rollup level.
+   - Derives SV, CV, SPI, CPI, EAC, ETC, VAC.
+   - Calculations are deterministic and trustworthy; PMs cannot manually edit metric outputs.
+   - Trend-based EAC (statistical projection from variance history) computed alongside any PM-supplied EAC; divergence flagged.
+
+2. **S-curve visualization**
+   - Three lines (PV, EV, AC) plotted over project timeline.
+   - Auto-generated from underlying schedule + actuals data; no manual configuration.
+   - Available at project level. Portfolio-level rollup deferred.
+
+3. **Executive dashboard (separate view from PM workspace)**
+   - 30-second consumption: RAG status (auto-calculated from variance thresholds, manual override permitted but logged), EAC vs. BAC, milestone slip chart, top 3 active risks, decisions needed.
+   - Mobile-grade responsive layout. Sponsors do not open laptops to read status.
+   - Distinct route and visual treatment from PM-facing views.
+
+4. **Milestone slip chart**
+   - For each milestone in a project: original baseline date plotted against forecast date over time (each project review cycle adds a data point).
+   - Visualizes whether milestones are stable or progressively drifting.
+
+**Success criteria for Phase 2:**
+- EVM metrics render correctly on at least 3 sample projects with manually entered actuals.
+- The exec dashboard is usable on mobile without horizontal scroll.
+- A milestone that has slipped twice over three review cycles renders as a visibly diverging line.
+
+---
+
+### Phase 3 — Make governance enforceable (Weeks 9–12)
+
+**Goal:** Move from passive measurement to active discipline. This phase is what makes primepm sellable to PMO directors as a governance platform, not just a tracker.
+
+**Scope:**
+
+1. **Change request workflow**
+   - Schedule modifications that exceed configured thresholds (date shift > N days, cost delta > X%, scope addition) require a Change Request.
+   - CR captures: requestor, rationale, impact analysis, requested approver(s).
+   - Approval routing based on impact tier.
+   - Approved CRs trigger a formal rebaseline action, producing a new baseline version with the CR linked as rationale.
+   - Rejected or pending CRs leave baseline untouched.
+
+2. **Audit trail / decision history**
+   - Single timeline view per project surfacing: baseline versions, CR submissions and approvals, RAG status overrides, strategic alignment reviews, risk register changes.
+   - Read-only. Filterable by event type, user, date range.
+   - Leverages existing audit log database groundwork from v0.1.
+
+3. **Anti-gaming heuristics (light)**
+   - Watermelon detection: project-level RAG = green while task-level RAG = red on N% of active tasks.
+   - Suspicious progress patterns: long flat periods followed by sudden % complete jumps.
+   - RAG override frequency tracked per PM. Surfaced in PMO view, not as accusation but as signal.
+
+4. **Strategic Objectives with included projects** *(new in v0.2)*
+   - Strategic Objective entity: name, description, owner, time horizon (start, target end), success metrics (free-form initially), status.
+   - Many-to-many relationship: projects ↔ strategic objectives. A project can contribute to multiple objectives; an objective can have multiple contributing projects.
+   - Objective health rollup: aggregate RAG, aggregate budget consumed vs. allocated, aggregate schedule variance across contributing projects.
+   - Objective detail view lists contributing projects with their individual status.
+   - **Quarterly strategic alignment review prompt:** for each active objective, system prompts the owner with: *"Are the contributing projects still aligned to this objective? Should any be removed, added, or terminated?"* Response is captured in the audit trail.
+   - **Zero-base review prompt:** for each contributing project, system prompts: *"If this project were proposed today, would you initiate it given current strategy and information?"* Response captured.
+
+5. **Risk Register** *(new in v0.2)*
+   - Risk entity: title, description, category (taxonomy: technical, schedule, cost, scope, external, organizational, strategic), probability (1–5), impact (1–5), risk score (P × I), owner, mitigation plan, contingency plan, status (identified, monitoring, mitigating, realized, closed), last reviewed date, trigger conditions (free text).
+   - Linkable to one or more projects, one or more strategic objectives, or both.
+   - Risk register views: by project, by objective, by status, by score (heat map).
+   - Risk heat map: 5×5 grid showing distribution of risks across probability and impact.
+   - Top 3 risks (by score) automatically surfaced on the executive dashboard.
+   - Risk realized state triggers an alert and a kill-criterion check on linked projects (does this realized risk match a pre-defined termination trigger?).
+   - Stale risk detection: risks with `last reviewed date > 30 days ago` flagged in the PMO view.
+
+**Success criteria for Phase 3:**
+- A schedule change exceeding threshold cannot be saved without a CR being raised and approved.
+- Two projects can be linked to one strategic objective, and the objective's health view reflects the aggregate state.
+- A user can submit and respond to a quarterly alignment review prompt; the response is retrievable in the audit timeline.
+- A risk can be created, scored, linked to a project and an objective, and surfaced on the heat map.
+- The exec dashboard shows top 3 risks pulled from the risk register.
+
+---
+
+## 5. Out of Scope (Hard No List)
+
+The following are explicitly excluded from the next 90 days. Resist scope creep.
+
+- Deepening the scheduling engine (resource leveling, advanced calendar features, additional constraint types).
+- Extending AHP or criteria management.
+- Portfolio simulation features (DB groundwork remains; UI not prioritized).
+- External system integrations (Jira, MS Project, ERP, financial systems).
+- SOC2, ISO 27001, or other formal compliance certifications.
+- Enterprise SSO beyond Google OAuth (SAML, Microsoft, Okta).
+- Native task management / Kanban competing with Jira/Asana/Linear.
+- Document collaboration / wiki features.
+- Mobile native apps (responsive web is sufficient).
+- AI-assisted narrative generation for status reports.
+- Predictive risk models (manual entry is the baseline).
+- White-label or multi-language support.
+
+Any feature request not on the Phase 1–3 list and not on the explicit Out of Scope list defaults to **deferred**, not "considered."
+
+---
+
+## 6. Buyer & Audience
+
+**Primary economic buyer:** PMO Director / Program Management Office leadership at mid-market companies (50–500 employees).
+
+**Secondary buyer / decision influencer:** CFO, COO, or Head of Strategy concerned about capital allocation discipline and project portfolio ROI.
+
+**Daily user:** Project Managers (acknowledged friction — see Risk section).
+
+**Vertical focus for first 12 months:** Capital-intensive, regulated, or program-heavy mid-market — candidate verticals include construction, engineering services, pharma/biotech, infrastructure, financial services. Avoid horizontal generic positioning. Pick 1–2 verticals after Phase 2 user conversations inform the choice.
+
+**Geographic focus:** Initially open. Sales motion implications deferred until first 5 design partners identified.
+
+---
+
+## 7. Methodology Positioning
+
+primepm is the public artifact for an **agentic engineering methodology** developed by a solo builder. Build process and engineering decisions are documented in a public build log throughout the 90 days.
+
+**Documentation cadence:**
+- Weekly: short build log post (decisions made, decisions deferred, surprises).
+- End of each phase: longer essay framing engineering and product decisions, including what was not built and why.
+- End of 90 days: methodology v1 essay synthesizing the full build experience.
+
+**Audiences:**
+- Engineering / technical leadership exploring agentic engineering at production scale.
+- PM community members interested in how AI changes who can build credible software products.
+
+**Monetization paths under evaluation (in order of realism):**
+1. Paid newsletter / written content on agentic engineering with operational lens.
+2. Advisory and consulting engagements.
+3. Cohort-based course or workshop series.
+4. Speaking engagements.
+5. SaaS revenue from primepm itself (treated as bonus, not plan).
+
+---
+
+## 8. Risks & Open Questions
+
+**Strategic risks:**
+- **PM hostility risk:** PMs are the daily user but not the buyer. Governance features (mandatory CRs, anti-gaming detection) may generate negative PM feedback. Mitigation: design PM workflow to be efficient; do not let PM feedback derail governance commitments.
+- **Audience volatility:** Builder has bounced between framings (serious product, hobby, methodology vehicle) within recent strategic conversations. Risk that this framing also drifts. Mitigation: 90-day decision point with explicit criteria.
+- **Solo capacity:** 90 days is aggressive. Risk of incomplete Phase 3 delivery. Mitigation: protect Phase 1 and 2 as non-negotiable; Phase 3 features are individually shippable in priority order (CR workflow > audit trail > strategic objectives > risk register > anti-gaming).
+
+**Open questions to resolve during execution:**
+- Final vertical focus for go-to-market.
+- Whether to seek 3 design partners during the build or after Phase 2 demo is ready.
+- Pricing model (per-project, platform fee, tiered) — defer until end of Phase 2.
+- Whether to open-source any portion (scheduling engine candidate) for methodology credibility.
+
+---
+
+## 9. Decision Point — Day 90
+
+By **2026-08-06** (90 days from PRD v0.2 date), the following will be evaluated:
+
+**Engineering criteria (must-haves):**
+- Baseline + tracking Gantt + actuals working on real schedule data.
+- EVM metrics computing correctly with S-curve and exec dashboard rendering.
+- CR workflow blocks unauthorized baseline changes.
+- Strategic Objectives feature operational with at least one objective linking ≥2 projects.
+- Risk Register operational with at least 5 risks across categories, surfaced on exec dashboard.
+
+**Methodology / audience criteria (signal):**
+- ≥100 newsletter subscribers or equivalent engaged audience.
+- ≥3 PMO-level conversations conducted with structured notes.
+- ≥1 paid signal of any kind (advisory request, paid newsletter conversion, course interest).
+
+**Decision matrix:**
+
+| Engineering | Audience | Action |
+|---|---|---|
+| ✅ Met | ✅ Met | Commit harder. Pick vertical. Begin design partner conversations. |
+| ✅ Met | ❌ Not met | Methodology positioning is not landing. Reassess content strategy and audience targeting. Product remains a viable artifact. |
+| ❌ Not met | ✅ Met | Engineering velocity is the bottleneck. Reassess scope and agentic engineering approach. |
+| ❌ Not met | ❌ Not met | Hobby project. Continue or shelve based on personal interest, with no business pretension. |
+
+The decision is binary at the engineering level (shipped or not), continuous at the audience level (signal strength). Document the outcome publicly regardless.
+
+---
+
+*End of PRD v0.2.*

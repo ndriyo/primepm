@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   Calendar,
   CalendarRange,
+  Camera,
   Crosshair,
   Keyboard,
   Search,
@@ -17,6 +18,7 @@ import {
 import { cn } from '../../lib/cn';
 import { isApiConfigured } from '../../api/client';
 import { navigate } from '../../lib/router';
+import { SetBaselineDialog } from '../gantt/SetBaselineDialog';
 
 const ZOOM_OPTIONS: { value: ZoomLevel; label: string }[] = [
   { value: 'day', label: 'Day' },
@@ -46,6 +48,16 @@ export function Toolbar() {
   const setCommandOpen = useProjectStore(s => s.setCommandOpen);
   const setCheatsheetOpen = useProjectStore(s => s.setCheatsheetOpen);
   const setTemplatePickerOpen = useProjectStore(s => s.setTemplatePickerOpen);
+
+  // Spec 002 — Baseline overlay
+  const taskOrder = useProjectStore(s => s.taskOrder);
+  const setBaseline = useProjectStore(s => s.setBaseline);
+  const baselineHeaders = useProjectStore(s => s.baselineHeaders);
+  const upcomingVersionIndex = baselineHeaders.length; // server validates uniqueness
+  const upcomingVersionLabel = `v${upcomingVersionIndex}`;
+  const [baselineDialogOpen, setBaselineDialogOpen] = useState(false);
+
+  const canSetBaseline = taskOrder.length > 0;
 
   const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState(project.name);
@@ -167,6 +179,26 @@ export function Toolbar() {
               </Button>
             </Tooltip>
 
+            <Tooltip
+              label={
+                canSetBaseline
+                  ? 'Capture an immutable snapshot of the schedule'
+                  : 'Add at least one task to set a baseline'
+              }
+            >
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={!canSetBaseline}
+                onClick={() => setBaselineDialogOpen(true)}
+                aria-label="Set baseline"
+                data-testid="toolbar-set-baseline"
+              >
+                <Camera size={14} />
+                <span className="text-[12px] font-medium">Set baseline</span>
+              </Button>
+            </Tooltip>
+
             <div className="w-px h-5 bg-(--color-border) mx-1" />
           </>
         )}
@@ -195,6 +227,16 @@ export function Toolbar() {
           {project.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
         </span>
       </div>
+
+      <SetBaselineDialog
+        open={baselineDialogOpen}
+        upcomingVersionLabel={upcomingVersionLabel}
+        onCancel={() => setBaselineDialogOpen(false)}
+        onConfirm={async rationale => {
+          await setBaseline(rationale);
+          setBaselineDialogOpen(false);
+        }}
+      />
     </div>
   );
 }

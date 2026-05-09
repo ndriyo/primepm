@@ -13,6 +13,7 @@ import { dashboardRoutes } from './routes/dashboard.ts';
 import { criteriaRoutes } from './routes/criteria.ts';
 import { departmentsRoutes } from './routes/departments.ts';
 import { submissionRoutes } from './routes/submission.ts';
+import { baselineRoutes } from './routes/baselines.ts';
 
 const app = new Hono();
 
@@ -71,6 +72,7 @@ api.route('/', dashboardRoutes);
 api.route('/', criteriaRoutes);
 api.route('/', departmentsRoutes);
 api.route('/', submissionRoutes);
+api.route('/', baselineRoutes);
 
 app.route('/api', api);
 

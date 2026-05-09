@@ -11,6 +11,8 @@ import {
   type Task,
 } from '../engine';
 import { newId } from '../lib/ids';
+import { apiClient } from '../api/client';
+import type { BaselineHeaderDto, BaselinePayloadDto } from '../api/types';
 
 enableMapSet();
 enablePatches();
@@ -80,6 +82,11 @@ export interface ProjectState {
   commandOpen: boolean;
   cheatsheetOpen: boolean;
   templatePickerOpen: boolean;
+
+  // Spec 002 — Baseline overlay (session-scoped)
+  baselineHeaders: BaselineHeaderDto[];        // newest first
+  baselinePayloads: Map<string, BaselinePayloadDto>;
+  activeBaselineRef: 'latest' | string;        // 'latest' or a baseline id
 
   // history
   past: UndoEntry[];
@@ -158,6 +165,12 @@ export interface ProjectActions {
   // Bulk
   loadProject: (snapshot: Partial<Pick<ProjectState, 'project' | 'tasks' | 'taskOrder' | 'dependencies' | 'calendar' | 'resources' | 'resourceOrder' | 'assignments' | 'collapsed'>>) => void;
   reset: () => void;
+
+  // Spec 002 — Baseline actions
+  setBaseline: (rationale: string) => Promise<BaselineHeaderDto>;
+  loadBaselineHeaders: (projectId: string) => Promise<void>;
+  loadBaselinePayload: (projectId: string, baselineId: string) => Promise<BaselinePayloadDto>;
+  setActiveBaselineRef: (ref: 'latest' | string) => void;
 }
 
 export type Store = ProjectState & ProjectActions;
@@ -206,6 +219,9 @@ const initialState = (): ProjectState => {
     commandOpen: false,
     cheatsheetOpen: false,
     templatePickerOpen: true,
+    baselineHeaders: [],
+    baselinePayloads: new Map(),
+    activeBaselineRef: 'latest',
     past: [],
     future: [],
   };
@@ -773,6 +789,46 @@ export const useProjectStore = create<Store>()(
         Object.assign(state, fresh);
       });
       void get;
+    },
+
+    // Spec 002 — Baseline actions
+    setBaseline: async (rationale: string) => {
+      const projectId = get().project.id;
+      const created = await apiClient.setBaseline(projectId, rationale);
+      set(state => {
+        // Insert in newest-first order. New baseline always has the highest
+        // versionIndex, so prepend.
+        state.baselineHeaders.unshift(created);
+      });
+      return created;
+    },
+
+    loadBaselineHeaders: async (projectId: string) => {
+      const headers = await apiClient.listBaselines(projectId);
+      set(state => {
+        // Newest first — server already orders this way, but defend against
+        // ordering surprises.
+        state.baselineHeaders = [...headers].sort(
+          (a, b) => b.versionIndex - a.versionIndex,
+        );
+      });
+    },
+
+    loadBaselinePayload: async (projectId: string, baselineId: string) => {
+      // Memoised: skip if already cached.
+      const cached = get().baselinePayloads.get(baselineId);
+      if (cached) return cached;
+      const full = await apiClient.getBaseline(projectId, baselineId);
+      set(state => {
+        state.baselinePayloads.set(baselineId, full.payload);
+      });
+      return full.payload;
+    },
+
+    setActiveBaselineRef: (ref: 'latest' | string) => {
+      set(state => {
+        state.activeBaselineRef = ref;
+      });
     },
   })),
 );

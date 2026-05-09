@@ -5,7 +5,7 @@
 // RowOverlayState. Names + shapes pinned by overlay.test.tsx.
 
 import { differenceInCalendarDays, parseISO } from 'date-fns';
-import type { Task, ScheduledTask } from '../../engine';
+import { recalculate, type Calendar, type DayOfWeek, type Dependency, type Task, type ScheduledTask } from '../../engine';
 import type { BaselinePayloadDto } from '../../api/types';
 
 export type RowOverlayKind = 'no-baseline' | 'unchanged' | 'variant' | 'added' | 'removed';
@@ -30,6 +30,9 @@ export interface OverlayInputs {
   currentTasks: Map<string, Task>;
   currentSchedule: Map<string, ScheduledTask>;
   activeBaselinePayload?: BaselinePayloadDto;
+  /** Ids of tasks that are summaries in the CURRENT schedule. The overlay
+   * skips these (per overlay-ui.contract.md §6 — Phase 1 scope). */
+  summaryIds?: ReadonlySet<string>;
 }
 
 /**
@@ -40,49 +43,88 @@ export interface OverlayInputs {
 const VARIANCE_THRESHOLD_DAYS = 1;
 
 /**
- * Compute fallback computedStart/computedFinish from the persisted snapshot.
- * Server doesn't pre-compute (see contract note); client reads
- *   - manualStart for scheduleMode='manual'
- *   - constraint.date for SNET/FNET/MSO/MFO
- *   - else project.start (same convention the engine uses)
+ * Run the real scheduling engine against the FROZEN baseline payload and
+ * return per-task (start, finish) Dates. This honours dependencies, working
+ * days, holidays, and constraints — exactly what the user saw at capture
+ * time, recovered deterministically because the calendar is frozen inside
+ * the snapshot.
  *
- * For the variance check this is sufficient because we only need a stable
- * date to subtract from the current scheduled date. A full forward-pass would
- * use dependency lag — we accept the simpler heuristic since the spec's
- * variance threshold is calendar days at the leaf level.
+ * If the server happens to ship `computedStart` / `computedFinish` (future
+ * enhancement), those are used directly and the engine is skipped.
+ *
+ * Memoised by payload identity at the call site (computeRowOverlayStates).
  */
-function deriveBaselineDate(
-  task: BaselinePayloadDto['tasks'][number],
+function recomputeBaselineSchedule(
   payload: BaselinePayloadDto,
-  which: 'start' | 'finish',
-): Date {
-  // If the server happens to ship the precomputed dates (future enhancement),
-  // honour them.
-  const precomputed = which === 'start' ? task.computedStart : task.computedFinish;
-  if (precomputed) return parseISO(precomputed);
-
-  let start: Date;
-  if (task.scheduleMode === 'manual' && task.manualStart) {
-    start = parseISO(task.manualStart);
-  } else if (task.constraint.kind !== 'ASAP') {
-    start = parseISO(task.constraint.date);
-  } else {
-    start = parseISO(payload.project.start);
+): Map<string, { start: Date; finish: Date }> {
+  // Fast path — server-precomputed dates.
+  const allPrecomputed =
+    payload.tasks.length > 0 &&
+    payload.tasks.every(t => t.computedStart && t.computedFinish);
+  if (allPrecomputed) {
+    const out = new Map<string, { start: Date; finish: Date }>();
+    for (const t of payload.tasks) {
+      out.set(t.id, {
+        start: parseISO(t.computedStart as string),
+        finish: parseISO(t.computedFinish as string),
+      });
+    }
+    return out;
   }
 
-  if (which === 'start') return start;
-  // Finish = start + (durationDays - 1) calendar days. (We approximate
-  // working-day arithmetic with calendar-day arithmetic for the purposes of
-  // the > 1 calendar-day variance check; the exact engine result is recovered
-  // when computedStart/Finish are present.)
-  const finish = new Date(start);
-  finish.setDate(finish.getDate() + Math.max(0, task.durationDays - 1));
-  return finish;
+  // Convert payload → engine inputs.
+  const tasks = new Map<string, Task>();
+  for (const t of payload.tasks) {
+    const constraint =
+      t.constraint.kind === 'ASAP'
+        ? { kind: 'ASAP' as const }
+        : { kind: t.constraint.kind, date: parseISO(t.constraint.date) };
+    tasks.set(t.id, {
+      id: t.id,
+      name: t.name,
+      durationDays: t.durationDays,
+      scheduleMode: t.scheduleMode,
+      manualStart: t.manualStart ? parseISO(t.manualStart) : undefined,
+      constraint,
+      progressPct: t.progressPct,
+      isMilestone: t.isMilestone,
+      parentId: t.parentId ?? undefined,
+      color: t.color ?? undefined,
+      notes: t.notes ?? undefined,
+    });
+  }
+
+  const deps = new Map<string, Dependency>();
+  for (const d of payload.dependencies) {
+    deps.set(d.id, {
+      id: d.id,
+      predecessorId: d.predecessorId,
+      successorId: d.successorId,
+      type: d.type,
+      lagDays: d.lagDays,
+    });
+  }
+
+  const calendar: Calendar = {
+    workingDaysOfWeek: new Set<DayOfWeek>(payload.calendar.workingDaysOfWeek as DayOfWeek[]),
+    holidays: new Set<string>(payload.calendar.holidays),
+    hoursPerDay: payload.calendar.hoursPerDay,
+  };
+
+  const projectStart = parseISO(payload.project.start);
+  const result = recalculate(tasks, deps, calendar, projectStart);
+
+  const out = new Map<string, { start: Date; finish: Date }>();
+  for (const [id, sched] of result.scheduled) {
+    out.set(id, { start: sched.start, finish: sched.finish });
+  }
+  return out;
 }
 
 export function computeRowOverlayStates(inputs: OverlayInputs): Map<string, RowOverlayState> {
   const result = new Map<string, RowOverlayState>();
-  const { currentTasks, currentSchedule, activeBaselinePayload } = inputs;
+  const { currentTasks, currentSchedule, activeBaselinePayload, summaryIds } = inputs;
+  const isSummary = (id: string) => summaryIds?.has(id) === true;
 
   // 1. No baseline → all rows are no-baseline (FR-014, SC-007).
   if (!activeBaselinePayload) {
@@ -94,8 +136,19 @@ export function computeRowOverlayStates(inputs: OverlayInputs): Map<string, RowO
   const baselineById = new Map<string, BaselinePayloadDto['tasks'][number]>();
   for (const t of activeBaselinePayload.tasks) baselineById.set(t.id, t);
 
+  // Recompute the baseline's full schedule from the frozen payload via the
+  // engine, honouring dependencies / working-day calendar / constraints.
+  const baselineSched = recomputeBaselineSchedule(activeBaselinePayload);
+
   // 2. Walk current tasks first.
   for (const [id, _task] of currentTasks) {
+    // Per overlay-ui.contract.md §6 — overlay applies to leaf tasks only.
+    // Summary rows continue to render only the current summary bar.
+    if (isSummary(id)) {
+      result.set(id, { kind: 'no-baseline' });
+      continue;
+    }
+
     const baseline = baselineById.get(id);
     const sched = currentSchedule.get(id);
     if (!baseline) {
@@ -103,8 +156,25 @@ export function computeRowOverlayStates(inputs: OverlayInputs): Map<string, RowO
       continue;
     }
 
-    const baselineStart = deriveBaselineDate(baseline, activeBaselinePayload, 'start');
-    const baselineFinish = deriveBaselineDate(baseline, activeBaselinePayload, 'finish');
+    const baselineDates =
+      baselineSched.get(id) ??
+      // Fallback if the engine did not produce a schedule entry (e.g. cycle).
+      // Prefer manualStart / constraint date / project.start, no engine math.
+      (() => {
+        let start: Date;
+        if (baseline.scheduleMode === 'manual' && baseline.manualStart) {
+          start = parseISO(baseline.manualStart);
+        } else if (baseline.constraint.kind !== 'ASAP') {
+          start = parseISO(baseline.constraint.date);
+        } else {
+          start = parseISO(activeBaselinePayload.project.start);
+        }
+        const finish = new Date(start);
+        finish.setDate(finish.getDate() + Math.max(0, baseline.durationDays - 1));
+        return { start, finish };
+      })();
+    const baselineStart = baselineDates.start;
+    const baselineFinish = baselineDates.finish;
 
     // If we have no current schedule entry yet, treat as unchanged at the
     // baseline geometry (best-effort; render layer can elide).
@@ -139,8 +209,13 @@ export function computeRowOverlayStates(inputs: OverlayInputs): Map<string, RowO
   // 3. Walk baseline tasks for those missing from current → removed.
   for (const t of activeBaselinePayload.tasks) {
     if (currentTasks.has(t.id)) continue;
-    const baselineStart = deriveBaselineDate(t, activeBaselinePayload, 'start');
-    const baselineFinish = deriveBaselineDate(t, activeBaselinePayload, 'finish');
+    // Skip baseline-only summary rows (Phase 1 scope).
+    if (t.parentId == null && activeBaselinePayload.tasks.some(c => c.parentId === t.id)) {
+      continue;
+    }
+    const dates = baselineSched.get(t.id);
+    const baselineStart = dates?.start ?? parseISO(activeBaselinePayload.project.start);
+    const baselineFinish = dates?.finish ?? baselineStart;
     result.set(t.id, {
       kind: 'removed',
       baselineBar: { startDate: baselineStart, finishDate: baselineFinish },

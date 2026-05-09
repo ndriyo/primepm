@@ -4,10 +4,9 @@
 import { Hono } from 'hono';
 import { sql } from '../lib/db.ts';
 import { getAuth } from '../lib/auth.ts';
-import { handleError, badRequest, forbidden, notFound, HttpError } from '../lib/errors.ts';
+import { handleError, forbidden, notFound, HttpError } from '../lib/errors.ts';
 import { baselineCreateSchema } from '../lib/validation.ts';
 import { loadSnapshot } from '../sql/snapshot.ts';
-import { audit } from '../lib/audit.ts';
 
 export const baselineRoutes = new Hono();
 
@@ -69,7 +68,12 @@ function snapshotToBaselinePayload(snap: Awaited<ReturnType<typeof loadSnapshot>
     lagDays: d.lagDays,
   }));
 
-  const resources = (snap.resources ?? []).map(([id, r]) => ({
+  // resourceOrder is the source of truth; if it's missing or doesn't include
+  // a given id (e.g. a freshly-added resource not yet ordered), fall back to
+  // the array position so orderIndex is always a non-negative integer.
+  const resourceOrderIndexById = new Map<string, number>();
+  (snap.resourceOrder ?? []).forEach((id, idx) => resourceOrderIndexById.set(id, idx));
+  const resources = (snap.resources ?? []).map(([id, r], arrIdx) => ({
     id,
     code: r.code,
     name: r.name,
@@ -77,7 +81,7 @@ function snapshotToBaselinePayload(snap: Awaited<ReturnType<typeof loadSnapshot>
     ratePerDay: r.ratePerDay ?? null,
     color: r.color ?? null,
     notes: r.notes ?? null,
-    orderIndex: (snap.resourceOrder ?? []).indexOf(id),
+    orderIndex: resourceOrderIndexById.get(id) ?? arrIdx,
   }));
 
   const assignments = (snap.assignments ?? []).map(([_id, a]) => ({
@@ -199,7 +203,10 @@ baselineRoutes.post('/projects/:projectId/baselines', async c => {
       const versionIndex = countRows[0]?.count ?? 0;
       const versionLabel = `v${versionIndex}`;
 
-      const snap = await loadSnapshot(projectId);
+      // loadSnapshot reads through the SAME transaction handle so the
+      // captured payload is consistent with the version count above
+      // (Spec 002 FR-018, R3).
+      const snap = await loadSnapshot(projectId, tx);
       if (!snap) throw notFound('project_not_found');
       const payload = snapshotToBaselinePayload(snap);
 
@@ -242,6 +249,3 @@ baselineRoutes.post('/projects/:projectId/baselines', async c => {
     return handleError(err, c);
   }
 });
-
-// Best-effort fallback for unused imports under strict TS.
-void badRequest;

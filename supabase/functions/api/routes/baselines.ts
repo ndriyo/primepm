@@ -215,7 +215,10 @@ baselineRoutes.post('/projects/:projectId/baselines', async c => {
       `;
       const row = insertRows[0];
 
-      // Audit row in the same transaction (FR-015, R11).
+      // Spec 002 — FR-015 / R11. The audit row is written inside the SAME
+      // transaction as the baseline insert: if either fails, both roll back.
+      // We deliberately do NOT use the project's `audit()` helper here because
+      // it is best-effort and swallows errors — we want hard atomicity.
       await tx`
         INSERT INTO audit_logs (user_id, action, entity_type, entity_id)
         VALUES (${auth.userId}, ${'baseline.set'}, ${'ScheduleBaseline'}, ${row.id})

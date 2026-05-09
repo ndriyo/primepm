@@ -242,5 +242,77 @@ Deno.test('T014b — simulated mid-transaction failure leaves zero rows', async 
   }
 });
 
+// T031 — second POST returns versionLabel: 'v1', versionIndex: 1
+Deno.test('T031 — second POST creates v1 and v0 stays unchanged byte-for-byte', async () => {
+  const ctx = await setupProjectWithTasks();
+  try {
+    const v0Res = await postBaseline(ctx.projectId, { rationale: 'v0 reason' });
+    const v0 = await v0Res.json() as { id: string; versionIndex: number };
+    assertEquals(v0.versionIndex, 0);
+
+    // Snapshot v0's payload before the second POST so we can compare bytes.
+    const v0FullRes = await fetch(
+      `${API_BASE}/api/projects/${ctx.projectId}/baselines/${v0.id}`,
+      { headers: { 'Authorization': `Bearer ${TOKEN}` } },
+    );
+    const v0Snapshot = JSON.stringify(await v0FullRes.json());
+
+    const v1Res = await postBaseline(ctx.projectId, { rationale: 'v1 reason' });
+    const v1 = await v1Res.json() as { versionIndex: number; versionLabel: string };
+    assertEquals(v1.versionIndex, 1);
+    assertEquals(v1.versionLabel, 'v1');
+
+    // v0 still byte-for-byte the same.
+    const v0FullAgain = await fetch(
+      `${API_BASE}/api/projects/${ctx.projectId}/baselines/${v0.id}`,
+      { headers: { 'Authorization': `Bearer ${TOKEN}` } },
+    );
+    const v0SnapshotAgain = JSON.stringify(await v0FullAgain.json());
+    assertEquals(v0Snapshot, v0SnapshotAgain);
+  } finally {
+    await ctx.cleanup();
+  }
+});
+
+// T033 — list newest-first; single fetch includes payload
+Deno.test('T033 — GET /baselines returns newest-first headers without payload', async () => {
+  const ctx = await setupProjectWithTasks();
+  try {
+    await postBaseline(ctx.projectId, { rationale: 'v0' });
+    await postBaseline(ctx.projectId, { rationale: 'v1' });
+    const res = await getBaselines(ctx.projectId);
+    const body = await res.json() as { baselines: Array<{ versionIndex: number; payload?: unknown }> };
+    assertEquals(body.baselines.length, 2);
+    assertEquals(body.baselines[0].versionIndex, 1);
+    assertEquals(body.baselines[1].versionIndex, 0);
+    assertEquals(body.baselines[0].payload, undefined);
+  } finally {
+    await ctx.cleanup();
+  }
+});
+
+// T048 — two POSTs → exactly two audit rows, distinct entity_ids, ordered ASC
+Deno.test('T048 — two POSTs write two audit rows with distinct entity ids and chronological order', async () => {
+  const ctx = await setupProjectWithTasks();
+  try {
+    const v0Res = await postBaseline(ctx.projectId, { rationale: 'v0' });
+    const v1Res = await postBaseline(ctx.projectId, { rationale: 'v1' });
+    const v0 = await v0Res.json() as { id: string };
+    const v1 = await v1Res.json() as { id: string };
+
+    const rows = await sql<{ entity_id: string; created_at: string }[]>`
+      SELECT entity_id, created_at FROM audit_logs
+      WHERE entity_type = 'ScheduleBaseline'
+        AND entity_id IN (${v0.id}, ${v1.id})
+      ORDER BY created_at ASC
+    `;
+    assertEquals(rows.length, 2);
+    assertEquals(rows[0].entity_id, v0.id);
+    assertEquals(rows[1].entity_id, v1.id);
+  } finally {
+    await ctx.cleanup();
+  }
+});
+
 // Helper used by other phases too
 export { setupProjectWithTasks, postBaseline, getBaselines };

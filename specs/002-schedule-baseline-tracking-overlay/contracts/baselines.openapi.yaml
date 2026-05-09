@@ -209,9 +209,14 @@ components:
 
     BaselineTask:
       type: object
+      # NOTE (impl 2026-05-09): `computedStart`/`computedFinish` were
+      # originally required to "freeze" computed dates, but since the snapshot
+      # persists the calendar verbatim, the client can recompute deterministically
+      # at render time. Making them optional lets the Edge function reuse the
+      # existing `loadSnapshot` serialiser without porting the engine to Deno.
       required:
         [id, name, durationDays, isMilestone, scheduleMode, constraint,
-         progressPct, orderIndex, computedStart, computedFinish]
+         progressPct, orderIndex]
       properties:
         id: { type: string, format: uuid }
         parentId: { type: string, format: uuid, nullable: true }

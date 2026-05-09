@@ -54,8 +54,10 @@ export function GanttChart({ scrollY, onScrollY }: Props) {
   );
 
   const width = totalDays * scale.pxPerDay;
-  const totalRows = visibleOrder.length;
-  const innerHeight = Math.max(totalRows * ROW_HEIGHT, 320);
+  // totalRows / innerHeight are derived AFTER `renderedOrder` is computed
+  // a few lines below — `renderedOrder` is `visibleOrder` plus any
+  // baseline-only ids, so removed-since-baseline rows are included in the
+  // scroll height (FR-011).
 
   const rowsById = useMemo(() => {
     const m = new Map<string, number>();
@@ -79,9 +81,32 @@ export function GanttChart({ scrollY, onScrollY }: Props) {
         currentTasks: tasks,
         currentSchedule: schedule.scheduled,
         activeBaselinePayload: activeBaseline?.payload,
+        summaryIds,
       }),
-    [tasks, schedule.scheduled, activeBaseline?.payload],
+    [tasks, schedule.scheduled, activeBaseline?.payload, summaryIds],
   );
+
+  // Spec 002 (FR-011) — baseline-only task ids (kind: 'removed') are NOT in
+  // visibleOrder, so they would otherwise never receive a row index. Append
+  // them after the current rows in baseline orderIndex order so the user
+  // sees them under "removed since baseline".
+  const renderedOrder = useMemo(() => {
+    if (!activeBaseline) return visibleOrder;
+    const removedIds: string[] = [];
+    overlayStates.forEach((state, id) => {
+      if (state.kind === 'removed') removedIds.push(id);
+    });
+    if (removedIds.length === 0) return visibleOrder;
+    const baselineOrderIndex = new Map<string, number>();
+    activeBaseline.payload.tasks.forEach(t => baselineOrderIndex.set(t.id, t.orderIndex));
+    removedIds.sort(
+      (a, b) => (baselineOrderIndex.get(a) ?? 0) - (baselineOrderIndex.get(b) ?? 0),
+    );
+    return [...visibleOrder, ...removedIds];
+  }, [visibleOrder, overlayStates, activeBaseline]);
+
+  const totalRows = renderedOrder.length;
+  const innerHeight = Math.max(totalRows * ROW_HEIGHT, 320);
 
   // Spec 002 (T047) — when the resolved active baseline header has no payload
   // cached yet, lazy-fetch it. Memoised by baselineId in the store, so a
@@ -186,17 +211,20 @@ export function GanttChart({ scrollY, onScrollY }: Props) {
           <WeekendShading scale={scale} totalDays={totalDays} height={innerHeight} />
           <TodayLine scale={scale} height={innerHeight} />
 
-          {/* baseline bars — pre-pass behind current bars (Spec 002) */}
+          {/* baseline bars — pre-pass behind current bars (Spec 002).
+              Includes baseline-only ids (kind: 'removed') so FR-011 renders. */}
           {activeBaseline &&
-            visibleOrder.slice(visibleRange.startIdx, visibleRange.endIdx).map((id, k) => {
+            renderedOrder.slice(visibleRange.startIdx, visibleRange.endIdx).map((id, k) => {
               const idx = visibleRange.startIdx + k;
               const state = overlayStates.get(id);
               if (!state || state.kind === 'no-baseline' || state.kind === 'added') return null;
               return <BaselineBar key={`baseline-${id}`} taskId={id} rowIndex={idx} scale={scale} state={state} />;
             })}
 
-          {/* bars (windowed) */}
-          {visibleOrder.slice(visibleRange.startIdx, visibleRange.endIdx).map((id, k) => {
+          {/* bars (windowed). Walks renderedOrder so removed rows take a row,
+              even though `tasks` no longer holds them — TaskBar is suppressed
+              for those, leaving the BaselineBar alone (per contract). */}
+          {renderedOrder.slice(visibleRange.startIdx, visibleRange.endIdx).map((id, k) => {
             const idx = visibleRange.startIdx + k;
             const task = tasks.get(id);
             const sched = schedule.scheduled.get(id);

@@ -45,10 +45,27 @@ function readUrlError(): string | null {
 
 function stripUrlError() {
   if (typeof window === 'undefined') return;
-  const params = new URLSearchParams(window.location.search);
-  const hadError = params.has('error') || params.has('error_description') || window.location.hash.includes('error');
-  if (!hadError) return;
-  window.history.replaceState({}, '', window.location.pathname);
+  const queryParams = new URLSearchParams(window.location.search);
+  const hashRaw = window.location.hash.replace(/^#/, '');
+  const hashParams = new URLSearchParams(hashRaw);
+
+  const queryHadError = queryParams.has('error') || queryParams.has('error_description');
+  const hashHadError = hashParams.has('error') || hashParams.has('error_description');
+  if (!queryHadError && !hashHadError) return;
+
+  // Drop only the OAuth error keys; preserve everything else (e.g. ?tab=signup).
+  for (const key of ['error', 'error_description', 'error_code']) {
+    queryParams.delete(key);
+    hashParams.delete(key);
+  }
+  const cleanedQuery = queryParams.toString();
+  const cleanedHash = hashParams.toString();
+
+  const url =
+    window.location.pathname +
+    (cleanedQuery ? `?${cleanedQuery}` : '') +
+    (cleanedHash ? `#${cleanedHash}` : '');
+  window.history.replaceState({}, '', url);
 }
 
 interface ProfileSyncPayload {

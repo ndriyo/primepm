@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export interface AvatarProps {
   url: string | null | undefined;
@@ -29,6 +29,11 @@ function deriveInitials(
 
 export function Avatar({ url, name, email, size = 32, className }: AvatarProps) {
   const [errored, setErrored] = useState(false);
+  // Reset the error state when the url changes so a new avatar URL gets a
+  // fresh chance to load (e.g. user signs in again with updated provider photo).
+  useEffect(() => {
+    setErrored(false);
+  }, [url]);
   const showImage = Boolean(url) && !errored;
   const initials = deriveInitials(name, email);
   const altText = name ?? email ?? 'User';

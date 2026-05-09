@@ -63,6 +63,30 @@ describe('Avatar — C4 contract', () => {
     expect(screen.getByText('DR')).toBeInTheDocument();
   });
 
+  // Regression for PR review: errored state must reset when url prop changes
+  // so a fresh provider URL gets a fresh chance to load.
+  it('retries the image when url prop changes after a previous onError', () => {
+    const { rerender } = render(
+      <Avatar
+        url="https://expired.googleusercontent.com/old"
+        name="Daniela Reyes"
+        email="daniela@northwind.co"
+      />,
+    );
+    fireEvent.error(screen.getByRole('img'));
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+
+    rerender(
+      <Avatar
+        url="https://lh3.googleusercontent.com/new"
+        name="Daniela Reyes"
+        email="daniela@northwind.co"
+      />,
+    );
+    const img = screen.getByRole('img') as HTMLImageElement;
+    expect(img.src).toBe('https://lh3.googleusercontent.com/new');
+  });
+
   it('respects custom size', () => {
     render(
       <Avatar url={null} name="Daniela Reyes" email="daniela@northwind.co" size={56} />,

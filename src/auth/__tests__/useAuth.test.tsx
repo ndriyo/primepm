@@ -108,6 +108,15 @@ describe('useAuth — URL error capture (C2)', () => {
     expect(result.current.oauthError && result.current.oauthError.length > 0).toBe(true);
   });
 
+  // Regression for PR review #1: preserve non-error query params (e.g. ?tab=signup)
+  // when stripping the OAuth error.
+  it('preserves non-error query params when stripping the OAuth error', async () => {
+    window.history.replaceState({}, '', '/?tab=signup&error=access_denied&error_description=user+cancelled');
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.oauthError).toBeTruthy());
+    expect(window.location.search).toBe('?tab=signup');
+  });
+
   it('is a no-op when no error params are present', async () => {
     const spy = vi.spyOn(window.history, 'replaceState');
     renderHook(() => useAuth(), { wrapper });

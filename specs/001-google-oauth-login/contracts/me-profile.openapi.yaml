@@ -1,0 +1,151 @@
+openapi: 3.1.0
+info:
+  title: primepm — Me / Profile API
+  version: "1.0.0"
+  description: |
+    Endpoints for reading and refreshing the authenticated user's app-level
+    profile (display name + avatar). Introduced in feature 001-google-oauth-login
+    so that a successful Google sign-in can sync the latest Google profile data
+    into the application `users` table.
+
+    Both endpoints are served by the existing Supabase Edge Function at
+    `/functions/v1/api` (Hono router under `/api`). Authentication is the
+    existing `Authorization: Bearer <supabase-jwt>` scheme verified by
+    `supabase/functions/api/lib/auth.ts:requireAuth`.
+
+servers:
+  - url: https://{projectRef}.supabase.co/functions/v1
+    variables:
+      projectRef:
+        default: example-project
+        description: Supabase project ref
+
+paths:
+  /api/me:
+    get:
+      summary: Get the authenticated user's app-level profile
+      operationId: getMe
+      security:
+        - supabaseJwt: []
+      responses:
+        "200":
+          description: Authenticated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeProfile"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/me/profile:
+    put:
+      summary: Refresh the authenticated user's display name and avatar from the latest provider profile
+      description: |
+        Idempotent. Called by the frontend after every successful sign-in
+        (regardless of provider) to mirror `session.user.user_metadata.full_name`
+        and `avatar_url` into the `public.users` row.
+
+        - `fullName`: trimmed, MUST be a non-empty string after trimming.
+        - `avatarUrl`: optional. When present MUST be an absolute HTTPS URL.
+          Pass `null` to clear an existing avatar (e.g. user removed it from
+          their Google account).
+
+        On success returns the updated profile shape (same as `GET /api/me`).
+      operationId: putMeProfile
+      security:
+        - supabaseJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeProfileUpdate"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeProfile"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                emptyName:
+                  value: { error: "validation_error", message: "fullName must be non-empty" }
+                badUrl:
+                  value: { error: "validation_error", message: "avatarUrl must be an absolute https URL" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    supabaseJwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase-issued JWT (RS256 via JWKS, or HS256 fallback). Verified by `requireAuth`.
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          examples:
+            missing:
+              value: { error: "missing_token" }
+            invalid:
+              value: { error: "invalid_token" }
+
+  schemas:
+    MeProfile:
+      type: object
+      required: [id, email, fullName, organizationId, avatarUrl, roles]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Same value as the JWT `sub` and `auth.users.id`.
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+          minLength: 1
+        organizationId:
+          type: string
+          format: uuid
+        avatarUrl:
+          type: [string, "null"]
+          format: uri
+          description: Absolute HTTPS URL of the user's avatar (e.g. Google CDN URL). Null when not set.
+        roles:
+          type: array
+          items: { type: string }
+
+    MeProfileUpdate:
+      type: object
+      required: [fullName]
+      additionalProperties: false
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 255
+        avatarUrl:
+          type: [string, "null"]
+          format: uri
+          maxLength: 2048
+          description: Absolute HTTPS URL or null to clear.
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        message: { type: string }

@@ -25,7 +25,7 @@ const headerFor = (idx: number, id?: string): BaselineHeaderDto => ({
   createdBy: { id: 'u1', fullName: 'Andrian' },
 });
 
-const payloadFor = (id: string): BaselinePayloadDto => ({
+const payloadFor = (_id: string): BaselinePayloadDto => ({
   schemaVersion: 1,
   capturedAt: '2026-05-09T09:00:00Z',
   project: { id: 'p1', name: 'P', start: '2026-05-04' },

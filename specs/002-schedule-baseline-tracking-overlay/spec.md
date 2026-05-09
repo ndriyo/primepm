@@ -5,11 +5,19 @@
 **Status**: Draft
 **Input**: User description: "Add immutable, versioned schedule baselines and a tracking Gantt overlay that compares baseline bars against current schedule bars per task."
 
+## Clarifications
+
+### Session 2026-05-09
+
+- Q: When does the visual variance indicator activate on a task in the tracking Gantt? → A: When start drift OR finish drift exceeds 1 calendar day in either direction.
+- Q: Should the baseline rationale text be optional or mandatory? → A: Mandatory — every baseline (v0 and every rebaseline) must include a non-empty rationale before the action is committed.
+- Q: Who is allowed to set a baseline (and rebaseline) in this release? → A: Anyone with permission to edit the project schedule. Phase 3 will introduce the change-request workflow that gates rebaselines.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Project manager sets the original baseline (v0) and freezes the plan (Priority: P1)
 
-A PM has finished planning a project schedule (tasks, dependencies, dates, durations, costs, resource assignments, calendar). Before execution starts, the PM clicks "Set baseline" on the project schedule. The system captures a frozen, immutable snapshot of the entire schedule — labeled v0, stamped with the PM's identity and the current timestamp, and given an optional rationale text the PM can fill in. From this point on, the original plan is locked in evidence; no edit can erase what was committed.
+A PM has finished planning a project schedule (tasks, dependencies, dates, durations, costs, resource assignments, calendar). Before execution starts, the PM clicks "Set baseline" on the project schedule, enters a required rationale (e.g., "Approved by steering committee 2026-05-08"), and confirms. The system captures a frozen, immutable snapshot of the entire schedule — labeled v0, stamped with the PM's identity, timestamp, and rationale. From this point on, the original plan is locked in evidence; no edit can erase what was committed.
 
 **Why this priority**: Without v0, there is nothing to track against. Every other capability in this feature (overlay, variance, future EVM, future change-request workflow) depends on the existence of a frozen original plan. The PRD's strategic thesis ("baseline integrity built in by default") starts here.
 
@@ -19,7 +27,7 @@ A PM has finished planning a project schedule (tasks, dependencies, dates, durat
 
 1. **Given** a project with a planned schedule and no existing baseline, **When** the PM clicks "Set baseline" and confirms, **Then** a baseline labeled v0 is created containing a complete frozen snapshot of the current schedule (tasks, dependencies, dates, durations, costs, resources, assignments, calendar, settings).
 2. **Given** a project with a v0 baseline, **When** the PM modifies any task's dates, durations, dependencies, or resources afterward, **Then** v0 remains unchanged and is still retrievable in its original form.
-3. **Given** the "Set baseline" confirmation dialog, **When** the PM optionally enters a rationale ("Approved by steering committee 2026-05-08"), **Then** that rationale is stored alongside v0 and visible whenever v0 is later viewed.
+3. **Given** the "Set baseline" confirmation dialog, **When** the PM enters a rationale (e.g., "Approved by steering committee 2026-05-08"), **Then** that rationale is stored alongside v0 and visible whenever v0 is later viewed. The Confirm action is disabled until a non-empty rationale is provided.
 4. **Given** a baseline has been set, **When** any user attempts to edit or delete v0 directly, **Then** the system refuses the operation and explains that baselines are immutable by design.
 
 ---
@@ -35,8 +43,8 @@ After setting a baseline, the PM modifies the schedule (tasks slip, durations gr
 **Acceptance Scenarios**:
 
 1. **Given** a project with v0 baseline and a current schedule that differs from v0, **When** the PM opens the Gantt view, **Then** each task bar is drawn alongside its baseline bar in the same row, with both visible simultaneously.
-2. **Given** a task whose current dates are identical to its baseline dates, **When** rendered on the tracking Gantt, **Then** no variance marker is shown for that task.
-3. **Given** a task whose current dates have shifted from baseline, **When** rendered on the tracking Gantt, **Then** a clear visual variance indicator (color, pattern, or marker) is applied so the slip is obvious without reading the dates.
+2. **Given** a task whose current start and finish are within ±1 calendar day of its baseline start and finish, **When** rendered on the tracking Gantt, **Then** no variance marker is shown for that task.
+3. **Given** a task whose current start OR finish has shifted by more than 1 calendar day from baseline, **When** rendered on the tracking Gantt, **Then** a clear visual variance indicator (color, pattern, or marker) is applied so the drift is obvious without reading the dates.
 4. **Given** a project that has no baseline yet, **When** the PM opens the Gantt view, **Then** the view looks identical to today's Gantt (no overlay, no toggle visible) — the feature is invisible until a baseline exists.
 5. **Given** a task that exists in the current schedule but did not exist in v0 (added after baselining), **When** rendered on the tracking Gantt, **Then** the task is shown with no baseline bar and is marked as "added since baseline".
 6. **Given** a task that existed in v0 but was deleted from the current schedule, **When** the PM views the tracking Gantt, **Then** the task is shown with only its baseline bar and marked as "removed since baseline".
@@ -94,6 +102,7 @@ Every baseline action — initial v0, each rebaseline — is recorded in the pro
 ### Edge Cases
 
 - A user clicks "Set baseline" but cancels the confirmation dialog — no baseline is created and the schedule is unchanged.
+- A user clicks "Set baseline" and tries to confirm without entering a rationale — the Confirm action is disabled and the user is prompted to provide a rationale before proceeding.
 - A user clicks "Set baseline" twice quickly. Only one baseline is created; duplicate clicks are ignored or de-duplicated.
 - The PM tries to set a baseline on a project with zero tasks. The system either refuses (preferred — there is nothing to baseline) or creates an empty baseline that is honest about its emptiness.
 - A task in the current schedule has been moved under a different summary parent since baseline. The overlay still pairs it correctly using a stable task identifier, not the task's tree position.
@@ -107,14 +116,14 @@ Every baseline action — initial v0, each rebaseline — is recorded in the pro
 ### Functional Requirements
 
 - **FR-001**: The system MUST provide a "Set baseline" action on the project schedule, available to users with permission to edit the schedule.
-- **FR-002**: When "Set baseline" is invoked, the system MUST present a confirmation dialog that captures an optional rationale text and requires explicit confirmation before committing.
+- **FR-002**: When "Set baseline" is invoked, the system MUST present a confirmation dialog that captures a **required** rationale text. The Confirm action MUST be disabled until a non-empty rationale is supplied. The action MUST require explicit confirmation before committing.
 - **FR-003**: On confirmation, the system MUST capture a complete frozen snapshot of the current schedule, including: tasks (with their dates, durations, costs, scheduling mode, constraints, progress), dependencies (with type and lag), resources, assignments, calendar (working days and holidays), and schedule settings (display order, collapsed state).
-- **FR-004**: Each baseline MUST store: a version label (v0, v1, v2, ...), the creator's user identity, the creation timestamp, the optional rationale text, and the full snapshot.
+- **FR-004**: Each baseline MUST store: a version label (v0, v1, v2, ...), the creator's user identity, the creation timestamp, a **required** non-empty rationale text, and the full snapshot.
 - **FR-005**: Once committed, baselines MUST be immutable. The system MUST refuse any operation that would modify or delete an existing baseline's data.
 - **FR-006**: A project MUST be able to hold an unbounded number of baseline versions over time, with v0 always retrievable regardless of how many later versions exist.
 - **FR-007**: The Gantt view MUST render the tracking overlay (baseline bar paired with current bar per task) whenever at least one baseline exists for the project.
-- **FR-008**: Tasks whose current dates differ from the active baseline's dates MUST be visually distinguished (e.g., color, pattern, or marker) on the Gantt so variance is obvious without reading numbers.
-- **FR-009**: Tasks whose current dates exactly match the active baseline's dates MUST NOT show a variance indicator.
+- **FR-008**: Tasks whose current start date OR current finish date differs from the active baseline's corresponding date by more than 1 calendar day (in either direction — earlier or later) MUST be visually distinguished (e.g., color, pattern, or marker) on the Gantt so variance is obvious without reading numbers.
+- **FR-009**: Tasks whose current start and finish dates each match the active baseline's dates within ±1 calendar day MUST NOT show a variance indicator.
 - **FR-010**: A task that exists in the current schedule but was not present in the active baseline MUST be visibly marked as "added since baseline" on the Gantt.
 - **FR-011**: A task that existed in the active baseline but is no longer in the current schedule MUST still be shown on the Gantt with its baseline bar and marked as "removed since baseline".
 - **FR-012**: The Gantt view MUST provide a control to switch the active baseline reference between any of the project's baseline versions, including a "latest" option.

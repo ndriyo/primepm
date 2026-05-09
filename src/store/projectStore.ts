@@ -833,6 +833,37 @@ export const useProjectStore = create<Store>()(
   })),
 );
 
+/**
+ * Spec 002 — derived selector. Returns `{ payload, versionLabel }` for the
+ * resolved active baseline reference, or undefined when:
+ *   - no baselines exist on the project, OR
+ *   - the resolved header's payload is not yet cached.
+ *
+ * Resolution rule (per overlay-ui.contract.md §"Active baseline reference selector"):
+ *   - 'latest' → header with the largest versionIndex
+ *   - <id>     → the header whose id === ref
+ */
+export function useActiveBaselinePayload():
+  | { payload: BaselinePayloadDto; versionLabel: string }
+  | undefined {
+  const headers = useProjectStore(s => s.baselineHeaders);
+  const payloads = useProjectStore(s => s.baselinePayloads);
+  const ref = useProjectStore(s => s.activeBaselineRef);
+  if (headers.length === 0) return undefined;
+  let header: BaselineHeaderDto | undefined;
+  if (ref === 'latest') {
+    header = headers.reduce((best, h) =>
+      best == null || h.versionIndex > best.versionIndex ? h : best,
+    headers[0] as BaselineHeaderDto | undefined);
+  } else {
+    header = headers.find(h => h.id === ref);
+  }
+  if (!header) return undefined;
+  const payload = payloads.get(header.id);
+  if (!payload) return undefined;
+  return { payload, versionLabel: header.versionLabel };
+}
+
 function addDays(date: Date, days: number): Date {
   const d = new Date(date);
   d.setDate(d.getDate() + days);

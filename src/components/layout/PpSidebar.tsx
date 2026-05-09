@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useRoute, navigate, type Route } from '../../lib/router';
 import { useAuth } from '../../auth/useAuth';
+import { Avatar } from '../Avatar';
 
 interface NavItem {
   label: string;
@@ -65,13 +66,16 @@ export function PpSidebar({ projectCount = 0 }: { projectCount?: number }) {
   const route = useRoute();
   const { session } = useAuth();
 
-  const initials = (session?.user?.email ?? 'U')
-    .split('@')[0]
-    .split(/[._-]/)
-    .filter(Boolean)
-    .map(s => s[0]?.toUpperCase())
-    .join('')
-    .slice(0, 2) || 'U';
+  const userMeta = (session?.user?.user_metadata ?? {}) as Record<string, unknown>;
+  const userName =
+    (typeof userMeta.full_name === 'string' && userMeta.full_name) ||
+    (typeof userMeta.name === 'string' && userMeta.name) ||
+    null;
+  const userAvatar =
+    (typeof userMeta.avatar_url === 'string' && userMeta.avatar_url) ||
+    (typeof userMeta.picture === 'string' && userMeta.picture) ||
+    null;
+  const userEmail = session?.user?.email ?? null;
 
   const sections: NavSection[] = [
     {
@@ -158,9 +162,9 @@ export function PpSidebar({ projectCount = 0 }: { projectCount?: number }) {
       {sections.map((s, i) => <SidebarNavBlock key={i} section={s} route={route} />)}
 
       <div className="pp-sidebar-foot">
-        <div className="pp-avatar">{initials}</div>
+        <Avatar url={userAvatar} name={userName} email={userEmail} size={28} />
         <div className="pp-avatar-meta">
-          <strong>{session?.user?.email?.split('@')[0] ?? 'You'}</strong>
+          <strong>{userName ?? userEmail?.split('@')[0] ?? 'You'}</strong>
           <span>PMO</span>
         </div>
         <button className="pp-icon-btn" style={{ marginLeft: 'auto' }} title="Settings">

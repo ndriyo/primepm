@@ -59,7 +59,12 @@ description: "Task list for feature 001-google-oauth-login"
 
 - [ ] T010 [P] [US1] Vitest test for `signInWithGoogle()` wiring in `src/auth/__tests__/useAuth.test.tsx` — assert it calls `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })` (contracts/auth-ui.contract.md §C1).
 - [ ] T011 [P] [US1] Vitest test for the "Continue with Google" button in `src/auth/__tests__/LoginPage.test.tsx` — renders on both `?tab=signin` and `?tab=signup`, click invokes `signInWithGoogle`, click while busy is a no-op, mocked Supabase error renders inside `pp-err` (contracts/auth-ui.contract.md §C1 test plan).
-- [ ] T012 [P] [US1] Vitest test for `Avatar` with image present in `src/components/__tests__/Avatar.test.tsx` — assert `<img>` renders with `src=url`, `alt`, `referrerPolicy="no-referrer"`, and `loading="lazy"` (contracts/auth-ui.contract.md §C4 test plan, items 1 + 4).
+- [ ] T012 [P] [US1] Vitest tests for the `Avatar` component covering **all four** C4 test-plan items in `src/components/__tests__/Avatar.test.tsx` (contracts/auth-ui.contract.md §C4 test plan):
+  - **(1) Image present** → `<img>` renders with `src=url`, `alt={name ?? email ?? 'User'}`, `referrerPolicy="no-referrer"`, and `loading="lazy"`.
+  - **(2) `url` empty/null, `name` present** → renders initials chip with name-derived initials (1- or 2-token derivation; `"Daniela Reyes"` → `"DR"`, single-token `"Daniela"` → `"D"`).
+  - **(3) `url` and `name` both missing, `email` present** → renders initials from `email.split('@')[0]` (matches existing `PpSidebar.tsx:68-74` logic for parity with US3).
+  - **(4) Everything missing** → renders the literal fallback `"U"`.
+  - Item (5) — `<img>` `onError` → switches to initials fallback — is asserted separately by T023 in the US2 phase.
 - [ ] T013 [P] [US1] Deno contract test for `PUT /api/me/profile` in `supabase/functions/api/routes/__tests__/me.test.ts` — assert: 401 without Bearer, 400 on empty `fullName`, 400 on non-https `avatarUrl`, 200 with valid body returns the updated profile shape from contracts/me-profile.openapi.yaml `MeProfile`.
 
 ### Implementation for User Story 1
@@ -135,7 +140,23 @@ description: "Task list for feature 001-google-oauth-login"
 - [ ] T029 [P] Add a single structured `console.info({ event: 'auth.signin', provider, sub, ts })` log in `src/auth/useAuth.tsx` on `SIGNED_IN` (research.md §R8). One line, no analytics-tool dependency. Provides the SC-006 adoption signal.
 - [ ] T030 [P] Update `README.md` "Authentication" section (or add one if missing) explaining the two sign-in paths and pointing at `specs/001-google-oauth-login/quickstart.md` for the staging checklist.
 - [ ] T031 [P] Mark `specs/001-google-oauth-login/checklists/requirements.md` items as ✅ as they're verified during the staging run.
-- [ ] T032 Run the full manual end-to-end checklist in `specs/001-google-oauth-login/quickstart.md` against Supabase staging across all three account types (new Google, existing email/password matched by Google, cancelled consent). Record results in the PR description.
+- [ ] T032 Run the full manual end-to-end checklist in `specs/001-google-oauth-login/quickstart.md` against Supabase staging. Record results in the PR description. Each scenario MUST capture the assertions below — they are the verification of the success criteria the unit/contract tests cannot exercise:
+
+  - **(a) Brand-new Google account (US1, FR-005, FR-007, FR-013, SC-001, SC-004)**:
+    - **SC-001 timing** (≤ 30 s): stopwatch from clicking "Continue with Google" to the dashboard rendered.
+    - **SC-004 timing** (≤ 2 s): stopwatch from OAuth callback (URL returns to app origin) to the avatar + display name visible in the `PpSidebar` foot.
+    - **FR-005 user provisioned**: `select count(*) from public.users where id = '<JWT sub>'` returns **1**.
+    - **FR-005 personal organization provisioned**: `select count(*) from public.organizations where id = '<users.organization_id>'` returns **1**.
+    - **FR-013 audit observability**: Supabase Auth → Logs shows an entry with `payload.provider = 'google'` for this sign-in, in the same surface where existing `email` events appear.
+
+  - **(b) Returning email/password user, mixed-case Google email (US2, FR-004, SC-002)**: covered end-to-end by the 10-account run in T024. Confirm the run completed and reference its results here.
+
+  - **(c) Cancelled consent (US1, FR-009, SC-005)**:
+    - **Before click**: capture `select count(*) from auth.users` (call this `N_auth`) and `select count(*) from public.users` (call this `N_app`).
+    - Click "Continue with Google" then **Deny** at Google's consent screen.
+    - **After redirect**: re-run the same `count(*)` queries.
+    - **SC-005 assertion**: both counts MUST equal `N_auth` and `N_app` exactly — zero rows added on cancellation.
+    - **FR-009 surface**: user lands back at `/login` with the cancellation banner from T021 visible; URL no longer contains `?error=` / `#error=` (T020 strip).
 - [ ] T033 Add an entry to `memory-bank/changelog.md` summarizing the feature: "Added Google OAuth sign-in alongside email/password; users.avatar_url column; Avatar component; PUT /api/me/profile endpoint."
 
 ---

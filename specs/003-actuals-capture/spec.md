@@ -5,6 +5,14 @@
 **Status**: Draft
 **Input**: User description: "Add per-task actuals capture: percent complete, actual start date, actual finish date. Actuals are stored independently from current scheduled values and from baseline values."
 
+## Clarifications
+
+### Session 2026-05-09
+
+- Q: When a user enters a % complete outside 0–100, how should the system respond? → A: Reject the save with a clear validation error; do not clamp. (FR-005 tightened.)
+- Q: Should this release include Gantt-track visualization of actuals, or is the inspector view sufficient? → A: Include a Gantt-track rendering of actuals alongside baseline and current bars. (FR-015 tightened; promoted from "optional" to required.)
+- Q: How should the rolled-up % complete on a summary task be calculated from its children? → A: Duration-weighted across children (each child's planned duration is the weight). (FR-011 tightened.)
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - PM records actual progress against a task without disturbing the plan (Priority: P1)
@@ -52,30 +60,32 @@ The PM accidentally enters an actual finish that is earlier than the actual star
 **Acceptance Scenarios**:
 
 1. **Given** an actual start of 2026-05-01, **When** the PM enters an actual finish of 2026-04-25 and saves, **Then** the system refuses the save with a clear "actual finish cannot be earlier than actual start" message and the field with the bad value is highlighted.
-2. **Given** the % complete field, **When** the PM enters -10 or 150, **Then** the system clamps to the 0–100 range or refuses the save with a clear message — at the implementer's choice — but never persists a value outside 0–100.
+2. **Given** the % complete field, **When** the PM enters -10 or 150, **Then** the system refuses the save with a clear "% complete must be between 0 and 100" message and the field is highlighted; clamping is not used.
 3. **Given** any rejected save, **When** the PM corrects the offending value, **Then** the save proceeds and all fields persist atomically.
 
 ---
 
 ### User Story 4 - PM sees actuals alongside baseline and scheduled values per task (Priority: P2)
 
-When the PM opens a task or hovers over a task on the Gantt, the system shows all three temporal pictures of that task: when it was originally baselined to start and finish, when it is currently scheduled to start and finish, and when it actually started and finished (or actually started and is still running). The PM can answer "did we deliver on plan?" without leaving the task.
+When the PM opens a task on the inspector or looks at the Gantt, the system shows all three temporal pictures of that task: when it was originally baselined to start and finish, when it is currently scheduled to start and finish, and when it actually started and finished (or actually started and is still running). On the Gantt, the actuals appear as a third visual track alongside the baseline bar and the current-schedule bar so PMs can compare delivery to commitment without opening a task. The PM can answer "did we deliver on plan?" at a glance.
 
-**Why this priority**: Without surfacing actuals next to baseline and scheduled values, the PM cannot reason about variance even if the data is captured. P2 because Phase 2 will build richer visualization on top — this release just needs minimum visibility (text on the inspector, at minimum; on the Gantt is a stretch).
+**Why this priority**: Without surfacing actuals next to baseline and scheduled values, the PM cannot reason about variance even if the data is captured. P2 because the inspector view alone is enough to start using the feature; the Gantt-track rendering is the visualization payoff that makes the data useful at portfolio scale.
 
-**Independent Test**: For a task with baseline start, scheduled start, and actual start all distinct, open the task inspector and verify all three values are visible and labeled clearly. Verify the same on the Gantt overlay or via hover, depending on visualization choices made at planning time.
+**Independent Test**: For a task with baseline, scheduled, and actual dates all distinct, open the task inspector and verify all three sets of values are visible and clearly labeled. Then open the Gantt and verify a third bar/track for actuals is rendered in the same row alongside the baseline bar and current-schedule bar.
 
 **Acceptance Scenarios**:
 
 1. **Given** a task with baseline, current scheduled, and actual values all distinct, **When** the PM opens the task inspector, **Then** all three sets of dates and the % complete value are visible and clearly labeled (baseline / scheduled / actual).
 2. **Given** a task without actuals, **When** the PM opens the inspector, **Then** the actual fields are present but empty, and clearly indicated as "not yet recorded".
 3. **Given** a task without a baseline (project never baselined), **When** the PM opens the inspector, **Then** the baseline labels are absent or marked "no baseline" — but actuals and scheduled values are still visible.
+4. **Given** a task with actuals recorded, **When** the PM opens the Gantt, **Then** a distinct actuals track/bar is rendered in the same row alongside the baseline bar and the current-schedule bar.
+5. **Given** a task with no actuals recorded yet, **When** the PM opens the Gantt, **Then** the actuals track is omitted for that task; the row still shows the baseline and current bars normally.
 
 ---
 
 ### User Story 5 - Actuals roll up to summary tasks (Priority: P3)
 
-A summary task that owns child tasks shows a derived view of its actual progress: a rolled-up % complete across its children, the earliest actual start across its children, and the latest actual finish across its children (if every child has finished). The PM does not enter actuals on summary tasks directly — they are computed.
+A summary task that owns child tasks shows a derived view of its actual progress: a duration-weighted rolled-up % complete across its children, the earliest actual start across its children, and the latest actual finish across its children (if every child has finished). The PM does not enter actuals on summary tasks directly — they are computed.
 
 **Why this priority**: Without rollup, summary rows show nothing about actual progress, so the Gantt looks half-empty at the PM's natural reading level. P3 because the summary computation is straightforward and can ship as a fast follow within the same Phase 1 milestone if time allows; the PM can survive without it for the first release.
 
@@ -85,7 +95,7 @@ A summary task that owns child tasks shows a derived view of its actual progress
 
 1. **Given** a summary task with three child tasks, **When** all three children have actual start dates, **Then** the summary's actual start is the earliest of the three.
 2. **Given** a summary task with three child tasks, **When** all three children have actual finish dates, **Then** the summary's actual finish is the latest of the three.
-3. **Given** a summary task with three child tasks of which two are finished and one is in progress, **When** the summary is viewed, **Then** the summary shows an earliest actual start, no actual finish (because work is still ongoing), and a % complete derived from the children.
+3. **Given** a summary task with three child tasks of which two are finished and one is in progress, **When** the summary is viewed, **Then** the summary shows an earliest actual start, no actual finish (because work is still ongoing), and a duration-weighted rolled-up % complete derived from the children's planned durations.
 4. **Given** a summary task, **When** the PM tries to edit its % complete or actual dates directly, **Then** the system prevents direct editing — these values are derived, not entered.
 
 ---
@@ -109,17 +119,17 @@ A summary task that owns child tasks shows a derived view of its actual progress
 - **FR-002**: The actuals fields MUST be exposed in the existing task inspector panel — the same panel used to edit the task's name, duration, scheduling mode, and constraints — without requiring navigation to a separate view or modal.
 - **FR-003**: Saving actuals MUST NOT modify the task's planned (current scheduled) start, planned finish, or planned duration.
 - **FR-004**: Saving actuals MUST NOT modify any existing baseline snapshot for the task. Baselines remain immutable; actuals are stored alongside them, not within them.
-- **FR-005**: The percent complete value MUST be constrained to integer values from 0 through 100. Inputs outside that range MUST be either rejected with a clear error or clamped — never silently persisted as out-of-range.
+- **FR-005**: The percent complete value MUST be constrained to integer values from 0 through 100. Inputs outside that range MUST be rejected with a clear validation error message (e.g., "% complete must be between 0 and 100"), the offending field MUST be highlighted, and no save MUST occur. Clamping to the 0–100 range is explicitly disallowed.
 - **FR-006**: The system MUST refuse a save in which actual finish is earlier than actual start, with a clear error message identifying the offending field.
 - **FR-007**: An unfinished task (actual finish is empty) MUST still be allowed to have a percent complete value strictly between 0 and 100 inclusive.
 - **FR-008**: All actuals values, the planned values, and (if a baseline exists) the baseline values for a task MUST be retrievable together so the user can compare them on a single screen without cross-referencing.
 - **FR-009**: When a task has no actuals recorded, the actuals fields MUST be visibly empty and labeled as "not yet recorded" — not zeroed-out or pre-populated from planned values.
 - **FR-010**: Saving any combination of task-edit fields and actuals fields MUST be a single atomic save action from the user's perspective — no separate "save actuals" affordance exists.
-- **FR-011**: Summary (non-leaf) tasks MUST display a derived view of their children's actuals: earliest actual start across children, latest actual finish across children once every child has finished, and a rolled-up percent complete across children. Direct entry of actuals on a summary task MUST be prevented.
+- **FR-011**: Summary (non-leaf) tasks MUST display a derived view of their children's actuals: earliest actual start across children, latest actual finish across children once every child has finished, and a **duration-weighted** rolled-up percent complete across children. The weight for each child is its planned duration; the rolled-up percent complete equals `sum(child.percent_complete × child.planned_duration) / sum(child.planned_duration)`, rounded to the nearest integer. Direct entry of actuals on a summary task MUST be prevented.
 - **FR-012**: Deleting a task MUST also delete its associated actuals records. No orphan actuals records may remain.
 - **FR-013**: Setting a new baseline on a project MUST NOT include any actuals values in the new baseline snapshot. Actuals are never part of any baseline.
 - **FR-014**: All actuals reads and writes MUST behave consistently across page reload, session restart, and tab switching — actuals are first-class persisted data, not session-only state.
-- **FR-015**: The system MUST surface actuals in a way that makes them visible alongside scheduled and baseline values per task. The minimum bar is the task inspector; richer Gantt visualization is permitted but not required for this release.
+- **FR-015**: The system MUST surface actuals in two places: (a) inside the task inspector, where actual % complete, actual start, and actual finish are displayed and edited alongside the planned and baseline values; and (b) on the Gantt, where a third visual track or bar is rendered in the same row as the baseline bar and the current-schedule bar, representing the actual start, actual finish, and progress. When a task has no actuals recorded, the Gantt actuals track for that task is omitted but the baseline and current bars render normally.
 
 ### Key Entities
 
@@ -138,7 +148,8 @@ A summary task that owns child tasks shows a derived view of its actual progress
 - **SC-005**: Invalid combinations (actual finish before actual start; % complete outside 0–100) are rejected with a user-understandable error in 100% of attempts; zero invalid records exist in the system after these tests.
 - **SC-006**: A PM can identify, for a single task, the baseline / scheduled / actual values side-by-side without leaving the task inspector — verified by a usability check that times the comparison at under 5 seconds.
 - **SC-007**: At least 60% of in-progress projects have actuals recorded on at least 50% of started tasks within 30 days of release, indicating the input flow is friction-light enough to be used.
-- **SC-008**: Summary-task rollup of % complete is consistent with manual aggregation across children in 100% of automated tests, including mixed in-progress and completed children.
+- **SC-008**: Summary-task rollup of % complete equals the duration-weighted aggregate of children (sum of child.% × child.planned_duration over sum of child.planned_duration) within ±1 percentage point in 100% of automated tests, including mixed in-progress and completed children.
+- **SC-009**: On a project where every started task has actuals recorded, opening the Gantt shows three distinct visual tracks per task (baseline, current, actuals) without horizontal overflow on a 1280px-wide viewport.
 
 ## Assumptions
 
@@ -146,8 +157,8 @@ A summary task that owns child tasks shows a derived view of its actual progress
 - The existing task inspector UI is structured so that three additional fields (% complete, actual start, actual finish) can be added without redesigning the panel.
 - "Permission to enter actuals" inherits from "permission to edit the task" — there is no separate actuals-only role in this release.
 - Dates are recorded as calendar dates (no time-of-day component). This matches how planned dates are handled today.
-- The Gantt rendering of actuals (separate visual track on the Gantt) is desired but optional in this release; the inspector view is the minimum-viable surface.
-- Summary-task rollup uses simple aggregation rules (earliest/latest/percent average across children); weighted rollup by duration or cost is **not** in scope for this release.
+- The Gantt rendering of actuals (a third visual track on the Gantt alongside baseline and current bars) is **required** in this release per Clarifications 2026-05-09 — promoted from "optional" to in scope.
+- Summary-task rollup of % complete uses **duration-weighted aggregation** per Clarifications 2026-05-09. Cost-weighted rollup is out of scope; that variant becomes relevant in Phase 2 (EVM).
 - Timesheets, rate cards, automatic % complete from time logs, and resource cost accruals are explicitly **not** in scope.
 - EVM derivations (PV, EV, AC, SPI, CPI, EAC, ETC, VAC) are explicitly **not** in scope — they consume actuals in Phase 2.
 - Concurrent-edit conflict detection on actuals is **not** in scope; last-write-wins is acceptable.

@@ -1,5 +1,7 @@
 import { supabase } from '../auth/supabaseClient';
 import type {
+  BaselineHeaderDto,
+  BaselineWithPayloadDto,
   CreateCriterionInput,
   CreateProjectInput,
   Criterion,
@@ -279,6 +281,23 @@ export const apiClient = {
       method: 'PUT',
       body: JSON.stringify(data),
     }).then(r => json<{ ok: true }>(r)),
+
+  // Spec 002 — Baselines
+  listBaselines: (projectId: string) =>
+    authedFetch(`/api/projects/${projectId}/baselines`).then(r =>
+      json<{ baselines: BaselineHeaderDto[] }>(r).then(b => b.baselines),
+    ),
+
+  getBaseline: (projectId: string, baselineId: string) =>
+    authedFetch(`/api/projects/${projectId}/baselines/${baselineId}`).then(r =>
+      json<BaselineWithPayloadDto>(r),
+    ),
+
+  setBaseline: (projectId: string, rationale: string) =>
+    authedFetch(`/api/projects/${projectId}/baselines`, {
+      method: 'POST',
+      body: JSON.stringify({ rationale }),
+    }).then(r => json<BaselineHeaderDto>(r)),
 };
 
 export type ApiClient = typeof apiClient;

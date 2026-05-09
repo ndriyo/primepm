@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { addDays, differenceInCalendarDays } from 'date-fns';
-import { useProjectStore } from '../../store/projectStore';
+import { useProjectStore, useActiveBaselinePayload } from '../../store/projectStore';
 import { computeVisibleOrder } from '../../store/visibleOrder';
 import { buildProgressMap } from '../../lib/progress';
 import { useDragInteractions } from './hooks/useDragInteractions';
@@ -11,6 +11,8 @@ import { WeekendShading } from './WeekendShading';
 import { DependencyLayer } from './DependencyLayer';
 import { SlipSenseTag } from './SlipSenseTag';
 import { LinkPreview } from './LinkPreview';
+import { BaselineBar } from './BaselineBar';
+import { computeRowOverlayStates } from './baselineOverlay';
 import { dateToX, HEADER_HEIGHT, PX_PER_DAY, ROW_HEIGHT, type TimeScale } from './timeScale';
 
 interface Props {
@@ -68,6 +70,36 @@ export function GanttChart({ scrollY, onScrollY }: Props) {
   }, [tasks]);
 
   const progressByTaskId = useMemo(() => buildProgressMap(tasks), [tasks]);
+
+  // Spec 002 — overlay state per row. Empty map when no baseline is active.
+  const activeBaseline = useActiveBaselinePayload();
+  const overlayStates = useMemo(
+    () =>
+      computeRowOverlayStates({
+        currentTasks: tasks,
+        currentSchedule: schedule.scheduled,
+        activeBaselinePayload: activeBaseline?.payload,
+      }),
+    [tasks, schedule.scheduled, activeBaseline?.payload],
+  );
+
+  // Spec 002 (T047) — when the resolved active baseline header has no payload
+  // cached yet, lazy-fetch it. Memoised by baselineId in the store, so a
+  // ref-switch between cached payloads triggers nothing extra here.
+  const baselineHeaders = useProjectStore(s => s.baselineHeaders);
+  const baselinePayloads = useProjectStore(s => s.baselinePayloads);
+  const activeBaselineRef = useProjectStore(s => s.activeBaselineRef);
+  const loadBaselinePayload = useProjectStore(s => s.loadBaselinePayload);
+  useEffect(() => {
+    if (baselineHeaders.length === 0) return;
+    const header =
+      activeBaselineRef === 'latest'
+        ? baselineHeaders.reduce((best, h) => (h.versionIndex > best.versionIndex ? h : best))
+        : baselineHeaders.find(h => h.id === activeBaselineRef);
+    if (!header) return;
+    if (baselinePayloads.has(header.id)) return;
+    void loadBaselinePayload(project.id, header.id);
+  }, [baselineHeaders, activeBaselineRef, baselinePayloads, loadBaselinePayload, project.id]);
 
   const { onPointerDown, ghost, link, slipSense } = useDragInteractions({
     scale,
@@ -154,6 +186,15 @@ export function GanttChart({ scrollY, onScrollY }: Props) {
           <WeekendShading scale={scale} totalDays={totalDays} height={innerHeight} />
           <TodayLine scale={scale} height={innerHeight} />
 
+          {/* baseline bars — pre-pass behind current bars (Spec 002) */}
+          {activeBaseline &&
+            visibleOrder.slice(visibleRange.startIdx, visibleRange.endIdx).map((id, k) => {
+              const idx = visibleRange.startIdx + k;
+              const state = overlayStates.get(id);
+              if (!state || state.kind === 'no-baseline' || state.kind === 'added') return null;
+              return <BaselineBar key={`baseline-${id}`} taskId={id} rowIndex={idx} scale={scale} state={state} />;
+            })}
+
           {/* bars (windowed) */}
           {visibleOrder.slice(visibleRange.startIdx, visibleRange.endIdx).map((id, k) => {
             const idx = visibleRange.startIdx + k;
@@ -173,6 +214,7 @@ export function GanttChart({ scrollY, onScrollY }: Props) {
                   isSummary={summaryIds.has(id)}
                   displayProgressPct={progressByTaskId.get(id) ?? task.progressPct}
                   onPointerDown={(e, mode) => onPointerDown(e, id, mode)}
+                  overlayState={overlayStates.get(id)}
                 />
               </div>
             );

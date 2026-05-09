@@ -4,6 +4,7 @@ import { addWorkingDays } from '../../engine';
 import { dateToX, ROW_HEIGHT, type TimeScale } from './timeScale';
 import { useProjectStore } from '../../store/projectStore';
 import { cn } from '../../lib/cn';
+import type { RowOverlayState } from './baselineOverlay';
 
 interface Props {
   task: Task;
@@ -13,9 +14,11 @@ interface Props {
   isSummary: boolean;
   displayProgressPct: number;
   onPointerDown: (e: React.PointerEvent, mode: 'move' | 'resize-start' | 'resize-end' | 'link-start' | 'link-end') => void;
+  /** Spec 002 — overlay state for this row. Undefined when no baseline exists. */
+  overlayState?: RowOverlayState;
 }
 
-export function TaskBar({ task, scheduled, rowIndex, scale, isSummary, displayProgressPct, onPointerDown }: Props) {
+export function TaskBar({ task, scheduled, rowIndex, scale, isSummary, displayProgressPct, onPointerDown, overlayState }: Props) {
   const calendar = useProjectStore(s => s.calendar);
   const selection = useProjectStore(s => s.selection);
   const showCriticalPath = useProjectStore(s => s.showCriticalPath);
@@ -30,6 +33,11 @@ export function TaskBar({ task, scheduled, rowIndex, scale, isSummary, displayPr
   const cycleFlag = scheduled.inCycle;
   const dimNonCritical = showCriticalPath && !scheduled.isCritical && !isSummary;
   const isCritical = showCriticalPath && scheduled.isCritical;
+  const isVariant = overlayState?.kind === 'variant';
+  const isAdded = overlayState?.kind === 'added';
+  // Removed rows render only the BaselineBar; suppress the current bar.
+  const isRemoved = overlayState?.kind === 'removed';
+  if (isRemoved) return null;
 
   if (task.isMilestone) {
     const cx = x;
@@ -82,6 +90,8 @@ export function TaskBar({ task, scheduled, rowIndex, scale, isSummary, displayPr
   return (
     <motion.div
       data-task-id={task.id}
+      data-variance={isVariant ? 'true' : undefined}
+      data-baseline={isAdded ? 'added' : undefined}
       layout
       layoutId={`bar-${task.id}`}
       transition={{ type: 'spring', stiffness: 380, damping: 32 }}
@@ -147,6 +157,17 @@ export function TaskBar({ task, scheduled, rowIndex, scale, isSummary, displayPr
         className="absolute -right-2 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-(--color-brand) opacity-0 group-hover:opacity-100 hover:scale-125 transition-transform shadow"
         onPointerDown={e => { e.stopPropagation(); onPointerDown(e, 'link-end'); }}
       />
+
+      {/* Spec 002 — "+" gutter badge for tasks added since baseline */}
+      {isAdded && (
+        <span
+          data-testid={`baseline-added-badge-${task.id}`}
+          className="absolute -left-5 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-4 h-4 rounded-full bg-(--color-success-bg,_#DCFCE7) text-(--color-success,_#16A34A) text-[11px] font-bold ring-1 ring-(--color-success,_#16A34A)"
+          aria-label="Added since baseline"
+        >
+          +
+        </span>
+      )}
     </motion.div>
   );
 }

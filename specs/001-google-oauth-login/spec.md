@@ -5,6 +5,14 @@
 **Status**: Draft
 **Input**: User description: "Add Google OAuth login alongside existing Supabase email/password authentication, with account linking, profile data sync, and SSO architecture readiness."
 
+## Clarifications
+
+### Session 2026-05-09
+
+- Q: How should account linking work when a Google sign-in email matches an existing email/password user? → A: Auto-link silently (trust Google's verified email; no extra password re-auth).
+- Q: Is in-app account management (a "Link Google" button inside the authenticated app's settings) in scope for this release? → A: No — login-page entry only.
+- Q: How should the system keep the Google avatar in sync over time? → A: Refresh on each successful Google sign-in only; no render-time refetch and no server-side image caching.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - New user signs up with Google in one click (Priority: P1)
@@ -84,7 +92,7 @@ A future product decision to add Microsoft, SAML, or Okta SSO can proceed withou
 - **FR-001**: The sign-in surface MUST present a "Continue with Google" option alongside the existing email/password form, on both the marketing-landing sign-in entry and the dedicated sign-in page.
 - **FR-002**: The system MUST initiate a Google OAuth authorization flow when the user activates the "Continue with Google" option.
 - **FR-003**: On successful Google authorization, the system MUST capture the user's verified email address, display name, and avatar URL from the Google profile.
-- **FR-004**: The system MUST treat a Google sign-in whose email matches an existing primepm user as the same account (case-insensitive match) and MUST NOT create a duplicate user record.
+- **FR-004**: The system MUST treat a Google sign-in whose email matches an existing primepm user as the same account (case-insensitive match) and MUST NOT create a duplicate user record. Linking is automatic and silent — no additional confirmation, password re-authentication, or email-verification step is required, because Google's verified-email guarantee is trusted.
 - **FR-005**: On a first-time Google sign-in for an email that does not match any existing user, the system MUST create a new user record AND auto-provision a personal organization, identical to the existing email/password first-sign-in flow.
 - **FR-006**: The system MUST persist the linkage between a user account and one or more external identity providers, such that the same user account can later sign in with any linked provider.
 - **FR-007**: The system MUST display the authenticated user's display name and avatar in the application shell within the same loading window as today's email/password sign-in.
@@ -92,7 +100,7 @@ A future product decision to add Microsoft, SAML, or Okta SSO can proceed withou
 - **FR-009**: The system MUST handle a cancelled or denied Google consent gracefully: no user record is created or modified, the user returns to the sign-in page, and a non-alarming message indicates that sign-in was not completed.
 - **FR-010**: The system MUST handle a Google profile with no avatar by displaying a deterministic initials-based fallback derived from the display name.
 - **FR-011**: The user identity model MUST be capable of holding multiple linked external identities per user, so that adding additional SSO providers (e.g., Microsoft, SAML, Okta) in the future does not require restructuring the user record.
-- **FR-012**: The system MUST update the stored display name and avatar on each successful Google sign-in to reflect the latest values from the Google profile.
+- **FR-012**: The system MUST update the stored display name and avatar on each successful Google sign-in to reflect the latest values from the Google profile. Avatar updates happen at sign-in only — there is no render-time re-fetch of the Google avatar URL and no server-side caching of the avatar image bytes in this release.
 - **FR-013**: All Google sign-in events (success, cancellation, error) MUST be observable in the same place that email/password sign-in events are observable today, so operators can monitor adoption and failure rates.
 
 ### Key Entities
@@ -121,5 +129,6 @@ A future product decision to add Microsoft, SAML, or Okta SSO can proceed withou
 - Email matching for account linking is case-insensitive. Plus-addressing variants (e.g., `user+x@example.com`) are treated as distinct addresses unless they exactly match an existing record.
 - Mobile-web sign-in shares the same flow as desktop-web; no native-app considerations apply.
 - "Continue with Google" is the only new SSO entry point in this release. Microsoft, SAML, and Okta entry points are out of scope.
+- In-app account management (a "Link Google" button in the authenticated app's settings) is **out of scope** for this release per Clarifications 2026-05-09.
 - Cross-device session continuity is governed by the existing session model and is not changed by this feature.
 - Sign-in events are already logged today; this feature inherits that logging surface without inventing a new one.

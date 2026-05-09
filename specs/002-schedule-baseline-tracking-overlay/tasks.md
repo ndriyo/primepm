@@ -9,6 +9,19 @@ description: "Task list for feature 002 — schedule baseline & tracking Gantt o
 
 **Tests**: Test tasks **are included**. The spec's User Stories define acceptance scenarios that must be observable, and `quickstart.md §7` explicitly enumerates a red-green test suite (overlay unit, store unit, Edge integration, client API integration, dialog UI, overlay performance). Independence of each user story is verified by these tests.
 
+> **Revision log** — 2026-05-09: applied remediation from `/speckit.analyze` round 1.
+> - **C1** (HIGH): added T039a (test) + T039b (impl) for the BaselineHistoryPanel so FR-016 + SC-006 are covered.
+> - **C2** (HIGH): T008 now asserts the full `BaselinePayload` shape, not just non-emptiness.
+> - **C3** (MED): added T014a — 403 path for callers without edit-schedule permission.
+> - **C4** (MED): added T014b — atomic-or-nothing under simulated mid-transaction failure (FR-018 / SC-008).
+> - **C5** (MED): added T014c — Toolbar disabled-with-tooltip UI test for the zero-task edge case.
+> - **I1** (MED): User-story dependencies section now declares US2 → US3 runtime coupling explicitly.
+> - **U1** (MED): T020 host file pinned to `src/components/layout/Toolbar.tsx`.
+> - **U2 / U3** (MED): T055 now records SC-001 / SC-003 / SC-006 / SC-007 manual walkthroughs.
+> - **L1** (LOW): T012 wording clarified to be non-overlapping with T048.
+> - **L2** (LOW): T029 implements the final resolution rule once; T047 is a pure consumer-side change.
+> - **L3** (LOW): T053 pins hand-mirroring (no new dep) + a type-level drift test.
+
 **Organization**: Tasks are grouped by user story (US1–US5) so each story can be implemented and verified independently. Each phase ends with a checkpoint that maps directly to the spec's "Independent Test" criterion for that story.
 
 ## Format: `[ID] [P?] [Story] Description`
@@ -59,13 +72,16 @@ description: "Task list for feature 002 — schedule baseline & tracking Gantt o
 
 ### Tests for User Story 1 (write FIRST, ensure they FAIL before implementation)
 
-- [ ] T008 [P] [US1] Edge integration test in `supabase/functions/api/__tests__/baselines.test.ts`: `POST /projects/:projectId/baselines` with non-empty rationale returns 201 and inserts exactly one row with `versionLabel === 'v0'`, `versionIndex === 0`, `rationale` round-tripped, and a non-empty JSONB `payload` (FR-002, FR-003, FR-004, FR-018).
+- [ ] T008 [P] [US1] Edge integration test in `supabase/functions/api/__tests__/baselines.test.ts`: `POST /projects/:projectId/baselines` with non-empty rationale returns 201 and inserts exactly one row with `versionLabel === 'v0'`, `versionIndex === 0`, `rationale` round-tripped, and a JSONB `payload` whose top-level shape **matches `BaselinePayload`** from `data-model.md` — assert presence of every required key (`schemaVersion === 1`, `capturedAt`, `project.{id,name,start}`, `tasks[]`, `dependencies[]`, `resources[]`, `assignments[]`, `calendar.{workingDaysOfWeek,holidays,hoursPerDay}`, `settings.{taskOrder,resourceOrder,collapsedIds}`) and that `tasks.length` matches the source project's task count, with each task carrying `id`, `name`, `durationDays`, `isMilestone`, `scheduleMode`, `constraint`, `progressPct`, `orderIndex`, `computedStart`, and `computedFinish` (FR-002, FR-003, FR-004, FR-018, contract `BaselinePayload`/`BaselineTask` schemas).
 - [ ] T009 [P] [US1] Edge integration test in the same file asserting that an empty/whitespace `rationale` returns 400 with `error: 'rationale_required'` and writes no DB row (FR-002).
 - [ ] T010 [P] [US1] Edge integration test in the same file asserting that a project with zero tasks rejects POST with 400 (spec edge case "If the project has zero tasks, the toolbar entry is disabled").
 - [ ] T011 [P] [US1] DB-level test in the same file: after the POST, attempting `UPDATE schedule_baselines …` raises the immutability exception (FR-005).
-- [ ] T012 [P] [US1] Edge integration test in the same file: POST writes one `audit_logs` row with `action='baseline.set'`, `entityType='ScheduleBaseline'`, `entityId=<insertedId>`, in the same transaction as the insert (FR-015 + R11).
+- [ ] T012 [P] [US1] Edge integration test in the same file: a single POST writes one `audit_logs` row with `action='baseline.set'`, `entityType='ScheduleBaseline'`, `entityId=<insertedId>`, in the same transaction as the insert (FR-015 + R11). The two-row chronology case is covered separately by T048 and is intentionally non-overlapping.
 - [ ] T013 [P] [US1] Client API test in `src/api/__tests__/client.baselines.test.ts`: `setBaseline(projectId, rationale)` POSTs JSON `{ rationale }`, parses 201 → `BaselineHeaderDto`, and propagates 400 errors with the error code intact.
 - [ ] T014 [P] [US1] UI test in `src/components/gantt/__tests__/SetBaselineDialog.test.tsx`: Confirm button is disabled when the rationale field is empty or whitespace; typing a non-empty value enables it; clicking Confirm calls `onConfirm(rationale.trim())` exactly once with the trimmed value; the dialog stays open with rationale preserved when `onConfirm` rejects (`overlay-ui.contract.md` §"Set baseline dialog").
+- [ ] T014a [P] [US1] Edge integration test in `supabase/functions/api/__tests__/baselines.test.ts`: a caller authenticated but lacking `edit_schedule` permission on the project receives **403** with `error: 'forbidden'` and **no row** is written to `schedule_baselines` or `audit_logs` (FR-001, contract `403` response). Pair this with a positive test using a permitted caller to guard against permission-check regressions.
+- [ ] T014b [P] [US1] Edge integration test in `supabase/functions/api/__tests__/baselines.test.ts`: simulate a mid-transaction failure by stubbing the INSERT (or the audit insert) to throw **after** `loadSnapshot` succeeds. Assert that **zero** rows exist in `schedule_baselines` for the project AND **zero** new rows in `audit_logs` with `entityType='ScheduleBaseline'` (FR-018, SC-008). This pins atomic-or-nothing under failure.
+- [ ] T014c [P] [US1] UI test in `src/components/layout/__tests__/Toolbar.test.tsx` (new file if absent): when the active project has `taskOrder.length === 0`, the "Set baseline" toolbar entry is rendered with `disabled` and a tooltip whose text begins with "Add at least one task" (or the final copy chosen during implementation). When `taskOrder.length > 0`, the entry is enabled and the tooltip is absent (spec edge case "If the project has zero tasks, the entry point is disabled with a tooltip").
 
 ### Implementation for User Story 1
 
@@ -74,7 +90,7 @@ description: "Task list for feature 002 — schedule baseline & tracking Gantt o
 - [ ] T017 [P] [US1] Implement `setBaseline(projectId, rationale)` in `src/api/client.ts` returning `BaselineHeaderDto` (depends on T007 DTOs from Phase 2).
 - [ ] T018 [P] [US1] Add the `setBaseline` action to the new `BaselineSlice` in `src/store/projectStore.ts` (just this action plus the empty `baselineHeaders: []` / `baselinePayloads: new Map()` / `activeBaselineRef: 'latest'` state; the load/get actions land in US4) — wires to T017.
 - [ ] T019 [P] [US1] Implement `src/components/gantt/SetBaselineDialog.tsx` per `overlay-ui.contract.md` §"Set baseline dialog": props `{ open, onConfirm, onCancel }`, Confirm disabled while rationale is empty/whitespace, pending state during submit, inline error preserves rationale on rejection (no styling decisions beyond design-token classes).
-- [ ] T020 [US1] Wire the existing schedule toolbar to mount `SetBaselineDialog` and call `setBaseline` from the store; disable the toolbar entry with a tooltip when `taskOrder.length === 0` (spec edge case). Touches `src/components/gantt/GanttChart.tsx` or its parent (whichever currently owns the toolbar — see plan §"Project Structure").
+- [ ] T020 [US1] Wire the existing schedule toolbar to mount `SetBaselineDialog` and call `setBaseline` from the store; disable the toolbar entry with a tooltip when `taskOrder.length === 0` (spec edge case). Host file is `src/components/layout/Toolbar.tsx` (the Schedule view's toolbar — confirmed by `src/App.tsx` import; the page wrappers under `src/pages/ongoing/*` only link out to `/p/:projectId` and do not own a toolbar). Add the new control next to the existing Critical-path / Today buttons.
 
 **Checkpoint US1**: Tests T008–T014 pass; manually walking through `quickstart.md §8 US1` succeeds. The MVP demo ("v0 captured, immutable, audit-logged") is shippable here.
 
@@ -104,7 +120,7 @@ description: "Task list for feature 002 — schedule baseline & tracking Gantt o
 - [ ] T026 [P] [US2] Implement `src/components/gantt/BaselineBar.tsx` — a `motion.div` with `layoutId="baseline-${task.id}"` rendered behind the current bar (own `z-index` lane); props mirror geometry computed from `(scheduled, scale, calendar)` (R12, plan §"Project Structure").
 - [ ] T027 [US2] Update `src/components/gantt/GanttChart.tsx` to render a baseline pre-pass: for each task in `taskOrder` (filtered by `collapsed`) compute `RowOverlayState` per `overlay-ui.contract.md` §"State derivation rules" and render a `BaselineBar` ahead of the existing `TaskBar` (depends on T026).
 - [ ] T028 [P] [US2] Update `src/components/gantt/TaskBar.tsx` to attach `data-variance` (when `kind === 'variant'`) and `data-baseline="added"` (when `kind === 'added'`) attributes, and to render the `+` gutter badge for added rows; remove the current bar entirely for removed rows (`overlay-ui.contract.md` Visual rendering table).
-- [ ] T029 [US2] Add a derived selector `useActiveBaselinePayload()` in `src/store/projectStore.ts` that returns `{ payload, versionLabel } | undefined` from `(baselineHeaders, baselinePayloads, activeBaselineRef)` and is consumed by `GanttChart` (R13). For US2 alone this returns the latest header's payload if loaded, otherwise undefined; US4 expands the resolution rule.
+- [ ] T029 [US2] Add a derived selector `useActiveBaselinePayload()` in `src/store/projectStore.ts` that returns `{ payload, versionLabel } | undefined` from `(baselineHeaders, baselinePayloads, activeBaselineRef)` and is consumed by `GanttChart` (R13). Implement the **final** resolution rule once: `activeBaselineRef === 'latest'` → header with the largest `versionIndex`; otherwise the header whose `id` equals `activeBaselineRef`. If the resolved header's payload is not yet in `baselinePayloads`, return `undefined` (US3 wires the fetch). T047 in US4 is therefore a pure consumer-side change, not a rework.
 - [ ] T030 [P] [US2] Implement the deterministic mapping function in a small pure module `src/components/gantt/baselineOverlay.ts` exporting `computeRowOverlayStates({ currentTasks, currentSchedule, currentCalendar, activeBaseline })` returning the `RowOverlayState[]` exactly as spec'd in `overlay-ui.contract.md` §"Outputs" — referenced from both `GanttChart` and the unit tests in T021–T025.
 
 **Checkpoint US2**: Tests T021–T025 pass against the new pure function and the rendered Gantt; manually walking `quickstart.md §8 US2` succeeds. With v0 set, drift becomes visible at a glance.
@@ -131,8 +147,10 @@ description: "Task list for feature 002 — schedule baseline & tracking Gantt o
 - [ ] T037 [P] [US3] Implement `listBaselines(projectId)` and `getBaseline(projectId, baselineId)` in `src/api/client.ts` (depends on T007 DTOs).
 - [ ] T038 [US3] Add `loadBaselineHeaders(projectId)` and `loadBaselinePayload(baselineId)` actions to the `BaselineSlice` in `src/store/projectStore.ts`. `loadBaselinePayload` is **memoised** by `baselineId` (do not re-fetch if the payload is already in `baselinePayloads`) (R13).
 - [ ] T039 [US3] In the existing `loadProject` flow, call `loadBaselineHeaders(projectId)` unconditionally (the API returns `[]` when none exist — `quickstart.md §5`). After Gantt mount, lazily call `loadBaselinePayload(activeHeader.id)` for the resolved active reference only.
+- [ ] T039a [P] [US3] UI test in `src/components/gantt/__tests__/BaselineHistoryPanel.test.tsx`: with three headers (`v0`, `v1`, `v2` ordered newest-first), the panel renders all three in chronological order with version label, ISO timestamp, creator full name, rationale, and an "Immutable" cue per row (FR-016); with zero headers, the panel renders an empty state and no row controls. Match the visual structure of Figma Scene E (linked from `plan.md §"Design references"`).
+- [ ] T039b [US3] Implement `src/components/gantt/BaselineHistoryPanel.tsx` rendering the headers from `useProjectStore(s => s.baselineHeaders)`, ordered newest-first, with a "View snapshot" affordance per row that calls `loadBaselinePayload(headerId)` (memoised — T038). No edit/delete affordances, ever (FR-005). The panel reads from the store only; it owns no fetch lifecycle. Wire its mount-point in the Gantt view per the design mockup (linked Scene E in `plan.md`).
 
-**Checkpoint US3**: Tests T031–T034 pass; v0 still returns byte-identical bytes on `GET /baselines/:v0Id` after v1 is created (SC-002, SC-004).
+**Checkpoint US3**: Tests T031–T034 + T039a pass; v0 still returns byte-identical bytes on `GET /baselines/:v0Id` after v1 is created (SC-002, SC-004); the history panel lists all baselines chronologically (FR-016) and unblocks the SC-006 manual checklist in Phase 8.
 
 ---
 
@@ -154,7 +172,7 @@ description: "Task list for feature 002 — schedule baseline & tracking Gantt o
 - [ ] T044 [US4] Add the `setActiveBaselineRef(ref)` reducer to `BaselineSlice` (session-scoped only — must NOT be added to the persistence allowlist in `src/store/persistence.ts`).
 - [ ] T045 [P] [US4] Implement `src/components/gantt/BaselineVersionSelector.tsx` per `overlay-ui.contract.md` §"Active baseline reference selector (header control)": props `{ headers, active, onChange }`, hidden when `headers.length <= 1`, default value `'latest'`. Newest-first ordering, with the version label and short metadata per the design mockup (Scene C in `plan.md` §"Design references").
 - [ ] T046 [US4] Mount `BaselineVersionSelector` in the existing Gantt header (`GanttChart.tsx` or its toolbar parent); subscribe via `useProjectStore(s => ({ headers: s.baselineHeaders, active: s.activeBaselineRef }))` and dispatch `setActiveBaselineRef`.
-- [ ] T047 [US4] Update `useActiveBaselinePayload()` (added in T029) to honour the full `'latest' | <id>` resolution and to lazy-fetch the payload via `loadBaselinePayload` if not yet cached (R13).
+- [ ] T047 [US4] In the Gantt mount/effect that consumes `useActiveBaselinePayload()`, register a side-effect that calls `loadBaselinePayload(resolvedHeaderId)` whenever the resolved header changes and its payload is not yet cached (R13). The selector itself is unchanged — this task only adds the lazy-fetch trigger now that the user can switch references.
 
 **Checkpoint US4**: Tests T040–T043 pass; the perf test holds at 100 tasks (SC-005). The mockup's "Scene C" interaction matches behaviour.
 
@@ -185,9 +203,13 @@ description: "Task list for feature 002 — schedule baseline & tracking Gantt o
 
 - [ ] T051 [P] Add a smoke test in `src/components/gantt/__tests__/overlay.test.tsx` asserting that with `headers.length === 0` and `activeBaseline === undefined`, **no** `BaselineBar` is rendered and the `BaselineVersionSelector` is not in the DOM (FR-014, SC-007). The DOM after this render must equal a snapshot of the pre-feature Gantt for the same project fixture.
 - [ ] T052 [P] Add a "tasks with no baseline coverage" guard in `BaselineBar.tsx` to skip rendering for `kind === 'no-baseline'` early — a render-cost regression here would defeat SC-007.
-- [ ] T053 [P] Generate TypeScript types from `contracts/baselines.openapi.yaml` (or hand-mirror, whichever the existing project does for other contracts — see `src/api/types.ts` neighbours) and ensure `BaselineHeaderDto` / `BaselinePayloadDto` are byte-compatible (no `any` in API surfaces).
+- [ ] T053 [P] Hand-mirror `BaselineHeaderDto` and `BaselinePayloadDto` (and their nested types `BaselineTask` / `BaselineDependency` / `BaselineResource` / `BaselineAssignment` / `BaselineCalendar` / `BaselineSettings`) into `src/api/types.ts`, matching the existing convention used by neighbouring DTOs in that file (no `openapi-typescript` dependency added). Add a `// SOURCE: contracts/baselines.openapi.yaml` comment at the top of the new block, and a Vitest type-level test in `src/api/__tests__/types.baselines.test.ts` that imports both the DTO and a literal mock built from the OpenAPI examples to fail at compile time on drift. Strict TypeScript only — no `any` in API surfaces.
 - [ ] T054 [P] Update the project's agent-context file (touched by `/speckit.plan`) so subsequent automation knows about the new module boundaries — run `bash .specify/scripts/bash/update-agent-context.sh` if available.
-- [ ] T055 [P] Tick the FR-001…FR-018 and SC-001…SC-008 checkboxes on the eventual implementation PR description, citing the test or file that satisfies each (DoD per `quickstart.md §9`).
+- [ ] T055 [P] Tick the FR-001…FR-018 and SC-001…SC-008 checkboxes on the eventual implementation PR description, citing the test or file that satisfies each (DoD per `quickstart.md §9`). For criteria with no automated test, run and record the manual walkthroughs:
+  - **SC-001** — time a fresh "open project → Set baseline → enter rationale → confirm → see row" loop on a fixture project; record the elapsed time and confirm it is under 30 s.
+  - **SC-003** — UX review with a tester unfamiliar with the project: confirm slipped tasks can be identified within 5 s without reading dates (purely from the variance treatment).
+  - **SC-006** — using the BaselineHistoryPanel from T039b, confirm a PMO reviewer can produce a chronological listing (version, timestamp, creator, rationale) of every baseline event for the test project in under 1 minute.
+  - **SC-007** — visual diff a project with zero baselines against the pre-feature build to confirm the Gantt is indistinguishable.
 - [ ] T056 Run the full quality gates locally: `npm run test:run` (must be green), `npm run build` (must be green), and the SQL smoke in `quickstart.md §2` (UPDATE rejection still fires after migration).
 
 ---
@@ -204,8 +226,8 @@ description: "Task list for feature 002 — schedule baseline & tracking Gantt o
 ### User-story dependencies
 
 - **US1 (P1)** has no dependencies on other stories (delivers MVP — captures v0 + audit + dialog).
-- **US2 (P1)** can start immediately after Phase 2; it depends on US1 only at runtime (you need at least one baseline to see overlay), but the **code** is independent (the Gantt simply renders nothing extra until a baseline is loaded).
-- **US3 (P2)** depends on US1 endpoints existing (T015) — extends them. It does **not** depend on US2.
+- **US2 (P1)** code can be authored after Phase 2, but US2 has a **runtime dependency on US3**: nothing in US2 fetches the baseline payload from the server, so until US3's `loadBaselineHeaders` (T038) and `loadBaselinePayload` (T038) actions and the `loadProject` integration (T039) land, the overlay derived in T029 / T030 has no payload to render against. To ship US2 visibly, ship **US1 + US3 (T035, T037, T038, T039) + US2** as one increment, OR move T038's `loadBaselineHeaders` + a "latest-only" payload fetch into US2. The chosen path must be recorded in the implementation PR.
+- **US3 (P2)** depends on US1 endpoints existing (T015) — extends them. It does **not** depend on US2 at the code level.
 - **US4 (P2)** depends on US3's `loadBaselinePayload` action (T038); the selector is meaningless without ≥ 2 headers, but the code can be unit-tested with fixtures.
 - **US5 (P3)** depends on US1's POST handler (T015) only — it's a verification/refactor pass on the same transaction.
 
@@ -231,13 +253,16 @@ description: "Task list for feature 002 — schedule baseline & tracking Gantt o
 
 ```bash
 # Round 1 — write all US1 tests in parallel:
-Task: T008 "Edge integration test: POST creates v0 row in supabase/functions/api/__tests__/baselines.test.ts"
+Task: T008 "Edge integration test: POST creates v0 row with full payload shape"
 Task: T009 "Edge integration test: empty rationale → 400"
 Task: T010 "Edge integration test: zero-task project → 400"
 Task: T011 "DB-level test: UPDATE on schedule_baselines fails"
 Task: T012 "Edge integration test: audit_logs row written in same transaction"
 Task: T013 "Client API test: setBaseline in src/api/__tests__/client.baselines.test.ts"
-Task: T014 "UI test: SetBaselineDialog disabled until rationale in src/components/gantt/__tests__/SetBaselineDialog.test.tsx"
+Task: T014 "UI test: SetBaselineDialog disabled until rationale"
+Task: T014a "Edge integration test: caller without edit_schedule → 403"
+Task: T014b "Edge integration test: mid-transaction failure → no rows committed"
+Task: T014c "UI test: Toolbar Set-baseline disabled with tooltip when zero tasks"
 
 # Round 2 — implement, partially parallel:
 Task: T015 "POST handler in supabase/functions/api/routes/baselines.ts"

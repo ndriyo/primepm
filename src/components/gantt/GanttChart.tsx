@@ -54,11 +54,10 @@ export function GanttChart({ scrollY, onScrollY }: Props) {
   );
 
   const width = totalDays * scale.pxPerDay;
-  // totalRows / innerHeight are derived AFTER renderedOrder is computed
-  // (a few lines below) so removed-since-baseline rows are included in the
-  // scroll height. We compute a placeholder here for the rowsById that the
-  // drag interactions still rely on (current-only rows).
-  const totalRowsCurrent = visibleOrder.length;
+  // totalRows / innerHeight are derived AFTER `renderedOrder` is computed
+  // a few lines below — `renderedOrder` is `visibleOrder` plus any
+  // baseline-only ids, so removed-since-baseline rows are included in the
+  // scroll height (FR-011).
 
   const rowsById = useMemo(() => {
     const m = new Map<string, number>();
@@ -108,7 +107,6 @@ export function GanttChart({ scrollY, onScrollY }: Props) {
 
   const totalRows = renderedOrder.length;
   const innerHeight = Math.max(totalRows * ROW_HEIGHT, 320);
-  void totalRowsCurrent;
 
   // Spec 002 (T047) — when the resolved active baseline header has no payload
   // cached yet, lazy-fetch it. Memoised by baselineId in the store, so a

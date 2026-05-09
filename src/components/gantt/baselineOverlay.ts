@@ -140,6 +140,15 @@ export function computeRowOverlayStates(inputs: OverlayInputs): Map<string, RowO
   // engine, honouring dependencies / working-day calendar / constraints.
   const baselineSched = recomputeBaselineSchedule(activeBaselinePayload);
 
+  // Precompute the set of baseline-side summary ids in a single pass over
+  // the payload — every id that appears as a parentId is a summary. Used to
+  // skip baseline-only summaries from `removed` rows (overlay-ui.contract.md
+  // §6 — overlay applies to leaf tasks only in Phase 1).
+  const baselineSummaryIds = new Set<string>();
+  for (const t of activeBaselinePayload.tasks) {
+    if (t.parentId) baselineSummaryIds.add(t.parentId);
+  }
+
   // 2. Walk current tasks first.
   for (const [id, _task] of currentTasks) {
     // Per overlay-ui.contract.md §6 — overlay applies to leaf tasks only.
@@ -209,10 +218,10 @@ export function computeRowOverlayStates(inputs: OverlayInputs): Map<string, RowO
   // 3. Walk baseline tasks for those missing from current → removed.
   for (const t of activeBaselinePayload.tasks) {
     if (currentTasks.has(t.id)) continue;
-    // Skip baseline-only summary rows (Phase 1 scope).
-    if (t.parentId == null && activeBaselinePayload.tasks.some(c => c.parentId === t.id)) {
-      continue;
-    }
+    // Skip baseline-only summary rows at any depth (Phase 1 scope —
+    // overlay applies to leaf tasks only). Uses the precomputed
+    // baselineSummaryIds set so this is O(1) per task.
+    if (baselineSummaryIds.has(t.id)) continue;
     const dates = baselineSched.get(t.id);
     const baselineStart = dates?.start ?? parseISO(activeBaselinePayload.project.start);
     const baselineFinish = dates?.finish ?? baselineStart;

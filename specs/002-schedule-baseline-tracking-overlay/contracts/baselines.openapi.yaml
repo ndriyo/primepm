@@ -1,0 +1,310 @@
+openapi: 3.0.3
+info:
+  title: PrimePM Baselines API
+  version: 0.1.0
+  description: |
+    REST contract for the Schedule Baseline & Tracking Gantt Overlay feature.
+    Hosted by the existing Supabase Edge Function (`supabase/functions/api`)
+    under the `/projects/:projectId/baselines` namespace. All endpoints require
+    the same authenticated user context as the existing project routes;
+    project-scoped permission is enforced by RLS on `schedule_*` tables and
+    by `getAuth(c)` in the Edge Function.
+
+paths:
+  /projects/{projectId}/baselines:
+    get:
+      summary: List baseline headers for a project (newest first)
+      description: |
+        Returns the list of baselines for the project, newest first.
+        Headers only — no `payload`. Use `GET /projects/{projectId}/baselines/{baselineId}`
+        to fetch the full snapshot payload of a specific version.
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: OK — possibly empty array
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  baselines:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BaselineHeader'
+                required: [baselines]
+        '404': { $ref: '#/components/responses/NotFound' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+    post:
+      summary: Set (capture) a new baseline for a project
+      description: |
+        Captures a frozen, immutable snapshot of the project's current
+        schedule. Server reads the canonical `schedule_*` tables in a single
+        transaction; the client only supplies the rationale.
+
+        The server generates `versionLabel = 'v' || versionIndex` where
+        `versionIndex` is the count of pre-existing baselines for the project.
+
+        Idempotency: duplicate POSTs in quick succession (e.g. rapid
+        double-click) are deduplicated by the client; the server treats them
+        as separate calls and the unique constraint will reject any race
+        winner that picks an already-used version index, returning 409.
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rationale]
+              properties:
+                rationale:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                  description: Required free text capturing the "why".
+            examples:
+              steeringCommittee:
+                value:
+                  rationale: "Approved by steering committee 2026-05-08"
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaselineHeader'
+        '400':
+          description: Validation error (e.g. empty rationale, project has no tasks)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Caller lacks edit-schedule permission on this project
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Version conflict — concurrent baseline race; client should retry
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /projects/{projectId}/baselines/{baselineId}:
+    get:
+      summary: Fetch a single baseline including its full snapshot payload
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: baselineId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaselineHeader'
+                  - type: object
+                    required: [payload]
+                    properties:
+                      payload: { $ref: '#/components/schemas/BaselinePayload' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+    # Explicitly NO put/patch/delete — baselines are immutable (FR-005, R4).
+
+components:
+  parameters:
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  responses:
+    Unauthorized:
+      description: Not authenticated
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Project or baseline not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        message: { type: string }
+
+    BaselineHeader:
+      type: object
+      required:
+        [id, projectId, versionLabel, versionIndex, rationale, createdAt, createdBy]
+      properties:
+        id: { type: string, format: uuid }
+        projectId: { type: string, format: uuid }
+        versionLabel:
+          type: string
+          pattern: '^v\d+$'
+          example: 'v0'
+        versionIndex:
+          type: integer
+          minimum: 0
+          example: 0
+        rationale:
+          type: string
+          minLength: 1
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: object
+          required: [id, fullName]
+          properties:
+            id: { type: string, format: uuid }
+            fullName: { type: string }
+
+    BaselinePayload:
+      type: object
+      required:
+        [schemaVersion, capturedAt, project, tasks, dependencies, resources, assignments, calendar, settings]
+      properties:
+        schemaVersion:
+          type: integer
+          enum: [1]
+        capturedAt: { type: string, format: date-time }
+        project:
+          type: object
+          required: [id, name, start]
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+            start: { type: string, format: date }
+        tasks:
+          type: array
+          items: { $ref: '#/components/schemas/BaselineTask' }
+        dependencies:
+          type: array
+          items: { $ref: '#/components/schemas/BaselineDependency' }
+        resources:
+          type: array
+          items: { $ref: '#/components/schemas/BaselineResource' }
+        assignments:
+          type: array
+          items: { $ref: '#/components/schemas/BaselineAssignment' }
+        calendar: { $ref: '#/components/schemas/BaselineCalendar' }
+        settings: { $ref: '#/components/schemas/BaselineSettings' }
+
+    BaselineTask:
+      type: object
+      # NOTE (impl 2026-05-09): `computedStart`/`computedFinish` were
+      # originally required to "freeze" computed dates, but since the snapshot
+      # persists the calendar verbatim, the client can recompute deterministically
+      # at render time. Making them optional lets the Edge function reuse the
+      # existing `loadSnapshot` serialiser without porting the engine to Deno.
+      required:
+        [id, name, durationDays, isMilestone, scheduleMode, constraint,
+         progressPct, orderIndex]
+      properties:
+        id: { type: string, format: uuid }
+        parentId: { type: string, format: uuid, nullable: true }
+        name: { type: string }
+        notes: { type: string, nullable: true }
+        durationDays: { type: integer, minimum: 0 }
+        isMilestone: { type: boolean }
+        scheduleMode:
+          type: string
+          enum: [auto, manual]
+        manualStart: { type: string, format: date, nullable: true }
+        constraint:
+          oneOf:
+            - type: object
+              required: [kind]
+              properties:
+                kind: { type: string, enum: [ASAP] }
+            - type: object
+              required: [kind, date]
+              properties:
+                kind: { type: string, enum: [SNET, FNET, MSO, MFO] }
+                date: { type: string, format: date }
+        progressPct: { type: integer, minimum: 0, maximum: 100 }
+        color: { type: string, nullable: true }
+        orderIndex: { type: integer }
+        computedStart: { type: string, format: date }
+        computedFinish: { type: string, format: date }
+
+    BaselineDependency:
+      type: object
+      required: [id, predecessorId, successorId, type, lagDays]
+      properties:
+        id: { type: string, format: uuid }
+        predecessorId: { type: string, format: uuid }
+        successorId: { type: string, format: uuid }
+        type:
+          type: string
+          enum: [FS, SS, FF, SF]
+        lagDays: { type: integer }
+
+    BaselineResource:
+      type: object
+      required:
+        [id, code, name, defaultAllocationPct, orderIndex]
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string }
+        name: { type: string }
+        defaultAllocationPct: { type: integer, minimum: 0, maximum: 100 }
+        ratePerDay: { type: number, nullable: true }
+        color: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+        orderIndex: { type: integer }
+
+    BaselineAssignment:
+      type: object
+      required: [id, taskId, resourceId, allocationPct]
+      properties:
+        id: { type: string, format: uuid }
+        taskId: { type: string, format: uuid }
+        resourceId: { type: string, format: uuid }
+        allocationPct: { type: integer, minimum: 0, maximum: 100 }
+
+    BaselineCalendar:
+      type: object
+      required: [workingDaysOfWeek, holidays, hoursPerDay]
+      properties:
+        workingDaysOfWeek:
+          type: array
+          items: { type: integer, minimum: 0, maximum: 6 }
+        holidays:
+          type: array
+          items: { type: string, format: date }
+        hoursPerDay:
+          type: integer
+          minimum: 1
+          maximum: 24
+
+    BaselineSettings:
+      type: object
+      required: [taskOrder, resourceOrder, collapsedIds]
+      properties:
+        taskOrder:
+          type: array
+          items: { type: string, format: uuid }
+        resourceOrder:
+          type: array
+          items: { type: string, format: uuid }
+        collapsedIds:
+          type: array
+          items: { type: string, format: uuid }

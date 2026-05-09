@@ -153,8 +153,20 @@ function rowToResource(r: DbResource): SerializedResource {
   return out;
 }
 
-export async function loadSnapshot(projectId: string): Promise<Snapshot | null> {
-  const projectRows = await sql<DbProject[]>`
+/**
+ * Read every schedule_* table for a project into a tuple-encoded Snapshot.
+ *
+ * The optional `client` parameter lets callers pass a transaction handle (the
+ * `tx` from `sql.begin(async tx => …)`) so all reads happen on the same
+ * connection as a surrounding INSERT — important for the baselines route,
+ * which needs all reads + the insert to be in one consistent transaction
+ * (Spec 002 FR-018, R3).
+ */
+export async function loadSnapshot(
+  projectId: string,
+  client: typeof sql = sql,
+): Promise<Snapshot | null> {
+  const projectRows = await client<DbProject[]>`
     SELECT id, name, start_date FROM projects WHERE id = ${projectId} LIMIT 1
   `;
   if (projectRows.length === 0) return null;
@@ -162,28 +174,28 @@ export async function loadSnapshot(projectId: string): Promise<Snapshot | null> 
 
   const [taskRows, depRows, resourceRows, assignmentRows, calendarRows, settingsRows] =
     await Promise.all([
-      sql<DbTask[]>`
+      client<DbTask[]>`
         SELECT id, parent_id, name, notes, duration_days, is_milestone, schedule_mode,
                manual_start, constraint_type, constraint_date, progress_pct, color, order_index
         FROM schedule_tasks WHERE project_id = ${projectId} ORDER BY order_index
       `,
-      sql<DbDep[]>`
+      client<DbDep[]>`
         SELECT id, predecessor_id, successor_id, type, lag_days
         FROM schedule_dependencies WHERE project_id = ${projectId}
       `,
-      sql<DbResource[]>`
+      client<DbResource[]>`
         SELECT id, code, name, default_allocation_pct, rate_per_day, color, notes, order_index
         FROM schedule_resources WHERE project_id = ${projectId} ORDER BY order_index
       `,
-      sql<DbAssignment[]>`
+      client<DbAssignment[]>`
         SELECT id, task_id, resource_id, allocation_pct
         FROM schedule_assignments WHERE project_id = ${projectId}
       `,
-      sql<DbCalendar[]>`
+      client<DbCalendar[]>`
         SELECT working_days_mask, holidays, hours_per_day
         FROM schedule_calendars WHERE project_id = ${projectId} LIMIT 1
       `,
-      sql<DbSettings[]>`
+      client<DbSettings[]>`
         SELECT task_order, resource_order, collapsed_ids, project_start, project_name
         FROM schedule_settings WHERE project_id = ${projectId} LIMIT 1
       `,

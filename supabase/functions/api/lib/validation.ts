@@ -119,6 +119,13 @@ export const snapshotSchema = z.object({
   savedAt: z.number().optional(),
 });
 
+// Spec 002 — baseline create body. Server only accepts the rationale; the
+// snapshot is captured server-side by re-using `loadSnapshot` (FR-002, FR-003,
+// FR-018, contract POST /baselines requestBody).
+export const baselineCreateSchema = z.object({
+  rationale: z.string().trim().min(1).max(2000),
+});
+
 // Helper: convert calendar days-of-week array → bitmap (bit 0 = Sunday)
 export function workingDaysToMask(days: number[]): number {
   let mask = 0;

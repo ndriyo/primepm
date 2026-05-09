@@ -165,3 +165,97 @@ export interface SubmissionInput {
   scores: Array<{ criterionId: string; score: number; comment?: string | null }>;
   weightedScore?: number | null;
 }
+
+// ============================================================================
+// Spec 002 — Schedule Baseline & Tracking Gantt Overlay
+// SOURCE: specs/002-schedule-baseline-tracking-overlay/contracts/baselines.openapi.yaml
+// Mirrored by hand (no openapi-typescript dep). Drift is guarded by the
+// type-level test in src/api/__tests__/types.baselines.test.ts.
+// ============================================================================
+
+export interface BaselineHeaderDto {
+  id: string;
+  projectId: string;
+  versionLabel: string;          // 'v0' | 'v1' | …
+  versionIndex: number;
+  rationale: string;
+  createdAt: string;             // ISO timestamp
+  createdBy: { id: string; fullName: string };
+}
+
+export interface BaselineTaskDto {
+  id: string;
+  parentId?: string | null;
+  name: string;
+  notes?: string | null;
+  durationDays: number;
+  isMilestone: boolean;
+  scheduleMode: 'auto' | 'manual';
+  manualStart?: string | null;
+  constraint:
+    | { kind: 'ASAP' }
+    | { kind: 'SNET' | 'FNET' | 'MSO' | 'MFO'; date: string };
+  progressPct: number;
+  color?: string | null;
+  orderIndex: number;
+  // Optional — see contracts/baselines.openapi.yaml note. Server omits these;
+  // client recomputes from the frozen snapshot at render time.
+  computedStart?: string;         // ISO date
+  computedFinish?: string;        // ISO date
+}
+
+export interface BaselineDependencyDto {
+  id: string;
+  predecessorId: string;
+  successorId: string;
+  type: 'FS' | 'SS' | 'FF' | 'SF';
+  lagDays: number;
+}
+
+export interface BaselineResourceDto {
+  id: string;
+  code: string;
+  name: string;
+  defaultAllocationPct: number;
+  ratePerDay?: number | null;
+  color?: string | null;
+  notes?: string | null;
+  orderIndex: number;
+}
+
+export interface BaselineAssignmentDto {
+  id: string;
+  taskId: string;
+  resourceId: string;
+  allocationPct: number;
+}
+
+export interface BaselineCalendarDto {
+  workingDaysOfWeek: number[];   // 0..6
+  holidays: string[];            // ISO dates
+  hoursPerDay: number;
+}
+
+export interface BaselineSettingsDto {
+  taskOrder: string[];           // ordered task ids
+  resourceOrder: string[];
+  collapsedIds: string[];
+}
+
+export interface BaselinePayloadDto {
+  schemaVersion: 1;
+  capturedAt: string;            // ISO timestamp
+  project: {
+    id: string;
+    name: string;
+    start: string;               // ISO date
+  };
+  tasks: BaselineTaskDto[];
+  dependencies: BaselineDependencyDto[];
+  resources: BaselineResourceDto[];
+  assignments: BaselineAssignmentDto[];
+  calendar: BaselineCalendarDto;
+  settings: BaselineSettingsDto;
+}
+
+export type BaselineWithPayloadDto = BaselineHeaderDto & { payload: BaselinePayloadDto };

@@ -11,6 +11,8 @@ import {
   type Task,
 } from '../engine';
 import { newId } from '../lib/ids';
+import { apiClient } from '../api/client';
+import type { BaselineHeaderDto, BaselinePayloadDto } from '../api/types';
 
 enableMapSet();
 enablePatches();
@@ -80,6 +82,11 @@ export interface ProjectState {
   commandOpen: boolean;
   cheatsheetOpen: boolean;
   templatePickerOpen: boolean;
+
+  // Spec 002 — Baseline overlay (session-scoped)
+  baselineHeaders: BaselineHeaderDto[];        // newest first
+  baselinePayloads: Map<string, BaselinePayloadDto>;
+  activeBaselineRef: 'latest' | string;        // 'latest' or a baseline id
 
   // history
   past: UndoEntry[];
@@ -158,6 +165,12 @@ export interface ProjectActions {
   // Bulk
   loadProject: (snapshot: Partial<Pick<ProjectState, 'project' | 'tasks' | 'taskOrder' | 'dependencies' | 'calendar' | 'resources' | 'resourceOrder' | 'assignments' | 'collapsed'>>) => void;
   reset: () => void;
+
+  // Spec 002 — Baseline actions
+  setBaseline: (rationale: string) => Promise<BaselineHeaderDto>;
+  loadBaselineHeaders: (projectId: string) => Promise<void>;
+  loadBaselinePayload: (projectId: string, baselineId: string) => Promise<BaselinePayloadDto>;
+  setActiveBaselineRef: (ref: 'latest' | string) => void;
 }
 
 export type Store = ProjectState & ProjectActions;
@@ -206,6 +219,9 @@ const initialState = (): ProjectState => {
     commandOpen: false,
     cheatsheetOpen: false,
     templatePickerOpen: true,
+    baselineHeaders: [],
+    baselinePayloads: new Map(),
+    activeBaselineRef: 'latest',
     past: [],
     future: [],
   };
@@ -774,8 +790,79 @@ export const useProjectStore = create<Store>()(
       });
       void get;
     },
+
+    // Spec 002 — Baseline actions
+    setBaseline: async (rationale: string) => {
+      const projectId = get().project.id;
+      const created = await apiClient.setBaseline(projectId, rationale);
+      set(state => {
+        // Insert in newest-first order. New baseline always has the highest
+        // versionIndex, so prepend.
+        state.baselineHeaders.unshift(created);
+      });
+      return created;
+    },
+
+    loadBaselineHeaders: async (projectId: string) => {
+      const headers = await apiClient.listBaselines(projectId);
+      set(state => {
+        // Newest first — server already orders this way, but defend against
+        // ordering surprises.
+        state.baselineHeaders = [...headers].sort(
+          (a, b) => b.versionIndex - a.versionIndex,
+        );
+      });
+    },
+
+    loadBaselinePayload: async (projectId: string, baselineId: string) => {
+      // Memoised: skip if already cached.
+      const cached = get().baselinePayloads.get(baselineId);
+      if (cached) return cached;
+      const full = await apiClient.getBaseline(projectId, baselineId);
+      set(state => {
+        state.baselinePayloads.set(baselineId, full.payload);
+      });
+      return full.payload;
+    },
+
+    setActiveBaselineRef: (ref: 'latest' | string) => {
+      set(state => {
+        state.activeBaselineRef = ref;
+      });
+    },
   })),
 );
+
+/**
+ * Spec 002 — derived selector. Returns `{ payload, versionLabel }` for the
+ * resolved active baseline reference, or undefined when:
+ *   - no baselines exist on the project, OR
+ *   - the resolved header's payload is not yet cached.
+ *
+ * Resolution rule (per overlay-ui.contract.md §"Active baseline reference selector"):
+ *   - 'latest' → header with the largest versionIndex
+ *   - <id>     → the header whose id === ref
+ */
+export function useActiveBaselinePayload():
+  | { payload: BaselinePayloadDto; versionLabel: string }
+  | undefined {
+  const headers = useProjectStore(s => s.baselineHeaders);
+  const payloads = useProjectStore(s => s.baselinePayloads);
+  const ref = useProjectStore(s => s.activeBaselineRef);
+  if (headers.length === 0) return undefined;
+  let header: BaselineHeaderDto | undefined;
+  if (ref === 'latest') {
+    header = headers.reduce((best, h) =>
+      best == null || h.versionIndex > best.versionIndex ? h : best,
+    headers[0] as BaselineHeaderDto | undefined);
+  } else {
+    header = headers.find(h => h.id === ref);
+  }
+  if (!header) return undefined;
+  const payload = payloads.get(header.id);
+  if (!payload) return undefined;
+  return { payload, versionLabel: header.versionLabel };
+}
 
 function addDays(date: Date, days: number): Date {
   const d = new Date(date);

@@ -19,6 +19,7 @@ import { cn } from '../../lib/cn';
 import { isApiConfigured } from '../../api/client';
 import { navigate } from '../../lib/router';
 import { SetBaselineDialog } from '../gantt/SetBaselineDialog';
+import { BaselineVersionSelector } from '../gantt/BaselineVersionSelector';
 
 const ZOOM_OPTIONS: { value: ZoomLevel; label: string }[] = [
   { value: 'day', label: 'Day' },
@@ -53,6 +54,8 @@ export function Toolbar() {
   const taskOrder = useProjectStore(s => s.taskOrder);
   const setBaseline = useProjectStore(s => s.setBaseline);
   const baselineHeaders = useProjectStore(s => s.baselineHeaders);
+  const activeBaselineRef = useProjectStore(s => s.activeBaselineRef);
+  const setActiveBaselineRef = useProjectStore(s => s.setActiveBaselineRef);
   const upcomingVersionIndex = baselineHeaders.length; // server validates uniqueness
   const upcomingVersionLabel = `v${upcomingVersionIndex}`;
   const [baselineDialogOpen, setBaselineDialogOpen] = useState(false);
@@ -178,6 +181,12 @@ export function Toolbar() {
                 <Crosshair size={14} />
               </Button>
             </Tooltip>
+
+            <BaselineVersionSelector
+              headers={baselineHeaders}
+              active={activeBaselineRef}
+              onChange={setActiveBaselineRef}
+            />
 
             <Tooltip
               label={

@@ -83,6 +83,24 @@ export function GanttChart({ scrollY, onScrollY }: Props) {
     [tasks, schedule.scheduled, activeBaseline?.payload],
   );
 
+  // Spec 002 (T047) — when the resolved active baseline header has no payload
+  // cached yet, lazy-fetch it. Memoised by baselineId in the store, so a
+  // ref-switch between cached payloads triggers nothing extra here.
+  const baselineHeaders = useProjectStore(s => s.baselineHeaders);
+  const baselinePayloads = useProjectStore(s => s.baselinePayloads);
+  const activeBaselineRef = useProjectStore(s => s.activeBaselineRef);
+  const loadBaselinePayload = useProjectStore(s => s.loadBaselinePayload);
+  useEffect(() => {
+    if (baselineHeaders.length === 0) return;
+    const header =
+      activeBaselineRef === 'latest'
+        ? baselineHeaders.reduce((best, h) => (h.versionIndex > best.versionIndex ? h : best))
+        : baselineHeaders.find(h => h.id === activeBaselineRef);
+    if (!header) return;
+    if (baselinePayloads.has(header.id)) return;
+    void loadBaselinePayload(project.id, header.id);
+  }, [baselineHeaders, activeBaselineRef, baselinePayloads, loadBaselinePayload, project.id]);
+
   const { onPointerDown, ghost, link, slipSense } = useDragInteractions({
     scale,
     rowsById,

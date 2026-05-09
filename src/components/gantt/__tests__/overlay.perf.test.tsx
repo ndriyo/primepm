@@ -14,8 +14,19 @@ function makeFixture(taskCount: number): {
   const baselineTasksA: BaselinePayloadDto['tasks'] = [];
   const baselineTasksB: BaselinePayloadDto['tasks'] = [];
 
+  // Walk forward by 1 calendar day per task starting 2026-05-04, so every
+  // generated date is valid (months/days roll over correctly).
+  const baseStartA = new Date(2026, 4, 4); // 2026-05-04
+  const baseStartB = new Date(2026, 4, 5); // 2026-05-05 (offset +1 day)
+  const isoDate = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
   for (let i = 0; i < taskCount; i++) {
     const id = `t${i.toString().padStart(3, '0')}`;
+    const ad = new Date(baseStartA);
+    ad.setDate(ad.getDate() + i);
+    const bd = new Date(baseStartB);
+    bd.setDate(bd.getDate() + i);
     tasks.set(id, {
       id,
       name: `Task ${i}`,
@@ -27,8 +38,8 @@ function makeFixture(taskCount: number): {
     });
     schedule.set(id, {
       id,
-      start: new Date(2026, 4, 4 + (i % 30)),
-      finish: new Date(2026, 4, 6 + (i % 30)),
+      start: ad,
+      finish: new Date(ad.getFullYear(), ad.getMonth(), ad.getDate() + 2),
       slack: 0,
       isCritical: false,
       inCycle: false,
@@ -39,7 +50,7 @@ function makeFixture(taskCount: number): {
       durationDays: 3,
       isMilestone: false,
       scheduleMode: 'manual',
-      manualStart: `2026-05-${String(4 + (i % 30)).padStart(2, '0')}`,
+      manualStart: isoDate(ad),
       constraint: { kind: 'ASAP' },
       progressPct: 0,
       orderIndex: i,
@@ -50,7 +61,7 @@ function makeFixture(taskCount: number): {
       durationDays: 3,
       isMilestone: false,
       scheduleMode: 'manual',
-      manualStart: `2026-05-${String(5 + (i % 25)).padStart(2, '0')}`,
+      manualStart: isoDate(bd),
       constraint: { kind: 'ASAP' },
       progressPct: 0,
       orderIndex: i,

@@ -73,7 +73,7 @@ describe('useAuth — signInWithGoogle (C1)', () => {
     expect(supabaseMock.state.signInWithOAuth).toHaveBeenCalledTimes(1);
     expect(supabaseMock.state.signInWithOAuth).toHaveBeenCalledWith({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/dashboard` },
     });
   });
 

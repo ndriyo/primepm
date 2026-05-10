@@ -74,7 +74,7 @@ describe('LoginPage — Google button (C1)', () => {
     await userEvent.click(screen.getByRole('button', { name: /continue with google/i }));
     expect(supabaseMock.state.signInWithOAuth).toHaveBeenCalledWith({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/dashboard` },
     });
   });
 

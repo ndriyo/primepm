@@ -174,7 +174,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return error ? { error: error.message } : {};
       },
       signInWithGoogle: async () => {
-        const redirectTo = typeof window !== 'undefined' ? window.location.origin : undefined;
+        // Land on /dashboard (an app.html route via _redirects), not the
+        // marketing landing page at "/". Supabase's Redirect URLs allow-list
+        // must include path patterns (e.g. https://primepmdev.pages.dev/**).
+        const redirectTo =
+          typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : undefined;
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: redirectTo ? { redirectTo } : undefined,

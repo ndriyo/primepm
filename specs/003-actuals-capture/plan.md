@@ -9,43 +9,54 @@
 ## Design references
 
 The visual reference for this feature lives in the **PrimePM Design System**
-Figma file, on a dedicated page mirroring the 002 layout convention. Each
-scene is built from primitives discovered on the existing **PrimePM • Design
-System** page (the same `1 • Colors` / `2 • Typography` / `4 • Buttons` /
-`6 • Inputs` / `9 • Cards & Rows` / `10 • Progress bars` blocks 002 is built
-against).
+Figma file, on a dedicated page **`003 Actuals Capture`** built entirely
+from the **New Design System** components and tokens published in the same
+file. Each scene is composed from real component instances (Button, Chip,
+Pill, Input, Nav Item, Progress Bar, Milestone Dot) and bound throughout to
+the file's published variables (Color collection with **Light + Dark**
+modes, plus Spacing / Radius / Typography / Layout collections), so the
+mockup automatically responds to any future token edit or mode switch.
 
-- **Page** — `Spec 003 • Actuals Capture` —
-  <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=89-2>
+- **Page** — `003 Actuals Capture` —
+  <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=143-2>
 - **Full mockup frame (all scenes)** —
-  <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=89-3>
+  <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=143-3>
 
 Per-scene deep-links (use these when implementing the matching component):
 
 | Scene                                                              | Implements                                                                                | Link                                                                              |
 | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| A. Inspector — actuals not yet recorded (default leaf state)       | `ActualsSection` empty placeholder, `TaskInspector` placement (FR-001, FR-002, FR-009)    | <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=89-66>                 |
-| B. Inspector — in-progress task (actual start, partial %)          | Partial-progress state + audit "History" entry point (FR-007, FR-016)                     | <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=89-70>                 |
-| C. Inspector — auto-fill UX echo                                   | `data-auto-fill="pending"` UX echo for FR-017                                             | <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=89-74>                 |
-| D. Inspector — validation errors                                   | Inline error rendering for FR-005 (% range) and FR-006 (finish < start)                   | <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=89-78>                 |
-| E. Inspector — baseline + scheduled + actual side-by-side          | Three-temporal comparison view (FR-008, US4)                                              | <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=89-82>                 |
-| F. Inspector — summary task, rolled-up actuals (read-only)         | Duration-weighted rollup display (FR-011, US5)                                            | <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=89-86>                 |
-| G. Tracking Gantt — three-track row (baseline / current / actuals) | `ActualsBar`, lane geometry, in-progress hatch, finished flag (FR-015, SC-009)            | <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=89-90>                 |
-| H. Audit drawer (live + deleted task variants)                     | `ActualsAuditPanel`, before/after diff, FR-019 deleted-task retention                     | <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=89-94>                 |
+| A. Inspector — actuals not yet recorded (default leaf state)       | `ActualsSection` empty placeholder, `TaskInspector` placement (FR-001, FR-002, FR-009)    | <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=143-26>                |
+| B. Inspector — in-progress task (actual start, partial %)          | Partial-progress state + audit "History" entry point (FR-007, FR-016)                     | <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=143-30>                |
+| C. Inspector — auto-fill UX echo                                   | `data-auto-fill="pending"` UX echo for FR-017                                             | <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=143-34>                |
+| D. Inspector — validation errors                                   | Inline error rendering for FR-005 (% range) and FR-006 (finish < start)                   | <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=143-38>                |
+| E. Inspector — baseline + scheduled + actual side-by-side          | Three-temporal comparison view (FR-008, US4)                                              | <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=143-42>                |
+| F. Inspector — summary task, rolled-up actuals (read-only)         | Duration-weighted rollup display (FR-011, US5)                                            | <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=143-46>                |
+| G. Tracking Gantt — three-track row (baseline / current / actuals) | `ActualsBar`, lane geometry, in-progress hatch, finished flag (FR-015, SC-009)            | <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=143-50>                |
+| H. Audit drawer (live + deleted task variants)                     | `ActualsAuditPanel`, before/after diff, FR-019 deleted-task retention                     | <https://www.figma.com/file/N9DB0nKpW1qZiOj1AIHAlk?node-id=143-54>                |
 
-The mockup ships a **token legend** at the top of the page keyed by purpose
-(actuals lane / current bar / current variant / baseline outline / success /
-warning / danger / audit-event pill colors), so the contract names in
-[`contracts/inspector-ui.contract.md`](./contracts/inspector-ui.contract.md)
-map 1:1 to the visual treatments. Every primitive (white card, stone-50
-background, border #E7E5E4, radii 8/10/14/18, drop-shadow at 0,1,2 + 0,8,24)
-is reused from the DS page — no new primitives are introduced. The actuals
-lane introduces one new token `--color-bar-actual` set to **RAG-green
-`#16A34A`** (already in the DS palette under `RAG STATUS`), with the faint
-variant `#DCFCE7` and a lighter green `#86EFAC` for the in-progress hatched
-right-edge marker. RAG-green keeps the new lane visually distinct from the
-sky-blue current bar (`#38BDF8`) and the slate-400 baseline outline
-(`#94A3B8`) used by 002.
+Token mapping (Figma variable → CSS / implementation):
+
+- `accent/default` → `--pp-accent` (current bar fill, active nav item)
+- `status/green`, `status/green-bg` → **`--color-bar-actual`** + faint
+  variant for the actuals lane (the only new semantic CSS token introduced
+  by 003 — backed by the existing DS green; no new colour value)
+- `status/amber`, `status/amber-bg` → variant Gantt bar + auto-fill UX
+  echo Pill + before/after audit-diff highlight
+- `status/red`, `status/red-bg` → validation error border + inline error
+  background + `task.actuals.deleted` audit Pill
+- `text/quaternary` → baseline outline stroke (matches 002 slate)
+- `bg/surface`, `bg/surface-2`, `border/default` → inspector container,
+  field backgrounds, and dividers respectively
+
+Audit-event Pill component variants used in Scene H:
+`Tone=Green` for `task.actuals.set`, `Tone=Blue` for `task.actuals.update`,
+`Tone=Amber` for `task.actuals.cleared`, `Tone=Red` for
+`task.actuals.deleted` (FR-019).
+
+Milestone Dot component variants used in Scene G's milestone rows:
+`State=Done` (green) for the actuals lane, `State=Now` (sky) for the
+current lane, `State=Pending` (outlined) for the baseline lane.
 
 ## Summary
 

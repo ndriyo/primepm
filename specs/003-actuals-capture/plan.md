@@ -121,11 +121,17 @@ and `supabase/functions/api/` (Edge backend), `prisma/` for schema.
 
 **Constraints**:
 
-- Actuals are stored separately from baseline (FR-004, FR-013) — the 002
-  baseline payload MUST NOT include `actualStart` / `actualFinish` /
-  `progressPct`. The existing `loadSnapshot` serializer captures only
-  the baseline-relevant columns; this plan adds zero references to the
-  new columns from the baseline payload.
+- Actuals are stored separately from baseline (FR-004, FR-013). The 002
+  baseline payload MUST NOT include the new actuals date fields
+  `actualStart` / `actualFinish` — the existing `loadSnapshot`
+  serializer is **not** extended to read those columns, so they cannot
+  leak into the snapshot accidentally. `progressPct` is a separate case
+  per the 2026-05-10 clarification: it predates 003 and is preserved in
+  the snapshot as a convenience-copy of the latest value at capture
+  time. It is NOT used by the 002 variance overlay (`BaselineBar.tsx`
+  is outline-only); only the planned-schedule fields drive variance.
+  An explicit defensive test asserts that `actualStart` / `actualFinish`
+  never appear inside `schedule_baselines.payload.tasks[]` (T011b).
 - Auto-fill (FR-017) MUST NOT override an explicit user-entered value;
   the request-body convention is "key existence, not value-nullness"
   (research.md R4).

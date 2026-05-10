@@ -7,6 +7,15 @@ description: "Task list for feature 003 — Actuals Capture (% complete, actual 
 **Input**: Design documents from `/specs/003-actuals-capture/`
 **Prerequisites**: `plan.md`, `spec.md`, `research.md`, `data-model.md`, `quickstart.md`, `contracts/actuals.openapi.yaml`, `contracts/inspector-ui.contract.md`
 
+> **Revision log** — 2026-05-10: applied remediation from `/speckit.analyze` round 1.
+> - **C1** (CRITICAL): FR-013 ↔ 002 `BaselineTask.progressPct` reconciled per spec.md §"Clarifications" → 2026-05-10 Q6. The baseline is conceptually planned-schedule only; `progressPct` is a convenience-copy in the snapshot. Tightened FR-013 wording in `spec.md`; rewrote the FR-004/FR-013 paragraph in `plan.md §"Constraints"`.
+> - **H1** (HIGH): added T011a — SC-004 byte-identity test (v0 payload unchanged after actuals PUT).
+> - **C1 follow-up**: added T011b — defensive test that `actualStart`/`actualFinish` never appear in any baseline payload, even when the source task has them set.
+> - **L1** (LOW): T024's `appendAuditEntry` timing pinned: post-server-success, not optimistic.
+> - **M2** (MED): T010 file path pinned: `loadProject` action in `src/store/projectStore.ts`.
+> - **M4**: false positive on first read — T015 already tests `GET /tasks/:taskId/actuals/audit` for project-read users; no edit needed.
+> - **M3**: out of scope (constitution is unmodified template; recommend `/speckit.constitution` separately).
+
 **Tests**: Test tasks **are included**. The spec's User Stories define
 acceptance scenarios that must be observable, and `quickstart.md §7`
 explicitly enumerates a red-green test suite (progress unit, inspector
@@ -77,7 +86,7 @@ data US1 already produces.
   ```
   Strict so unknown keys are rejected (matches contract). Also export a small helper `pickProvidedKeys(body)` that returns the set of keys present on `body` (for the FR-017 "user provided" rule per `research.md` §R4).
 - [ ] T009 [P] Hand-mirror `ActualsSnapshotDto`, `ActualsUpdateDto`, `ActualsSaveResponseDto`, and `ActualsAuditEntryDto` into `src/api/types.ts` matching the schemas in `contracts/actuals.openapi.yaml` exactly. Add a `// SOURCE: contracts/actuals.openapi.yaml` comment at the top of the new block. Add a Vitest type-level test in `src/api/__tests__/types.actuals.test.ts` that imports the DTOs and a literal mock built from the OpenAPI examples to fail at compile time on drift (mirrors the 002 T053 pattern).
-- [ ] T010 [P] Extend the existing `Task` interface in `src/store/projectStore.ts` with two optional ISO-date fields: `actualStart?: string` and `actualFinish?: string`. Update the snapshot deserializer (the function that hydrates tasks from the project-load payload) to pass these through unchanged when present. **No new actions yet** — that's US1.
+- [ ] T010 [P] Extend the existing `Task` interface in `src/store/projectStore.ts` with two optional ISO-date fields: `actualStart?: string` and `actualFinish?: string`. Update the snapshot deserializer in `src/store/projectStore.ts` (the `loadProject` action — the same function that already hydrates `progressPct`, `manualStart`, etc. from the snapshot DTO) to pass `actualStart` / `actualFinish` through unchanged when present in the response, and to leave them `undefined` when absent. **No new actions yet** — that's US1.
 
 **Checkpoint**: Migration applied; CHECK constraints fire; `audit()` accepts a payload; zod schema and frontend DTOs compile; `Task` carries the new optional fields. US1–US5 may now proceed in parallel.
 
@@ -91,7 +100,9 @@ data US1 already produces.
 
 ### Tests for User Story 1 (write FIRST, ensure they FAIL before implementation)
 
-- [ ] T011 [P] [US1] Edge integration test in `supabase/functions/api/__tests__/actuals.test.ts`: `PUT /tasks/:taskId/actuals` with `{ progressPct: 30, actualStart: '2026-05-04' }` returns 200 with the persisted snapshot and a non-null `auditEntryId`; the `schedule_tasks` row has `progress_pct = 30`, `actual_start = '2026-05-04'`, `actual_finish IS NULL`; the row's planned columns (`duration_days`, `manual_start`, `constraint_*`) are unchanged byte-for-byte (FR-001, FR-003, FR-004).
+- [ ] T011 [P] [US1] Edge integration test in `supabase/functions/api/__tests__/actuals.test.ts`: `PUT /tasks/:taskId/actuals` with `{ progressPct: 30, actualStart: '2026-05-04' }` returns 200 with the persisted snapshot and a non-null `auditEntryId`; the `schedule_tasks` row has `progress_pct = 30`, `actual_start = '2026-05-04'`, `actual_finish IS NULL`; the row's planned columns (`duration_days`, `manual_start`, `constraint_*`) are unchanged byte-for-byte (FR-001, FR-003). Note: `progress_pct` is intentionally excluded from the unchanged-list because it is one of the three actuals fields (FR-001) — see `spec.md` §"Clarifications" → 2026-05-10 Q6.
+- [ ] T011a [P] [US1] Edge integration test in `supabase/functions/api/__tests__/actuals.test.ts` — **SC-004 byte-identity**: on a project with a v0 baseline (002) already set, capture `SELECT payload FROM schedule_baselines WHERE id = $v0Id` before and after a successful PUT to actuals on any task. Assert the two JSONB values are deeply equal (no key change, no value change, including the `progressPct` convenience-copy frozen at v0 capture time — it must not retroactively reflect later actuals edits). FR-004 + FR-013 + SC-004.
+- [ ] T011b [P] [US1] Edge integration test in `supabase/functions/api/__tests__/actuals.test.ts` — **FR-013 baseline scope (defensive)**: with the new actuals fields populated on at least one task (`progress_pct = 60, actual_start = '2026-05-04', actual_finish IS NULL`), call `POST /projects/:projectId/baselines` (the 002 endpoint) and inspect the resulting `schedule_baselines.payload.tasks[]`. Assert that **no task object** contains an `actualStart` or `actualFinish` key — neither as a real value nor as `null`. (`progressPct` IS allowed and expected as a convenience-copy of latest data per `spec.md` §"Clarifications" → 2026-05-10 Q6.) Pin this so a future change to `loadSnapshot()` cannot silently leak the new columns into the baseline payload.
 - [ ] T012 [P] [US1] Edge integration test in the same file — auto-fill (FR-017) in both directions:
   - Subtest A: existing row with `progress_pct = 30, actual_finish IS NULL`. PUT body `{ progressPct: 100 }` (no `actualFinish` key). Response has `actualFinish = today` (server-computed), DB row matches. Audit `payload.after.actualFinish` equals today.
   - Subtest B: existing row with `progress_pct = 50, actual_finish IS NULL`. PUT body `{ actualFinish: '2026-05-09' }` (no `progressPct` key). Response has `progressPct = 100`. Audit `payload.after.progressPct = 100`.
@@ -137,7 +148,7 @@ data US1 already produces.
   - State: `audit: Map<string, AuditEntry[]>` keyed by `taskId`.
   - Action: `updateActuals(taskId, partial)` — calls `saveActuals`, on success patches the local task in-place (per T017) using Immer, and surfaces validation errors via the existing toast/error channel.
   - Action: `loadActualsAudit(taskId)` — lazy fetch; populates the audit map; memoised (no refetch if already populated for that taskId during the session).
-  - Action: `appendAuditEntry(entry)` — for the optimistic local insertion after a successful save (so the drawer reflects the edit without a re-fetch).
+  - Action: `appendAuditEntry(entry)` — called by `updateActuals` **after** `saveActuals` resolves successfully, using the `auditEntryId` returned by the server as the local entry's id. This is post-server-success, NOT optimistic-pre-server: on rejection no entry is appended, and the inspector's inline error is the only user-visible signal. The drawer reflects the edit without a re-fetch.
 
 **Checkpoint US1**: Tests T011–T017 pass; manually walking `quickstart.md §8 US1` succeeds. The MVP demo ("PM saves actuals on a task; values persist; planned + baseline untouched; one audit row written; auto-fill works in both directions; deletion preserves history") is shippable here.
 
@@ -318,13 +329,15 @@ data US1 already produces.
 
 ```bash
 # Round 1 — write all US1 tests in parallel:
-Task: T011 "Edge integration test: PUT preserves planned columns; persists actuals"
-Task: T012 "Edge integration test: auto-fill in both directions + override-protect"
-Task: T013 "Edge integration test: audit emission, before/after, action discriminator"
-Task: T014 "Edge integration test: task deletion preserves audit; emits final task.actuals.deleted"
-Task: T015 "Edge integration test: read scope follows project-read; PUT requires task-edit"
-Task: T016 "Client API tests: getActuals / saveActuals / listActualsAudit (key-existence semantics)"
-Task: T017 "Store unit test: updateActuals patches local task with server-resolved values"
+Task: T011  "Edge integration test: PUT persists actuals; planned columns byte-unchanged"
+Task: T011a "Edge integration test: SC-004 — v0 baseline payload byte-identical after PUT"
+Task: T011b "Edge integration test: FR-013 — actualStart/actualFinish never in baseline payload"
+Task: T012  "Edge integration test: auto-fill in both directions + override-protect"
+Task: T013  "Edge integration test: audit emission, before/after, action discriminator"
+Task: T014  "Edge integration test: task deletion preserves audit; emits final task.actuals.deleted"
+Task: T015  "Edge integration test: read scope follows project-read; PUT requires task-edit"
+Task: T016  "Client API tests: getActuals / saveActuals / listActualsAudit (key-existence semantics)"
+Task: T017  "Store unit test: updateActuals patches local task with server-resolved values"
 
 # Round 2 — implement, partially parallel:
 Task: T018 "PUT handler in supabase/functions/api/routes/actuals.ts"

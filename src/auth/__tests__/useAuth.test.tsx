@@ -65,7 +65,7 @@ afterEach(() => {
 });
 
 describe('useAuth — signInWithGoogle (C1)', () => {
-  it('calls signInWithOAuth with provider=google and redirectTo=window.location.origin', async () => {
+  it('calls signInWithOAuth with provider=google and redirectTo=`${origin}/dashboard`', async () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
     await act(async () => {
       await result.current.signInWithGoogle();
@@ -73,7 +73,7 @@ describe('useAuth — signInWithGoogle (C1)', () => {
     expect(supabaseMock.state.signInWithOAuth).toHaveBeenCalledTimes(1);
     expect(supabaseMock.state.signInWithOAuth).toHaveBeenCalledWith({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/dashboard` },
     });
   });
 

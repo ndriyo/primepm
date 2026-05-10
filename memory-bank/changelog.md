@@ -2,6 +2,19 @@
 
 This file documents the changes made to the PrimePM application.
 
+## 2026-05-09
+### Added — Feature 001 Google OAuth Login
+- "Continue with Google" entry point on `LoginPage` alongside the existing email/password form. Wired through `supabase.auth.signInWithOAuth({ provider: 'google' })` with `redirectTo = window.location.origin`.
+- Silent account linking on verified-email match (relies on Supabase project setting; no application schema change for the linkage itself).
+- New `Avatar` component (`src/components/Avatar.tsx`) — image-with-initials-fallback, used by `PpSidebar` and ready for any future surface.
+- Idempotent `GET /api/me` and `PUT /api/me/profile` edge routes (`supabase/functions/api/routes/me.ts`) for mirroring the latest provider profile (display name + avatar) into `public.users`.
+- Cancelled-consent / OAuth provider error handling: URL `?error=` / `#error=` captured on mount, stripped via `history.replaceState`, surfaced in the existing `pp-err` row.
+- Adoption-signal `console.info({ event: 'auth.signin', provider, sub, ts })` on `SIGNED_IN`.
+
+### Changed
+- `User.avatarUrl` (`varchar(2048)`, nullable) added to Prisma schema and via migration `20260509000000_add_avatar_url_to_users`.
+- `PpSidebar` foot now renders `<Avatar />` instead of computing initials inline.
+
 ## 2025-03-26
 ### Added
 - Committee review interface (initial implementation):

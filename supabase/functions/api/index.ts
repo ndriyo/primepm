@@ -13,6 +13,7 @@ import { dashboardRoutes } from './routes/dashboard.ts';
 import { criteriaRoutes } from './routes/criteria.ts';
 import { departmentsRoutes } from './routes/departments.ts';
 import { submissionRoutes } from './routes/submission.ts';
+import { meRoutes } from './routes/me.ts';
 import { baselineRoutes } from './routes/baselines.ts';
 
 const app = new Hono();
@@ -58,6 +59,8 @@ app.use('/api/dashboard', requireAuth);
 app.use('/api/criteria', requireAuth);
 app.use('/api/criteria/*', requireAuth);
 app.use('/api/departments', requireAuth);
+app.use('/api/me', requireAuth);
+app.use('/api/me/*', requireAuth);
 
 const api = new Hono();
 api.route('/', projectsRoutes);
@@ -72,6 +75,7 @@ api.route('/', dashboardRoutes);
 api.route('/', criteriaRoutes);
 api.route('/', departmentsRoutes);
 api.route('/', submissionRoutes);
+api.route('/', meRoutes);
 api.route('/', baselineRoutes);
 
 app.route('/api', api);

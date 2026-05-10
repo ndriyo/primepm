@@ -22,6 +22,17 @@ The product is being built around two connected workflows:
 - Debounced persistence to local storage in standalone mode or to the API-backed schedule tables in authenticated mode.
 - Database groundwork for committee review, portfolio selections, portfolio simulations, audit logs, and schedule-specific entities.
 
+## Authentication
+
+PrimePM supports two sign-in paths through Supabase Auth:
+
+- **Email + password** — historical default. Form on `LoginPage.tsx`; `signIn` / `signUp` shaped as `(email, password) → { error?: string }`.
+- **Continue with Google** — Google OAuth via `supabase.auth.signInWithOAuth({ provider: 'google' })`. New Google sign-ins auto-provision a personal organization identically to first-time email/password users. Existing email/password accounts are silently linked when the verified Google email matches (Supabase project setting "Automatic linking on email match for verified emails"). On every successful sign-in the frontend mirrors the latest provider profile (display name + avatar) into `public.users` via the idempotent `PUT /api/me/profile` edge route.
+
+Avatar rendering is centralized in `src/components/Avatar.tsx` — image when present, deterministic initials chip otherwise (with `onError` fallback for stale provider URLs).
+
+For the configuration steps (Google Cloud Console, Supabase Dashboard, redirect URLs across environments) and the manual staging checklist, see `specs/001-google-oauth-login/quickstart.md`.
+
 ## In Progress
 
 The schema already includes committee review and portfolio simulation entities, and the UI has placeholder navigation for several future PMO modules. The main areas still being built are:

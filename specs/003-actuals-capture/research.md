@@ -314,8 +314,11 @@ current bar (`TaskBar`) and baseline bar (`BaselineBar`). The actuals lane:
   `actualFinish`, or `progressPct > 0` distinct from the planned (i.e.
   not just the implicit-progress mirror).
 - Uses a **filled** bar treatment with the actuals color token
-  (`--color-bar-actual`, defaults to a desaturated brand variant) and a
-  small flag at the actual-finish edge if the task is finished.
+  `--color-bar-actual` set to RAG-green `#16A34A` (already in the DS
+  palette under `RAG STATUS`; semantically: green = "actually delivered",
+  visually: distinct from the sky-blue current bar and the slate baseline
+  outline) plus a small flag at the actual-finish edge if the task is
+  finished.
 - For in-progress tasks (actual start, no actual finish), the bar runs
   from `actualStart` to "today" (clipped at the visible range), with a
   hatched right edge to signal "still running".

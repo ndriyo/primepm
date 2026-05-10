@@ -1,0 +1,291 @@
+openapi: 3.0.3
+info:
+  title: PrimePM Actuals API
+  version: 0.1.0
+  description: |
+    REST contract for the Actuals Capture feature (003). Hosted by the
+    existing Supabase Edge Function (`supabase/functions/api`) under the
+    `/tasks/:taskId/actuals` namespace. All endpoints require the same
+    authenticated user context as the existing project routes;
+    project-scoped permission is enforced by RLS on `schedule_tasks` and
+    by `getAuth(c)` in the Edge Function.
+
+    Read scope follows project-read (FR-018, parity with the 002 baseline
+    contract). Write scope follows task-edit (FR-001).
+
+paths:
+  /tasks/{taskId}/actuals:
+    get:
+      summary: Read the current actuals values for a task
+      description: |
+        Returns the current actuals snapshot for a single task. Returns
+        all-null fields if no actuals have been recorded yet.
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActualsSnapshot'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+    put:
+      summary: Set or update actuals for a task
+      description: |
+        Updates one or more of `progressPct`, `actualStart`, `actualFinish`
+        on a leaf task. Idempotent on identical inputs. Saving any
+        combination is a single atomic operation (FR-010); this endpoint
+        also produces exactly one audit log entry per call (FR-016).
+
+        **Auto-fill (FR-017):** the server applies the auto-fill rule
+        before persisting. If `progressPct === 100` and `actualFinish` is
+        omitted (key not in body) and the existing row has no
+        `actualFinish`, the server sets `actualFinish = today`. If
+        `actualFinish` is provided and `progressPct` is omitted (key not
+        in body) and the existing row has `progressPct < 100`, the server
+        sets `progressPct = 100`. Auto-fill never overrides a key the
+        client sent explicitly. Key existence (`Object.hasOwn(body, "progressPct")`),
+        not value-nullness, distinguishes "user provided" from "missing".
+
+        **Cleared state:** sending all three fields explicitly as `null`
+        clears the actuals (records a `task.actuals.cleared` audit event).
+
+        **Validation:**
+        - 400 `progress_pct_range` if `progressPct` is outside 0..100
+          (clamping is explicitly disallowed by FR-005).
+        - 400 `actuals_order` if `actualFinish < actualStart` after
+          auto-fill resolution (FR-006).
+        - 422 `summary_task_actuals` if the target task has children
+          (summary tasks reject direct actuals entry — FR-011, US5 AS4).
+
+        **Audit:** the response includes the new audit entry id. The
+        `before`/`after` snapshots in that entry reflect the post-auto-fill
+        values per FR-017.
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActualsUpdate'
+            examples:
+              startProgress:
+                summary: Record actual start with 30% complete
+                value:
+                  progressPct: 30
+                  actualStart: '2026-05-04'
+              markComplete:
+                summary: Mark complete; server auto-fills actualFinish
+                value:
+                  progressPct: 100
+              recordFinishOnly:
+                summary: Record actual finish; server auto-bumps progressPct
+                value:
+                  actualFinish: '2026-05-09'
+              clearAll:
+                summary: Clear all actuals back to none-recorded state
+                value:
+                  progressPct: 0
+                  actualStart: null
+                  actualFinish: null
+      responses:
+        '200':
+          description: OK — returns the persisted snapshot plus the audit entry id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActualsSaveResponse'
+        '400':
+          description: |
+            Validation error. `error` is one of:
+            `progress_pct_range`, `actuals_order`, `invalid_date`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Caller lacks task-edit permission on this task's project
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: |
+            Cannot set actuals on this task. `error = summary_task_actuals`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /tasks/{taskId}/actuals/audit:
+    get:
+      summary: List actuals audit entries for a task (newest first)
+      description: |
+        Returns audit log entries for the task's actuals events in
+        `created_at DESC` order. Includes the final `task.actuals.deleted`
+        event if the task has been deleted (FR-019); the path resolves the
+        task via `entity_id` in the audit log, so the endpoint continues
+        to return entries even after the task row is gone.
+
+        Cursor pagination on `created_at` (the cursor value is an ISO
+        timestamp). Default `limit` 50, max 200.
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: |
+            ISO timestamp of the last entry seen. The endpoint returns
+            entries strictly older than this timestamp.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        '200':
+          description: OK — possibly empty array
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [entries]
+                properties:
+                  entries:
+                    type: array
+                    items: { $ref: '#/components/schemas/ActualsAuditEntry' }
+                  nextCursor:
+                    type: string
+                    format: date-time
+                    nullable: true
+                    description: Pass back as `?cursor=` to fetch the next page; null if exhausted.
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: |
+            The task id has never had an actuals event recorded on it
+            (no audit rows). Distinguishes "no history" from
+            "task does not exist".
+
+components:
+  parameters:
+    TaskId:
+      name: taskId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  responses:
+    Unauthorized:
+      description: Not authenticated
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Task not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        message: { type: string }
+
+    ActualsSnapshot:
+      type: object
+      required: [progressPct, actualStart, actualFinish]
+      properties:
+        progressPct:
+          type: integer
+          minimum: 0
+          maximum: 100
+        actualStart:
+          type: string
+          format: date
+          nullable: true
+        actualFinish:
+          type: string
+          format: date
+          nullable: true
+
+    ActualsUpdate:
+      type: object
+      description: |
+        All three fields are optional. **Key presence** (not value
+        nullness) distinguishes "user-set" from "leave alone" — see the
+        auto-fill description on PUT.
+      properties:
+        progressPct:
+          type: integer
+          minimum: 0
+          maximum: 100
+        actualStart:
+          type: string
+          format: date
+          nullable: true
+        actualFinish:
+          type: string
+          format: date
+          nullable: true
+
+    ActualsSaveResponse:
+      allOf:
+        - $ref: '#/components/schemas/ActualsSnapshot'
+        - type: object
+          required: [auditEntryId]
+          properties:
+            auditEntryId:
+              type: string
+              format: uuid
+              description: The id of the audit_logs row produced by this save.
+
+    ActualsAuditEntry:
+      type: object
+      required:
+        [id, taskId, action, actor, createdAt, before, after]
+      properties:
+        id:
+          type: string
+          format: uuid
+        taskId:
+          type: string
+          format: uuid
+          description: |
+            The `entity_id` from the audit row; remains valid after the
+            task is deleted (FR-019).
+        action:
+          type: string
+          enum:
+            - task.actuals.set
+            - task.actuals.update
+            - task.actuals.cleared
+            - task.actuals.deleted
+        actor:
+          type: object
+          required: [id, fullName]
+          properties:
+            id: { type: string, format: uuid }
+            fullName: { type: string }
+        createdAt:
+          type: string
+          format: date-time
+        before:
+          oneOf:
+            - $ref: '#/components/schemas/ActualsSnapshot'
+            - type: 'null'
+        after:
+          oneOf:
+            - $ref: '#/components/schemas/ActualsSnapshot'
+            - type: 'null'
